@@ -1,3 +1,6 @@
+//  .
+// ..: P. Chang, philip@physics.ucsd.edu
+
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TH1.h"

@@ -1,10 +1,6 @@
 //  .
 // ..: P. Chang, philip@physics.ucsd.edu
 
-// N.B.: I kept a very compact style in listing the functions in order to easily move around with {,} in vim.
-//       Therefore, if one wants to add new feature please make the function extremely short as possible.
-//       If the function is too long, maybe it doesn't belong here!
-
 #ifndef looper_cc
 #define looper_cc
 
