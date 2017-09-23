@@ -5,7 +5,9 @@
 #define plotmaker_cc
 
 #include "TCanvas.h"
+#include "TColor.h"
 #include "TPad.h"
+#include "TH2.h"
 #include "TH1.h"
 #include "TH1D.h"
 #include "TH1F.h"
@@ -13,11 +15,21 @@
 #include "TList.h"
 #include "TCollection.h"
 #include "TString.h"
+#include "TLatex.h"
+#include "TObjString.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TStyle.h"
+#include "TGaxis.h"
 
+#include "RooStats/NumberCountingUtils.h"
+
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <string>
@@ -27,6 +39,8 @@
 #include <iomanip>
 #include <string>
 #include <deque>
+
+using namespace std;
 
 typedef std::pair<TH1*, TH1*> Hist;
 typedef std::vector<Hist> Hists;
@@ -97,7 +111,7 @@ inline std::vector <TString> GetParms( std::string blah )
 {
     int a = -1;
     int length = blah.length();
-    std::vector <TString> options;
+    std::vector <TString> options_;
     
     while ( a < length )
     {
@@ -116,10 +130,10 @@ inline std::vector <TString> GetParms( std::string blah )
         else
             mySubstring = blah.substr( a + 2, b - a - 2 );
             
-        options.push_back( TString( mySubstring ) );
+        options_.push_back( TString( mySubstring ) );
     }
     
-    return options;
+    return options_;
 }
 
 //_________________________________________________________________________________________________
@@ -308,7 +322,7 @@ void divideByBinWidth( TH1* hist )
 {
     if ( !getOpt( "divideByBinWidth" ).IsNull() )
     {
-        for ( unsigned int ibin = 1; ibin <= hist->GetNbinsX(); ibin++ )
+        for ( int ibin = 1; ibin <= hist->GetNbinsX(); ibin++ )
         {
             hist->SetBinContent( ibin, hist->GetBinContent( ibin ) / hist->GetBinWidth( ibin ) );
             hist->SetBinError( ibin, hist->GetBinError( ibin ) / hist->GetBinWidth( ibin ) );
@@ -342,7 +356,7 @@ TH1* histWithFullError( TH1* nominal, TH1* error )
         
     nominal_with_full_error->SetDirectory( 0 );
     
-    for ( unsigned int ibin = 0; ibin <= nominal->GetNbinsX() + 1; ibin++ )
+    for ( int ibin = 0; ibin <= nominal->GetNbinsX() + 1; ibin++ )
     {
         if ( TString( nominal->GetTitle() ).Contains( "counter" ) && ibin == nominal->GetNbinsX() + 1 )
             continue;
@@ -377,9 +391,9 @@ TH1* hist2DWithFullError( TH1* nominal, TH1* error )
         
     nominal_with_full_error->SetDirectory( 0 );
     
-    for ( unsigned int ibin = 0; ibin <= nominal->GetNbinsX() + 1; ibin++ )
+    for ( int ibin = 0; ibin <= nominal->GetNbinsX() + 1; ibin++ )
     {
-        for ( unsigned int jbin = 0; jbin <= nominal->GetNbinsY() + 1; jbin++ )
+        for ( int jbin = 0; jbin <= nominal->GetNbinsY() + 1; jbin++ )
         {
             double content = nominal->GetBinContent( ibin, jbin );
             double nominal_hist_error = nominal->GetBinError( ibin, jbin );
@@ -556,10 +570,10 @@ THStack* getStack( std::vector<TH1*> hists )
 //_________________________________________________________________________________________________
 void stylizeAxes( TH1* h, TPad* pad )
 {
-    double pad_h = pad->GetAbsHNDC();
-    double pad_w = pad->GetAbsWNDC();
-
-    double WidthPixel =  pad->GetWw();
+//    double pad_h = pad->GetAbsHNDC();
+//    double pad_w = pad->GetAbsWNDC();
+//
+//    double WidthPixel =  pad->GetWw();
 
     if ( !getOpt( "MaximumMultiplier" ).IsNull() )
         h->SetMaximum( h->GetMaximum() * getOpt( "MaximumMultiplier" ).Atof() );
@@ -596,10 +610,10 @@ void stylizeAxes( TH1* h, TPad* pad )
 //_________________________________________________________________________________________________
 void stylizeRatioAxes( TH1* h, TPad* pad )
 {
-    double pad_h = pad->GetAbsHNDC();
-    double pad_w = pad->GetAbsWNDC();
-
-    double WidthPixel =  pad->GetWw();
+//    double pad_h = pad->GetAbsHNDC();
+//    double pad_w = pad->GetAbsWNDC();
+//
+//    double WidthPixel =  pad->GetWw();
 
     float sf = 0.7 / 0.3;
 
@@ -899,7 +913,7 @@ void drawLogos( TPad* pad )
     TLatex* texpub = new TLatex( 0.265, 0.81, getOpt( "publogo" ) );
     texpub->SetNDC();
     texpub->SetTextFont( 52 );
-    float xsize = texpub->GetXsize();
+//    float xsize = texpub->GetXsize();
     texpub->SetTextSize( 0.049 * 0.5 / 1.335 );
     texpub->SetLineWidth( 2 );
     texpub->Draw();
@@ -957,7 +971,7 @@ void clearGlobalSettings()
 void printYields( TH1* hist, int ibinmin, int ibinmax, std::ostream &yieldscout )
 {
     yieldscout << center( hist->GetName(), 20 ) << " ,";
-    for ( unsigned int ibin = ibinmin; ibin <= ibinmax; ++ibin )
+    for ( int ibin = ibinmin; ibin <= ibinmax; ++ibin )
     {
         yieldscout << prd( hist->GetBinContent( ibin ), 4, 9 );
         yieldscout << " +- ";
@@ -1001,7 +1015,7 @@ bool printYieldsTable(
 
     std::ostream yieldscout( buf );
 
-    TH1* hist;
+    TH1* hist = 0;
     if ( data_hists.size() != 0 ) hist = data_hists[0];
     if ( bkg_hists.size()  != 0 ) hist = bkg_hists[0];
     if ( sig_hists.size()  != 0 ) hist = sig_hists[0];
@@ -1111,14 +1125,14 @@ void setMaximum(
         std::vector<TH1*> sig_hists )
 {
     float max = 0;
-    float maxerr = 0;
+//    float maxerr = 0;
     if ( getOpt( "noData" ).IsNull() )
     for ( auto& hist : data_hists )
         if ( max < ( hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() ) ) )
             max = hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() );
-    TH1* hist = getTotalBkgHists( bkg_hists );
-    if ( max < ( hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() ) ) )
-        max = hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() );
+    TH1* totalhist = getTotalBkgHists( bkg_hists );
+    if ( max < ( totalhist->GetMaximum() + totalhist->GetBinError( totalhist->GetMaximumBin() ) ) )
+        max = totalhist->GetMaximum() + totalhist->GetBinError( totalhist->GetMaximumBin() );
     for ( auto& hist : sig_hists )
         if ( max < ( hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() ) ) )
             max = hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() );
