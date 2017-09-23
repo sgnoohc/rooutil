@@ -38,17 +38,7 @@
 
 #include "printutil.cc"
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-// LorentzVector typedef that we use very often
-///////////////////////////////////////////////////////////////////////////////////////////////
-typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LV;
-typedef std::vector<LV> LVs;
-typedef std::vector<bool> bools;
-typedef std::vector<int> ints;
-typedef std::vector<float> floats;
-typedef std::vector<double> doubles;
-
-namespace TasUtil
+namespace RooUtil
 {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,22 +78,22 @@ namespace TasUtil
         std::vector<TString> skimbrfiltpttn;
         public:
         // Functions
-        Looper(TChain* chain=0, TREECLASS* treeclass=0, int nEventsToProcess=-1);
+        Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
         ~Looper();
-        void setTChain(TChain* c);
-        void setTreeClass(TREECLASS* t);
+        void setTChain( TChain* c );
+        void setTreeClass( TREECLASS* t );
         void printCurrentEventIndex();
         bool allEventsInTreeProcessed();
         bool allEventsInChainProcessed();
         bool nextEvent();
         TTree* getTree() { return ttree; }
         unsigned int getNEventsProcessed() { return nEventsProcessed; }
-        void setSkim(TString ofilename);
-        void setSkimBranchFilterPattern(std::vector<TString> x) { skimbrfiltpttn = x; }
+        void setSkim( TString ofilename );
+        void setSkimBranchFilterPattern( std::vector<TString> x ) { skimbrfiltpttn = x; }
         void fillSkim();
         void saveSkim();
         TTree* getSkimTree() { return skimtree; }
-        void setSkimMaxSize(Long64_t maxsize) { skimtree->SetMaxTreeSize( maxsize ); }
+        void setSkimMaxSize( Long64_t maxsize ) { skimtree->SetMaxTreeSize( maxsize ); }
         TTreePerfStats* getTTreePerfStats() { return ps; }
         private:
         void setFileList();
@@ -130,180 +120,215 @@ namespace TasUtil
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-TasUtil::Looper<TREECLASS>::Looper(TChain* c, TREECLASS* t, int nevtToProc) :
-    tchain(0),
-    listOfFiles(0),
-    fileIter(0),
-    tfile(0),
-    ttree(0),
-    ps(0),
-    nEventsTotalInChain(0),
-    nEventsTotalInTree(0),
-    nEventsToProcess(nevtToProc),
-    nEventsProcessed(0),
-    indexOfEventInTTree(0),
-    fastmode(false),
-    treeclass(0),
-    bar_id(0),
-    print_rate(432),
-    doskim(false),
-    skimfilename(""),
-    skimfile(0),
-    skimtree(0),
-    nEventsSkimmed(0)
+RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
+    tchain( 0 ),
+    listOfFiles( 0 ),
+    fileIter( 0 ),
+    tfile( 0 ),
+    ttree( 0 ),
+    ps( 0 ),
+    nEventsTotalInChain( 0 ),
+    nEventsTotalInTree( 0 ),
+    nEventsToProcess( nevtToProc ),
+    nEventsProcessed( 0 ),
+    indexOfEventInTTree( 0 ),
+    fastmode( false ),
+    treeclass( 0 ),
+    bar_id( 0 ),
+    print_rate( 432 ),
+    doskim( false ),
+    skimfilename( "" ),
+    skimfile( 0 ),
+    skimtree( 0 ),
+    nEventsSkimmed( 0 )
 {
     initProgressBar();
-    print("Start EventLooping");
+    print( "Start EventLooping" );
     start();
-    if (c) setTChain(c);
-    if (t) setTreeClass(t);
-    if (nevtToProc > 5000)
+
+    if ( c )
+        setTChain( c );
+
+    if ( t )
+        setTreeClass( t );
+
+    if ( nevtToProc > 5000 )
         fastmode = true;
+
     c->GetEntry( 0 );
     t->Init( c->GetTree() );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-TasUtil::Looper<TREECLASS>::~Looper()
+RooUtil::Looper<TREECLASS>::~Looper()
 {
-    print("Finished EventLooping");
+    print( "Finished EventLooping" );
     end();
-    if (fileIter) delete fileIter;
-    if (tfile) delete tfile;
+
+    if ( fileIter )
+        delete fileIter;
+
+    if ( tfile )
+        delete tfile;
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::setTChain(TChain* c)
+void RooUtil::Looper<TREECLASS>::setTChain( TChain* c )
 {
-    if (c)
+    if ( c )
     {
         tchain = c;
         setNEventsToProcess();
         setFileList();
     }
     else
-    {
-        error("You provided a null TChain pointer!", __FUNCTION__);
-    }
+        error( "You provided a null TChain pointer!", __FUNCTION__ );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::setTreeClass(TREECLASS* t)
+void RooUtil::Looper<TREECLASS>::setTreeClass( TREECLASS* t )
 {
-    if (t)
-    {
+    if ( t )
         treeclass = t;
-    }
     else
-    {
-        error("You provided a null TreeClass pointer!", __FUNCTION__);
-    }
+        error( "You provided a null TreeClass pointer!", __FUNCTION__ );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::printCurrentEventIndex()
+void RooUtil::Looper<TREECLASS>::printCurrentEventIndex()
 {
-    TasUtil::print(TString::Format("Current TFile = %s", tfile->GetName()));
-    TasUtil::print(TString::Format("Current TTree = %s", ttree->GetName()));
-    TasUtil::print(TString::Format("Current Entry # in TTree = %d", indexOfEventInTTree));
+    RooUtil::print( TString::Format( "Current TFile = %s", tfile->GetName() ) );
+    RooUtil::print( TString::Format( "Current TTree = %s", ttree->GetName() ) );
+    RooUtil::print( TString::Format( "Current Entry # in TTree = %d", indexOfEventInTTree ) );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-bool TasUtil::Looper<TREECLASS>::nextTree()
+bool RooUtil::Looper<TREECLASS>::nextTree()
 {
-    if (!fileIter)
-        error("fileIter not set but you are trying to access the next file", __FUNCTION__);
+    if ( !fileIter )
+        error( "fileIter not set but you are trying to access the next file", __FUNCTION__ );
+
     // Get the TChainElement from TObjArrayIter.
     // If no more to run over, Next returns 0.
-    TChainElement* chainelement = (TChainElement*) fileIter->Next();
-    if (chainelement)
+    TChainElement* chainelement = ( TChainElement* ) fileIter->Next();
+
+    if ( chainelement )
     {
         // If doskim is true and if this is the very first file being opened in the TChain,
         // flag it to create a tfile and ttree where the skimmed events will go to.
         bool createskimtree = false;
-        if (!ttree && doskim)
+
+        if ( !ttree && doskim )
             createskimtree = true;
+
         // If there is already a TFile opened from previous iteration, close it.
-        if (tfile) tfile->Close();
+        if ( tfile )
+            tfile->Close();
+
         // Open up a new file
-        tfile = new TFile(chainelement->GetTitle());
+        tfile = new TFile( chainelement->GetTitle() );
         // Get the ttree
-        ttree = (TTree*) tfile->Get(tchain->GetName());
-        if (!ttree)
-            error("TTree is null!??", __FUNCTION__);
+        ttree = ( TTree* ) tfile->Get( tchain->GetName() );
+
+        if ( !ttree )
+            error( "TTree is null!??", __FUNCTION__ );
+
         // Set some fast mode stuff
-        if (fastmode) TTreeCache::SetLearnEntries(10);
-        if (fastmode) ttree->SetCacheSize(128*1024*1024);
+        if ( fastmode )
+            TTreeCache::SetLearnEntries( 10 );
+
+        if ( fastmode )
+            ttree->SetCacheSize( 128 * 1024 * 1024 );
+
         // Print some info to stdout
-        announce("Working on " +
-                 TString(tfile->GetName()) +
-                 "/TTree:" +
-                 TString(ttree->GetName()));
+        announce( "Working on " +
+                TString( tfile->GetName() ) +
+                "/TTree:" +
+                TString( ttree->GetName() ) );
         // Reset the nEventsTotalInTree in this tree
         nEventsTotalInTree = ttree->GetEntries();
         // Reset the event index as we got a new ttree
         indexOfEventInTTree = 0;
         // Set the ttree to the TREECLASS
-        treeclass->Init(ttree);
+        treeclass->Init( ttree );
+
         // If skimming create the skim tree after the treeclass inits it.
         // This is to make sure the branch addresses are correct.
-        if (createskimtree)
+        if ( createskimtree )
             createSkimTree();
-        else if (doskim)
+        else if ( doskim )
             copyAddressesToSkimTree();
+
         // TTreePerfStats
         if ( ps )
             ps->SaveAs( "perf.root" );
-        ps = new TTreePerfStats("ioperf", ttree);
+
+        ps = new TTreePerfStats( "ioperf", ttree );
         // Return that I got a good one
         return true;
     }
     else
     {
         // Announce that we are done with this chain
-//        print("");
-//        print("Done with all trees in this chain", __FUNCTION__);
+        //        print("");
+        //        print("Done with all trees in this chain", __FUNCTION__);
         return false;
     }
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-bool TasUtil::Looper<TREECLASS>::allEventsInTreeProcessed()
+bool RooUtil::Looper<TREECLASS>::allEventsInTreeProcessed()
 {
-    if (indexOfEventInTTree >= nEventsTotalInTree) return true;
-    else return false;
+    if ( indexOfEventInTTree >= nEventsTotalInTree )
+        return true;
+    else
+        return false;
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-bool TasUtil::Looper<TREECLASS>::allEventsInChainProcessed()
+bool RooUtil::Looper<TREECLASS>::allEventsInChainProcessed()
 {
-    if (nEventsProcessed > (unsigned int) nEventsToProcess) return true;
-    else return false;
+    if ( nEventsProcessed > ( unsigned int ) nEventsToProcess )
+        return true;
+    else
+        return false;
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-bool TasUtil::Looper<TREECLASS>::nextEventInTree()
+bool RooUtil::Looper<TREECLASS>::nextEventInTree()
 {
-//    treeclass->progress(nEventsProcessed, nEventsToProcess);
+    //    treeclass->progress(nEventsProcessed, nEventsToProcess);
     // Sanity check before loading the next event.
-    if (!ttree) error("current ttree not set!", __FUNCTION__);
-    if (!tfile) error("current tfile not set!", __FUNCTION__);
-    if (!fileIter) error("fileIter not set!", __FUNCTION__);
+    if ( !ttree )
+        error( "current ttree not set!", __FUNCTION__ );
+
+    if ( !tfile )
+        error( "current tfile not set!", __FUNCTION__ );
+
+    if ( !fileIter )
+        error( "fileIter not set!", __FUNCTION__ );
+
     // Check whether I processed everything
-    if (allEventsInTreeProcessed()) return false;
-    if (allEventsInChainProcessed()) return false;
+    if ( allEventsInTreeProcessed() )
+        return false;
+
+    if ( allEventsInChainProcessed() )
+        return false;
+
     // if fast mode do some extra
-    if (fastmode) ttree->LoadTree(indexOfEventInTTree);
+    if ( fastmode )
+        ttree->LoadTree( indexOfEventInTTree );
+
     // Set the event index in TREECLASS
-    treeclass->GetEntry(indexOfEventInTTree);
+    treeclass->GetEntry( indexOfEventInTTree );
     // Increment the counter for this ttree
     ++indexOfEventInTTree;
     // Increment the counter for the entire tchain
@@ -316,73 +341,73 @@ bool TasUtil::Looper<TREECLASS>::nextEventInTree()
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-bool TasUtil::Looper<TREECLASS>::nextEvent()
+bool RooUtil::Looper<TREECLASS>::nextEvent()
 {
     // If no tree it means this is the beginning of the loop.
-    if (!ttree)
+    if ( !ttree )
     {
-//        std::cout << " I think this is the first tree " << std::endl;
+        //        std::cout << " I think this is the first tree " << std::endl;
         // Load the next tree if it returns true, then proceed to next event in tree.
-        while (nextTree())
+        while ( nextTree() )
         {
             // If the next event in tree was successfully loaded return true, that it's good.
-            if (nextEventInTree())
+            if ( nextEventInTree() )
             {
-//                std::cout << " I think this is the first event in first tree" << std::endl;
+                //                std::cout << " I think this is the first event in first tree" << std::endl;
                 return true;
             }
             // If the first event in this tree was not good, continue to the next tree
             else
                 continue;
         }
+
         // If looping over all trees, we fail to find first event that's good,
         // return false and call it quits.
         // At this point it will exit the loop without processing any events.
-//        printProgressBar();
+        //        printProgressBar();
         return false;
     }
     // If tree exists, it means that we're in the middle of a loop
     else
     {
         // If next event is successfully loaded proceed.
-        if (nextEventInTree())
-        {
+        if ( nextEventInTree() )
             return true;
-        }
         // If next event is not loaded then check why.
         else
         {
             // If failed because it was the last event in the whole chain to process, exit the loop.
             // You're done!
-            if (allEventsInChainProcessed())
+            if ( allEventsInChainProcessed() )
             {
-//                printProgressBar();
+                //                printProgressBar();
                 return false;
             }
             // If failed because it's last in the tree then load the next tree and the event
-            else if (allEventsInTreeProcessed())
+            else if ( allEventsInTreeProcessed() )
             {
                 // Load the next tree if it returns true, then proceed to next event in tree.
-                while (nextTree())
+                while ( nextTree() )
                 {
                     // If the next event in tree was successfully loaded return true, that it's good.
-                    if (nextEventInTree())
+                    if ( nextEventInTree() )
                         return true;
                     // If the first event in this tree was not good, continue to the next tree
                     else
                         continue;
                 }
+
                 // If looping over all trees, we fail to find first event that's good,
                 // return false and call it quits.
                 // Again you're done!
-//                printProgressBar();
+                //                printProgressBar();
                 return false;
             }
             else
             {
                 // Why are you even here?
                 // spit error and return false to avoid warnings
-                error("You should not be here! Please contact philip@physics.ucsd.edu", __FUNCTION__);
+                error( "You should not be here! Please contact philip@physics.ucsd.edu", __FUNCTION__ );
                 return false;
             }
         }
@@ -391,38 +416,41 @@ bool TasUtil::Looper<TREECLASS>::nextEvent()
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::setFileList()
+void RooUtil::Looper<TREECLASS>::setFileList()
 {
-    if (!fileIter)
+    if ( !fileIter )
     {
         listOfFiles = tchain->GetListOfFiles();
-        fileIter = new TObjArrayIter(listOfFiles);
+        fileIter = new TObjArrayIter( listOfFiles );
     }
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::setNEventsToProcess()
+void RooUtil::Looper<TREECLASS>::setNEventsToProcess()
 {
-    if (tchain)
+    if ( tchain )
     {
         nEventsTotalInChain = tchain->GetEntries();
-        if (nEventsToProcess < 0)
+
+        if ( nEventsToProcess < 0 )
             nEventsToProcess = nEventsTotalInChain;
-        if (nEventsToProcess > (int) nEventsTotalInChain)
+
+        if ( nEventsToProcess > ( int ) nEventsTotalInChain )
         {
             print( TString::Format(
                         "Asked to process %d events, but there aren't that many events",
                         nEventsToProcess ) );
             nEventsToProcess = nEventsTotalInChain;
         }
+
         print( TString::Format( "Total Events in this Chain to process = %d", nEventsToProcess ) );
     }
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::initProgressBar()
+void RooUtil::Looper<TREECLASS>::initProgressBar()
 {
     /// Init progress bar
     my_timer.Start();
@@ -431,29 +459,31 @@ void TasUtil::Looper<TREECLASS>::initProgressBar()
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::printProgressBar()
+void RooUtil::Looper<TREECLASS>::printProgressBar()
 {
     /// Print progress bar
 
     int entry = nEventsProcessed;
     int totalN = nEventsToProcess;
 
-    if (totalN < 20)
+    if ( totalN < 20 )
         totalN = 20;
 
     // Progress bar
-    if (entry > totalN)
+    if ( entry > totalN )
     {
-        printf("Why are you here?\n");
+//        printf( "Why are you here?\n" );
     }
-    else if (entry == totalN)
+    else if ( entry == totalN )
     {
         Double_t elapsed = my_timer.RealTime();
         Double_t rate;
-        if (elapsed!=0)
+
+        if ( elapsed != 0 )
             rate = entry / elapsed;
         else
             rate = -999;
+
         const int mins_in_hour = 60;
         const int secs_to_min = 60;
         Int_t input_seconds = elapsed;
@@ -461,72 +491,88 @@ void TasUtil::Looper<TREECLASS>::printProgressBar()
         Int_t minutes = input_seconds / secs_to_min % mins_in_hour;
         Int_t hours   = input_seconds / secs_to_min / mins_in_hour;
 
-        printf("\rTasUtil::");
-        printf("+");
-        printf("|====================");
+        printf( "\rRooUtil::" );
+        printf( "+" );
+        printf( "|====================" );
 
         //for ( int nb = 0; nb < 20; ++nb )
         //{
         //  printf("=");
         //}
 
-        printf("| %.1f %% (%d/%d) with  [avg. %d Hz]   Total Time: %.2d:%.2d:%.2d         \r", 100.0, entry, totalN, (int)rate, hours, minutes, seconds);
-        fflush(stdout);
-        printf("\n");
+        printf( "| %.1f %% (%d/%d) with  [avg. %d Hz]   Total Time: %.2d:%.2d:%.2d         \n", 100.0, entry, totalN,
+                ( int )rate, hours, minutes, seconds );
+        fflush( stdout );
     }
-    else if (entry%(5*((int)print_rate)) < 100)
+    else if ( entry % ( 5 * ( ( int )print_rate ) ) < 100 )
     {
 
         // sanity check
-        if (entry >= totalN+10) // +2 instead of +1 since, the loop might be a while loop where to check I got a bad event the index may go over 1.
+        if ( entry >= totalN +
+                10 ) // +2 instead of +1 since, the loop might be a while loop where to check I got a bad event the index may go over 1.
         {
-            TString msg = TString::Format("%d %d", entry, totalN);
-            TasUtil::print(msg, __FUNCTION__);
-            TasUtil::error("Total number of events processed went over max allowed! Check your loop boundary conditions!!", __FUNCTION__);
+            TString msg = TString::Format( "%d %d", entry, totalN );
+            RooUtil::print( msg, __FUNCTION__ );
+            RooUtil::error( "Total number of events processed went over max allowed! Check your loop boundary conditions!!",
+                    __FUNCTION__ );
         }
 
-        int nbars = entry/(totalN/20);
+        int nbars = entry / ( totalN / 20 );
         Double_t elapsed = my_timer.RealTime();
         Double_t rate;
-        if (elapsed!=0)
+
+        if ( elapsed != 0 )
             rate = entry / elapsed;
         else
             rate = -999;
-        Double_t percentage = entry / (totalN * 1.) * 100;
+
+        Double_t percentage = entry / ( totalN * 1. ) * 100;
         const int mins_in_hour = 60;
         const int secs_to_min = 60;
-        Int_t input_seconds = (totalN-entry)/rate;
+        Int_t input_seconds = ( totalN - entry ) / rate;
         Int_t seconds = input_seconds % secs_to_min;
         Int_t minutes = input_seconds / secs_to_min % mins_in_hour;
         Int_t hours   = input_seconds / secs_to_min / mins_in_hour;
 
-        print_rate = (int)(rate) + 1;
+        print_rate = ( int )( rate ) + 1;
 
-        printf("\rTasUtil:: ");
-        if (bar_id%4 == 3) printf("-");
-        if (bar_id%4 == 2) printf("/");
-        if (bar_id%4 == 1) printf("|");
-        if (bar_id%4 == 0) printf("\\");
-        printf("|");
+        printf( "RooUtil:: " );
+
+        if ( bar_id % 4 == 3 )
+            printf( "-" );
+
+        if ( bar_id % 4 == 2 )
+            printf( "/" );
+
+        if ( bar_id % 4 == 1 )
+            printf( "|" );
+
+        if ( bar_id % 4 == 0 )
+            printf( "\\" );
+
+        printf( "|" );
         bar_id ++;
 
-        for (int nb = 0; nb < 20; ++nb)
+        for ( int nb = 0; nb < 20; ++nb )
         {
-            if (nb < nbars) printf("=");
-            else printf(".");
+            if ( nb < nbars )
+                printf( "=" );
+            else
+                printf( "." );
         }
 
-        printf("| %.1f %% (%d/%d) with  [%d Hz]   ETA %.2d:%.2d:%.2d         ", percentage, entry+1, totalN, (int)rate, hours, minutes, seconds);
-        fflush(stdout);
+        printf( "| %.1f %% (%d/%d) with  [%d Hz]   ETA %.2d:%.2d:%.2d         \r", percentage, entry + 1, totalN, ( int )rate,
+                hours, minutes, seconds );
+        fflush( stdout );
 
     }
 
-    my_timer.Start(kFALSE);
+    my_timer.Start( kFALSE );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::setSkim(TString ofilename)
+void RooUtil::Looper<TREECLASS>::setSkim( TString ofilename )
 {
     skimfilename = ofilename;
     doskim = true;
@@ -534,39 +580,43 @@ void TasUtil::Looper<TREECLASS>::setSkim(TString ofilename)
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::createSkimTree()
+void RooUtil::Looper<TREECLASS>::createSkimTree()
 {
-    skimfile = new TFile(skimfilename, "recreate");
+    skimfile = new TFile( skimfilename, "recreate" );
     TObjArray* toa = ttree->GetListOfBranches();
-    if (skimbrfiltpttn.size() > 0 )
+
+    if ( skimbrfiltpttn.size() > 0 )
     {
         ttree->SetBranchStatus( "*", 0 );
-        for (auto& pttn : skimbrfiltpttn)
+
+        for ( auto& pttn : skimbrfiltpttn )
         {
-            for (const auto& brobj : *toa)
+            for ( const auto& brobj : *toa )
             {
                 TString brname = brobj->GetName();
-                if ( brname.Contains(pttn) )
+
+                if ( brname.Contains( pttn ) )
                 {
-//                    std::cout << brname << std::endl;
+                    //                    std::cout << brname << std::endl;
                     ttree->SetBranchStatus( brname + "*", 1 );
                 }
             }
         }
     }
-    skimtree = ttree->CloneTree(0);
+
+    skimtree = ttree->CloneTree( 0 );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::copyAddressesToSkimTree()
+void RooUtil::Looper<TREECLASS>::copyAddressesToSkimTree()
 {
-    ttree->CopyAddresses(skimtree);
+    ttree->CopyAddresses( skimtree );
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::fillSkim()
+void RooUtil::Looper<TREECLASS>::fillSkim()
 {
     treeclass->LoadAllBranches();
     skimtree->Fill();
@@ -575,22 +625,13 @@ void TasUtil::Looper<TREECLASS>::fillSkim()
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void TasUtil::Looper<TREECLASS>::saveSkim()
+void RooUtil::Looper<TREECLASS>::saveSkim()
 {
-    double frac_skimmed = (double) nEventsSkimmed / (double) nEventsProcessed * 100;
-    TasUtil::print(Form("Skimmed events %d out of %d. [%f%%]", nEventsSkimmed, nEventsProcessed, frac_skimmed));
+    double frac_skimmed = ( double ) nEventsSkimmed / ( double ) nEventsProcessed * 100;
+    RooUtil::print( Form( "Skimmed events %d out of %d. [%f%%]", nEventsSkimmed, nEventsProcessed, frac_skimmed ) );
     skimtree->GetCurrentFile()->cd();
     skimtree->Write();
-//    skimfile->Close();
-}
-
-//_________________________________________________________________________________________________
-template <class T>
-T* TasUtil::TTreeX::get(TString brname, int entry)
-{
-    if (entry >= 0)
-        GetEntry(entry);
-    return (T*) getValPtr(brname);
+    //    skimfile->Close();
 }
 
 #endif

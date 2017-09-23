@@ -1,6 +1,9 @@
 //  .
 // ..: P. Chang, philip@physics.ucsd.edu
 
+#ifndef plotmaker_cc
+#define plotmaker_cc
+
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TH1.h"
@@ -1654,3 +1657,5 @@ std::vector<TH1*> plotmaker(
 //        return bininfo;
 //    }
 //}
+
+#endif

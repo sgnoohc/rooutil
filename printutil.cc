@@ -36,20 +36,21 @@
 #include "TLorentzVector.h"
 #include "Math/LorentzVector.h"
 
-namespace TasUtil
+namespace RooUtil
 {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Printing functions
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // No namespace given in order to minimize typing
-    // (e.g. TasUtil::print v. TasUtil::NAMESPACE::print)
-    void print   (TString msg="", const char* fname="", int flush_before=0, int flush_after=0);
-    void error   (TString msg, const char* fname="", int is_error=1);
-    void warning (TString msg, const char* fname="");
-    void announce(TString msg="", int quiet=0);
-    void start   (int quiet=0, int sleep_time=0);
-    void end     (int quiet=0);
+    // (e.g. RooUtil::print v. RooUtil::NAMESPACE::print)
+    void clearline(int numchar=100);
+    void print    (TString msg="", const char* fname="", int flush_before=0, int flush_after=0);
+    void error    (TString msg, const char* fname="", int is_error=1);
+    void warning  (TString msg, const char* fname="");
+    void announce (TString msg="", int quiet=0);
+    void start    (int quiet=0, int sleep_time=0);
+    void end      (int quiet=0);
 
 }
 
@@ -62,25 +63,35 @@ namespace TasUtil
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //_________________________________________________________________________________________________
-void TasUtil::print(TString msg, const char* fname, int flush_before, int flush_after)
+void RooUtil::clearline(int numchar)
+{
+    printf("\r");
+    for (int i=0;i<numchar;++i)
+        printf(" ");
+    printf("\r");
+}
+
+//_________________________________________________________________________________________________
+void RooUtil::print(TString msg, const char* fname, int flush_before, int flush_after)
 {
     /// printf replacement
+    clearline();
     if (flush_before) printf("\n");
-    if (strlen(fname) == 0) printf("TasUtil:: %s\n", msg.Data());
-    else printf("TasUtil:: [in func %s()] %s\n", fname, msg.Data());
+    if (strlen(fname) == 0) printf("RooUtil:: %s\n", msg.Data());
+    else printf("RooUtil:: [in func %s()] %s\n", fname, msg.Data());
     if (flush_after) printf("\n");
     fflush(stdout);
 }
 
 //_________________________________________________________________________________________________
-void TasUtil::warning(TString msg, const char* fname)
+void RooUtil::warning(TString msg, const char* fname)
 {
     /// warning message. Does not exit the program.
     print("WARNING - "+msg+".\n", fname);
 }
 
 //_________________________________________________________________________________________________
-void TasUtil::error(TString msg, const char* fname, int is_error)
+void RooUtil::error(TString msg, const char* fname, int is_error)
 {
     /// Error & exit
     if (!is_error)
@@ -91,7 +102,7 @@ void TasUtil::error(TString msg, const char* fname, int is_error)
 }
 
 //_________________________________________________________________________________________________
-void TasUtil::start(int q, int sleep_time)
+void RooUtil::start(int q, int sleep_time)
 {
     /// Fun start (from TM Hong's BaBar days)
     if (q)
@@ -117,7 +128,7 @@ void TasUtil::start(int q, int sleep_time)
 }
 
 //_________________________________________________________________________________________________
-void TasUtil::announce(TString msg, Int_t q)
+void RooUtil::announce(TString msg, Int_t q)
 {
     /// Fun message presented by the moose
     if (q)
@@ -166,7 +177,7 @@ void TasUtil::announce(TString msg, Int_t q)
 }
 
 //_________________________________________________________________________________________________
-void TasUtil::end(int q)
+void RooUtil::end(int q)
 {
     /// Fun exit (from TM Hong's BaBar days)
     if (q)
