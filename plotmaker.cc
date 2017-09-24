@@ -45,6 +45,67 @@ using namespace std;
 typedef std::pair<TH1*, TH1*> Hist;
 typedef std::vector<Hist> Hists;
 
+// ========================
+// Additional color options
+// ========================
+std::vector<TColor*> colors;
+colors.push_back( new TColor(11005, 103 / 255., 0   / 255., 31  / 255.);
+colors.push_back( new TColor(11004, 178 / 255., 24  / 255., 43  / 255.);
+colors.push_back( new TColor(11003, 214 / 255., 96  / 255., 77  / 255.);
+colors.push_back( new TColor(11002, 244 / 255., 165 / 255., 130 / 255.);
+colors.push_back( new TColor(11001, 253 / 255., 219 / 255., 199 / 255.);
+colors.push_back( new TColor(11000, 247 / 255., 247 / 255., 247 / 255.);
+colors.push_back( new TColor(11011, 209 / 255., 229 / 255., 240 / 255.);
+colors.push_back( new TColor(11012, 146 / 255., 197 / 255., 222 / 255.);
+colors.push_back( new TColor(11013, 67  / 255., 147 / 255., 195 / 255.);
+colors.push_back( new TColor(11014, 33  / 255., 102 / 255., 172 / 255.);
+colors.push_back( new TColor(11015, 5   / 255., 48  / 255., 97  / 255.);
+
+colors.push_back( new TColor(3001, 239 / 255., 138 / 255., 98  / 255.);
+colors.push_back( new TColor(3000, 247 / 255., 247 / 255., 247 / 255.);
+colors.push_back( new TColor(3011, 103 / 255., 169 / 255., 207 / 255.);
+
+colors.push_back( new TColor(5001, 251 / 255., 180 / 255., 174 / 255.);
+colors.push_back( new TColor(5002, 179 / 255., 205 / 255., 227 / 255.);
+colors.push_back( new TColor(5003, 204 / 255., 235 / 255., 197 / 255.);
+colors.push_back( new TColor(5004, 222 / 255., 203 / 255., 228 / 255.);
+colors.push_back( new TColor(5005, 254 / 255., 217 / 255., 166 / 255.);
+
+colors.push_back( new TColor(7000, 0   / 255., 0   / 255., 0   / 255.);
+colors.push_back( new TColor(7001, 213 / 255., 94  / 255., 0   / 255.); // r
+colors.push_back( new TColor(7002, 230 / 255., 159 / 255., 0   / 255.); // o
+colors.push_back( new TColor(7003, 240 / 255., 228 / 255., 66  / 255.); // y
+colors.push_back( new TColor(7004, 0   / 255., 158 / 255., 115 / 255.); // g
+colors.push_back( new TColor(7005, 0   / 255., 114 / 255., 178 / 255.); // b
+colors.push_back( new TColor(7006, 86  / 255., 180 / 255., 233 / 255.); // k
+colors.push_back( new TColor(7007, 204 / 255., 121 / 255., 167 / 255.); // p
+colors.push_back( new TColor(7011, 110 / 255., 54  / 255., 0   / 255.); // alt r
+colors.push_back( new TColor(7012, 161 / 255., 117 / 255., 0   / 255.); // alt o
+colors.push_back( new TColor(7013, 163 / 255., 155 / 255., 47  / 255.); // alt y
+colors.push_back( new TColor(7014, 0   / 255., 102 / 255., 79  / 255.); // alt g
+colors.push_back( new TColor(7015, 0   / 255., 93  / 255., 135 / 255.); // alt b
+colors.push_back( new TColor(7016, 153 / 255., 153 / 255., 153 / 255.); // alt k
+colors.push_back( new TColor(7017, 140 / 255., 93  / 255., 119 / 255.); // alt p
+
+colors.push_back( new TColor(9001, 60  / 255., 186 / 255., 84  / 255.);
+colors.push_back( new TColor(9002, 244 / 255., 194 / 255., 13  / 255.);
+colors.push_back( new TColor(9003, 219 / 255., 50  / 255., 54  / 255.);
+colors.push_back( new TColor(9004, 72  / 255., 133 / 255., 237 / 255.);
+
+// Color schemes from Hannsjoerg for WWW analysis
+colors.push_back( new TColor(2001, 91  / 255., 187 / 255., 241 / 255.); //light-blue
+colors.push_back( new TColor(2002, 60  / 255., 144 / 255., 196 / 255.); //blue
+colors.push_back( new TColor(2003, 230 / 255., 159 / 255., 0   / 255.); //orange
+colors.push_back( new TColor(2004, 180 / 255., 117 / 255., 0   / 255.); //brown
+colors.push_back( new TColor(2005, 245 / 255., 236 / 255., 69  / 255.); //yellow
+colors.push_back( new TColor(2006, 215 / 255., 200 / 255., 0   / 255.); //dark yellow
+colors.push_back( new TColor(2007, 70  / 255., 109 / 255., 171 / 255.); //blue-violet
+colors.push_back( new TColor(2008, 70  / 255., 90  / 255., 134 / 255.); //violet
+colors.push_back( new TColor(2009, 55  / 255., 65  / 255., 100 / 255.); //dark violet
+colors.push_back( new TColor(2010, 120 / 255., 160 / 255., 0   / 255.); //light green
+colors.push_back( new TColor(2011, 0   / 255., 158 / 255., 115 / 255.); //green
+colors.push_back( new TColor(2012, 204 / 255., 121 / 255., 167 / 255.); //pink?
+
 // =============
 // global option
 // =============
