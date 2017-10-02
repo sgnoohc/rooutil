@@ -264,11 +264,11 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
         else if ( doskim )
             copyAddressesToSkimTree();
 
-        // TTreePerfStats
-        if ( ps )
-            ps->SaveAs( "perf.root" );
-
-        ps = new TTreePerfStats( "ioperf", ttree );
+//        // TTreePerfStats
+//        if ( ps )
+//            ps->SaveAs( "perf.root" );
+//
+//        ps = new TTreePerfStats( "ioperf", ttree );
         // Return that I got a good one
         return true;
     }
@@ -295,7 +295,7 @@ bool RooUtil::Looper<TREECLASS>::allEventsInTreeProcessed()
 template <class TREECLASS>
 bool RooUtil::Looper<TREECLASS>::allEventsInChainProcessed()
 {
-    if ( nEventsProcessed > ( unsigned int ) nEventsToProcess )
+    if ( nEventsProcessed >= ( unsigned int ) nEventsToProcess )
         return true;
     else
         return false;
