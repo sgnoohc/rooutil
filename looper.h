@@ -76,6 +76,7 @@ namespace RooUtil
         TTree* skimtree;
         unsigned int nEventsSkimmed;
         std::vector<TString> skimbrfiltpttn;
+        bool silent;
         public:
         // Functions
         Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
@@ -83,6 +84,7 @@ namespace RooUtil
         void setTChain( TChain* c );
         void setTreeClass( TREECLASS* t );
         void printCurrentEventIndex();
+        void setSilent(bool s=true) { silent = s; }
         bool allEventsInTreeProcessed();
         bool allEventsInChainProcessed();
         bool nextEvent();
@@ -140,7 +142,8 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     skimfilename( "" ),
     skimfile( 0 ),
     skimtree( 0 ),
-    nEventsSkimmed( 0 )
+    nEventsSkimmed( 0 ),
+    silent( false )
 {
     initProgressBar();
     print( "Start EventLooping" );
@@ -461,6 +464,10 @@ void RooUtil::Looper<TREECLASS>::initProgressBar()
 template <class TREECLASS>
 void RooUtil::Looper<TREECLASS>::printProgressBar()
 {
+
+    if (silent)
+        return;
+
     /// Print progress bar
 
     int entry = nEventsProcessed;
@@ -595,10 +602,23 @@ void RooUtil::Looper<TREECLASS>::createSkimTree()
             {
                 TString brname = brobj->GetName();
 
-                if ( brname.Contains( pttn ) )
+                if ( pttn.Contains( "*" ) )
                 {
-                    //                    std::cout << brname << std::endl;
-                    ttree->SetBranchStatus( brname + "*", 1 );
+                    TString modpttn = pttn;
+                    modpttn.ReplaceAll( "*", "");
+                    if ( brname.Contains( modpttn ) )
+                    {
+                        // std::cout << brname << std::endl;
+                        ttree->SetBranchStatus( brname + "*", 1 );
+                    }
+                }
+                else
+                {
+                    if ( brname.EqualTo( pttn ) )
+                    {
+                        // std::cout << brname << std::endl;
+                        ttree->SetBranchStatus( brname + "*", 1 );
+                    }
                 }
             }
         }

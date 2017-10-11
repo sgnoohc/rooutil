@@ -16,6 +16,7 @@
 #include "TCollection.h"
 #include "TString.h"
 #include "TLatex.h"
+#include "TMath.h"
 #include "TObjString.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
@@ -199,6 +200,19 @@ inline std::vector <TString> GetParms( std::string blah )
 }
 
 //_________________________________________________________________________________________________
+double getNonZeroMininimum(TH1* h)
+{
+    float nonzeromin = -999;
+    for (Int_t ibin = 1; ibin <= h->GetNbinsX(); ++ibin)
+    {
+        float binc = h->GetBinContent(ibin);
+        if ( (binc < nonzeromin && binc > 0) || ( nonzeromin == -999 ) )
+            nonzeromin = binc;
+    }
+    return nonzeromin;
+}
+
+//_________________________________________________________________________________________________
 TString getDefaultOpt(TString key, TString default_val)
 {
     return options[key].IsNull() ? default_val : options[key];
@@ -248,6 +262,8 @@ TString getOpt( TString key )
 
     else if ( key.EqualTo( "Minimum"                   )  ) return getDefaultOpt( key, ""                 ) ;
     else if ( key.EqualTo( "Maximum"                   )  ) return getDefaultOpt( key, ""                 ) ;
+    else if ( key.EqualTo( "MinimumLogy"               )  ) return getDefaultOpt( key, ""                 ) ;
+    else if ( key.EqualTo( "MaximumLogy"               )  ) return getDefaultOpt( key, ""                 ) ;
 
     else if ( key.EqualTo( "error_FillColor"           )  ) return getDefaultOpt( key, "1"                ) ;
     else if ( key.EqualTo( "error_FillStyle"           )  ) return getDefaultOpt( key, "3245"             ) ;
@@ -514,8 +530,8 @@ TH1* getSystByMaxDiff( TH1* nominal, std::vector<TH1*> systs, double normfracsys
             }
         }
     }
-    return diff;
-//    return totalsyst;
+//    return diff;
+    return totalsyst;
 }
 
 //_________________________________________________________________________________________________
@@ -1186,20 +1202,30 @@ void setMaximum(
         std::vector<TH1*> bkg_hists,
         std::vector<TH1*> sig_hists )
 {
-    float max = 0;
-//    float maxerr = 0;
+    // Create allhists vector
+    std::vector<TH1*> allhists = bkg_hists;
     if ( getOpt( "noData" ).IsNull() )
-    for ( auto& hist : data_hists )
-        if ( max < ( hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() ) ) )
-            max = hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() );
+        allhists.insert( allhists.end(), data_hists.begin(), data_hists.end() );
+    allhists.insert( allhists.end(), sig_hists.begin(), sig_hists.end() );
     TH1* totalhist = getTotalBkgHists( bkg_hists );
-    if ( max < ( totalhist->GetMaximum() + totalhist->GetBinError( totalhist->GetMaximumBin() ) ) )
-        max = totalhist->GetMaximum() + totalhist->GetBinError( totalhist->GetMaximumBin() );
-    for ( auto& hist : sig_hists )
+    allhists.push_back( totalhist );
+    // Compute max
+    float max = 0;
+    for ( auto& hist : allhists )
         if ( max < ( hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() ) ) )
             max = hist->GetMaximum() + hist->GetBinError( hist->GetMaximumBin() );
     float setmax = 1.8 * max;
-    options["Maximum"] = TString::Format( "%f", setmax );
+    if ( getOpt( "Maximum" ).IsNull() ) options["Maximum"] = TString::Format( "%f", setmax );
+    // Max of smallest histogram
+    auto min_hist = *(std::min_element(allhists.begin(), allhists.end(), [](TH1* h1, TH1* h2) { return h1->Integral() < h2->Integral(); }));
+    float maxofmin = min_hist->GetMaximum();
+    if (maxofmin < 0)
+        std::cout << min_hist->GetName() << std::endl;
+    if (bkg_hists.size() == 1)
+        maxofmin = getNonZeroMininimum(bkg_hists[0]);
+    options["MinimumLogy"] = TString::Format( "%f", maxofmin * 0.5 );
+    options["MaximumLogy"] = TString::Format( "%f", pow(10, 1.8*(TMath::Log10( max ) - TMath::Log10( maxofmin * 0.5 )) + TMath::Log10( maxofmin * 0.5 )) );
+    std::cout << " " << options["MinimumLogy"] << " " << options["MaximumLogy"] << std::endl;
     if ( setmax < 100 )
         options["yTitleOffset"] = "1.4";
     else if ( setmax < 1000 )
@@ -1408,6 +1434,7 @@ std::vector<TH1*> plotmaker(
     // ~-~-~-~-~-~-~-~
     // Draw background
     // ~-~-~-~-~-~-~-~
+    THStack* stack = 0;
     if ( bkg_hists.size() )
     {
 
@@ -1428,7 +1455,7 @@ std::vector<TH1*> plotmaker(
         // ~-~-~-~-~-~-~-~-~-
         // Main bkg stack plot
         // ~-~-~-~-~-~-~-~-~-
-        THStack* stack = getStack( bkg_hists );
+        stack = getStack( bkg_hists );
         draw( stack, getOpt( "stack_DrawOpt" ), pad0 );
         
         // ~-~-~-~-~-~-~-~-~-
@@ -1509,24 +1536,28 @@ std::vector<TH1*> plotmaker(
     {
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_liny.png", data_hists, bkg_hists, sig_hists, ratio_hists );
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_liny.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
-//        save( canvas, getOpt( "plotOutputName" ) + "_ratio_liny.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
     }
     else if ( !getOpt( "onlyLog" ).IsNull() )
     {
+        stack->SetMaximum( getOpt( "MaximumLogy" ).Atof() );
+        stack->SetMinimum( getOpt( "MinimumLogy" ).Atof() );
         pad0->SetLogy();
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_logy.png", data_hists, bkg_hists, sig_hists, ratio_hists );
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_logy.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
-//        save( canvas, getOpt( "plotOutputName" ) + "_ratio_logy.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
+        stack->SetMaximum( getOpt( "Maximum" ).Atof() );
+        stack->SetMinimum( 0 );
     }
     else
     {
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_liny.png", data_hists, bkg_hists, sig_hists, ratio_hists );
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_liny.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
-//        save( canvas, getOpt( "plotOutputName" ) + "_ratio_liny.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
+        stack->SetMaximum( getOpt( "MaximumLogy" ).Atof() );
+        stack->SetMinimum( getOpt( "MinimumLogy" ).Atof() );
         pad0->SetLogy();
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_logy.png", data_hists, bkg_hists, sig_hists, ratio_hists );
         save( canvas, getOpt( "plotOutputName" ) + "_ratio_logy.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
-//        save( canvas, getOpt( "plotOutputName" ) + "_ratio_logy.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
+        stack->SetMaximum( getOpt( "Maximum" ).Atof() );
+        stack->SetMinimum( 0 );
     }
 
     // ~-~-~-~-~-~-~-~-~-
@@ -1539,25 +1570,29 @@ std::vector<TH1*> plotmaker(
             pad0->SetLogy(0);
             save( pad0, getOpt( "plotOutputName" ) + "_main_liny.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
             save( pad0, getOpt( "plotOutputName" ) + "_main_liny.png", data_hists, bkg_hists, sig_hists, ratio_hists );
-//            save( pad0, getOpt( "plotOutputName" ) + "_main_liny.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
         }
         else if ( !getOpt( "onlyLog" ).IsNull() )
         {
+            stack->SetMaximum( getOpt( "MaximumLogy" ).Atof() );
+            stack->SetMinimum( getOpt( "MinimumLogy" ).Atof() );
             pad0->SetLogy(1);
             save( pad0, getOpt( "plotOutputName" ) + "_main_logy.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
             save( pad0, getOpt( "plotOutputName" ) + "_main_logy.png", data_hists, bkg_hists, sig_hists, ratio_hists );
-//            save( pad0, getOpt( "plotOutputName" ) + "_main_logy.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
+            stack->SetMaximum( getOpt( "Maximum" ).Atof() );
+            stack->SetMinimum( 0 );
         }
         else
         {
             pad0->SetLogy(0);
             save( pad0, getOpt( "plotOutputName" ) + "_main_liny.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
             save( pad0, getOpt( "plotOutputName" ) + "_main_liny.png", data_hists, bkg_hists, sig_hists, ratio_hists );
-//            save( pad0, getOpt( "plotOutputName" ) + "_main_liny.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
+            stack->SetMaximum( getOpt( "MaximumLogy" ).Atof() );
+            stack->SetMinimum( getOpt( "MinimumLogy" ).Atof() );
             pad0->SetLogy(1);
             save( pad0, getOpt( "plotOutputName" ) + "_main_logy.pdf", data_hists, bkg_hists, sig_hists, ratio_hists );
             save( pad0, getOpt( "plotOutputName" ) + "_main_logy.png", data_hists, bkg_hists, sig_hists, ratio_hists );
-//            save( pad0, getOpt( "plotOutputName" ) + "_main_logy.C"  , data_hists, bkg_hists, sig_hists, ratio_hists );
+            stack->SetMaximum( getOpt( "Maximum" ).Atof() );
+            stack->SetMinimum( 0 );
         }
     }
 
