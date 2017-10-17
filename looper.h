@@ -606,7 +606,7 @@ void RooUtil::Looper<TREECLASS>::createSkimTree()
                 {
                     TString modpttn = pttn;
                     modpttn.ReplaceAll( "*", "");
-                    if ( brname.Contains( modpttn ) )
+                    if ( brname.Contains( modpttn ) && brname.BeginsWith( modpttn ) )
                     {
                         // std::cout << brname << std::endl;
                         ttree->SetBranchStatus( brname + "*", 1 );
@@ -617,7 +617,7 @@ void RooUtil::Looper<TREECLASS>::createSkimTree()
                     if ( brname.EqualTo( pttn ) )
                     {
                         // std::cout << brname << std::endl;
-                        ttree->SetBranchStatus( brname + "*", 1 );
+                        ttree->SetBranchStatus( brname, 1 );
                     }
                 }
             }
