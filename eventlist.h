@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <functional>
 #include <cmath>
+#include <sstream>
 
 // ROOT
 #include "TBenchmark.h"

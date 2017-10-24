@@ -103,7 +103,7 @@ namespace RooUtil
         bool nextTree();
         bool nextEventInTree();
         void initProgressBar();
-        void printProgressBar();
+        void printProgressBar(bool force=false);
         void createSkimTree();
         void copyAddressesToSkimTree();
     };
@@ -134,7 +134,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nEventsToProcess( nevtToProc ),
     nEventsProcessed( 0 ),
     indexOfEventInTTree( 0 ),
-    fastmode( false ),
+    fastmode( true ),
     treeclass( 0 ),
     bar_id( 0 ),
     print_rate( 432 ),
@@ -249,10 +249,11 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
             ttree->SetCacheSize( 128 * 1024 * 1024 );
 
         // Print some info to stdout
-        announce( "Working on " +
+        print( "Working on " +
                 TString( tfile->GetName() ) +
                 "/TTree:" +
                 TString( ttree->GetName() ) );
+        printProgressBar(true);
         // Reset the nEventsTotalInTree in this tree
         nEventsTotalInTree = ttree->GetEntries();
         // Reset the event index as we got a new ttree
@@ -462,7 +463,7 @@ void RooUtil::Looper<TREECLASS>::initProgressBar()
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
-void RooUtil::Looper<TREECLASS>::printProgressBar()
+void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
 {
 
     if (silent)
@@ -511,7 +512,7 @@ void RooUtil::Looper<TREECLASS>::printProgressBar()
                 ( int )rate, hours, minutes, seconds );
         fflush( stdout );
     }
-    else if ( entry % ( 5 * ( ( int )print_rate ) ) < 100 )
+    else if ( entry % ( 5 * ( ( int )print_rate ) ) < 100 || force )
     {
 
         // sanity check
