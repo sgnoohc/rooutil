@@ -512,7 +512,8 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
                 ( int )rate, hours, minutes, seconds );
         fflush( stdout );
     }
-    else if ( entry % ( 5 * ( ( int )print_rate ) ) < 100 || force )
+    //else if ( entry % ( ( ( int ) print_rate ) ) < (0.3) * print_rate || force )
+    else if ( entry % ( ( ( int ) print_rate ) ) == 0 || force )
     {
 
         // sanity check
@@ -542,7 +543,7 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
         Int_t minutes = input_seconds / secs_to_min % mins_in_hour;
         Int_t hours   = input_seconds / secs_to_min / mins_in_hour;
 
-        print_rate = ( int )( rate ) + 1;
+        print_rate = ( int )( rate / 5 ) + 1;
 
         printf( "RooUtil:: " );
 
