@@ -97,6 +97,7 @@ namespace RooUtil
         TTree* getSkimTree() { return skimtree; }
         void setSkimMaxSize( Long64_t maxsize ) { skimtree->SetMaxTreeSize( maxsize ); }
         TTreePerfStats* getTTreePerfStats() { return ps; }
+        unsigned int getCurrentEventIndex() { return indexOfEventInTTree - 1; }
         private:
         void setFileList();
         void setNEventsToProcess();
