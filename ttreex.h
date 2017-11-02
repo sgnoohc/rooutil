@@ -104,6 +104,7 @@ namespace RooUtil
         void* getValPtr(TString brname);
         template <class T>
         T* get(TString brname, int entry=-1);
+        void fill() { ttree->Fill(); }
 
         template <class T>
         void createBranch(TString);
