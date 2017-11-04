@@ -16,6 +16,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <glob.h>
 
 // ROOT
 #include "TString.h"
@@ -36,6 +37,7 @@ namespace RooUtil
         vecTString split      (TString in,    TString separator=" "                                       );
         TString    join       (vecTString in, TString joiner=":",                        Int_t rm_blanks=1);
         TString    sjoin      (TString in,    TString separator=" ", TString joiner=":", Int_t rm_blanks=1);
+        vecTString glob       (TString patt);
     }
 }
 
@@ -123,6 +125,20 @@ RooUtil::StringUtil::vecTString RooUtil::StringUtil::filter(RooUtil::StringUtil:
         newvec.push_back(vec[i]);
     }
     return newvec;
+}
+
+//#############################################################################
+RooUtil::StringUtil::vecTString RooUtil::StringUtil::glob(TString patt)
+{
+    glob_t glob_result;
+    glob(patt.Data(), GLOB_TILDE, NULL, &glob_result);
+    std::vector<TString> ret;
+    for (unsigned int i = 0; i < glob_result.gl_pathc; ++i)
+    {
+        ret.push_back(glob_result.gl_pathv[i]);
+    }
+    globfree(&glob_result);
+    return ret;
 }
 
 #endif
