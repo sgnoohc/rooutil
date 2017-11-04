@@ -167,7 +167,6 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
 template <class TREECLASS>
 RooUtil::Looper<TREECLASS>::~Looper()
 {
-    print( "Finished EventLooping" );
     end();
 
     if ( fileIter )
