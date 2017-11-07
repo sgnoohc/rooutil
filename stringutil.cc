@@ -89,3 +89,15 @@ RooUtil::StringUtil::vecTString RooUtil::StringUtil::filter(RooUtil::StringUtil:
     return newvec;
 }
 
+//#############################################################################
+RooUtil::StringUtil::vecVecTString RooUtil::StringUtil::chunk(RooUtil::StringUtil::vecTString vec, Int_t nchunk)
+{
+    int bunch_size = vec.size() / nchunk + (vec.size() % nchunk > 0);
+    vecVecTString bunches;
+    for (size_t i = 0; i < vec.size(); i += bunch_size)
+    {
+        auto last = std::min(vec.size(), i + bunch_size);
+        bunches.emplace_back(vec.begin() + i, vec.begin() + last);
+    }
+    return bunches;
+}

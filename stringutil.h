@@ -27,15 +27,17 @@ namespace RooUtil
     namespace StringUtil
     {
         typedef std::vector<TString> vecTString;
+        typedef std::vector<vecTString> vecVecTString;
         // --------------------------------------------------------------------------
         // MvaStringUtils.cxx : python-like string manipulations
         vecTString  filter(vecTString &vec, TString keyword);
 
         // -- Python-like functions
-        void       rstrip     (TString &in,   TString separator="#"                                       );
-        vecTString split      (TString in,    TString separator=" "                                       );
-        TString    join       (vecTString in, TString joiner=":",                        Int_t rm_blanks=1);
-        TString    sjoin      (TString in,    TString separator=" ", TString joiner=":", Int_t rm_blanks=1);
+        void          rstrip(TString &in,   TString separator="#"                                       );
+        vecTString    split (TString in,    TString separator=" "                                       );
+        TString       join  (vecTString in, TString joiner=":",                        Int_t rm_blanks=1);
+        TString       sjoin (TString in,    TString separator=" ", TString joiner=":", Int_t rm_blanks=1);
+        vecVecTString chunk (vecTString in, Int_t   nchunk                                              );
     }
 }
 
