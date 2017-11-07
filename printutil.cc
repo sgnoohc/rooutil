@@ -62,7 +62,7 @@ void RooUtil::start(int q, int sleep_time)
     print(" \\ \\\\ (oo) (oo)  Here we come!");
     print("  \\_\\\\/~~\\_/~~\\_");
     print(" _.-~===========~-._");
-    print("(___________________)");
+    print("(____Surf_&_Turf____)");
     print("      \\_______/");
     print();
     print("System info:");
@@ -133,9 +133,9 @@ void RooUtil::end(int q)
         return;
     print();
     print("   \\__/    \\__/");
-    print("   (oo)    (oo)");
+    print(" S (oo)    (oo)");
     print("(\\//~~\\\\  //~~\\\\");
-    print(" \\/\\__//  \\\\__//\\");
+    print(" \\/\\__//  \\\\__//\\T");
     print("   ||||    ||\\\\ Who cares!");
     print("__ |||| __ |||| ___");
     print("  (_)(_)  (_)(_)");
