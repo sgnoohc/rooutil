@@ -249,7 +249,7 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
             ttree->SetCacheSize( 128 * 1024 * 1024 );
 
         // Print some info to stdout
-        print( "Working on " +
+        print( "Looping " +
                 TString( tfile->GetName() ) +
                 "/TTree:" +
                 TString( ttree->GetName() ) );
