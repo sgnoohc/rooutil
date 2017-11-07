@@ -56,6 +56,12 @@ void RooUtil::start(int q, int sleep_time)
     /// Fun start (from TM Hong's BaBar days)
     if (q)
         return;
+    print("System info:");
+    gSystem->Exec("hostname");
+    gSystem->Exec("uname -a");
+    gSystem->Exec("date");
+    gSystem->Exec("whoami");
+    gSystem->Exec("pwd");
     print(" _");
     print("/\\\\");
     print("\\ \\\\  \\__/ \\__/");
@@ -68,12 +74,6 @@ void RooUtil::start(int q, int sleep_time)
     print(" Your friendly aliens");
     print("     Surf & Turf");
     print();
-    print("System info:");
-    gSystem->Exec("hostname");
-    gSystem->Exec("uname -a");
-    gSystem->Exec("date");
-    gSystem->Exec("whoami");
-    gSystem->Exec("pwd");
     fflush(stdout);
     if (sleep_time>0)
         sleep(sleep_time);
