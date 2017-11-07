@@ -62,8 +62,11 @@ void RooUtil::start(int q, int sleep_time)
     print(" \\ \\\\ (oo) (oo)  Here we come!");
     print("  \\_\\\\/~~\\_/~~\\_");
     print(" _.-~===========~-._");
-    print("(____Surf_&_Turf____)");
+    print("(___________________)");
     print("      \\_______/");
+    print("");
+    print(" Your friendly aliens");
+    print("     Surf & Turf");
     print();
     print("System info:");
     gSystem->Exec("hostname");
