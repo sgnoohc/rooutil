@@ -105,6 +105,7 @@ namespace RooUtil
         template <class T>
         T* get(TString brname, int entry=-1);
         void fill() { ttree->Fill(); }
+        void write() { ttree->Write(); }
 
         template <class T>
         void createBranch(TString);
