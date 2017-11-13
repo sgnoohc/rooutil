@@ -55,6 +55,7 @@ namespace RooUtil
     {
         // Members
         TChain* tchain;
+        TBenchmark* bmark;
         TObjArray *listOfFiles;
         TObjArrayIter* fileIter;
         TFile* tfile;
@@ -98,6 +99,7 @@ namespace RooUtil
         void setSkimMaxSize( Long64_t maxsize ) { skimtree->SetMaxTreeSize( maxsize ); }
         TTreePerfStats* getTTreePerfStats() { return ps; }
         unsigned int getCurrentEventIndex() { return indexOfEventInTTree - 1; }
+        TFile* getCurrentFile() { return tfile; }
         private:
         void setFileList();
         void setNEventsToProcess();
@@ -161,6 +163,9 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
 
     c->GetEntry( 0 );
     t->Init( c->GetTree() );
+
+    bmark = new TBenchmark();
+    bmark->Start("benchmark");
 }
 
 //_________________________________________________________________________________________________
@@ -168,6 +173,16 @@ template <class TREECLASS>
 RooUtil::Looper<TREECLASS>::~Looper()
 {
     end();
+     
+    // return
+    using namespace std;
+    bmark->Stop("benchmark");
+    cout << endl;
+    cout << "------------------------------" << endl;
+    cout << "CPU  Time:	" << Form( "%.01f", bmark->GetCpuTime("benchmark")  ) << endl;
+    cout << "Real Time:	" << Form( "%.01f", bmark->GetRealTime("benchmark") ) << endl;
+    cout << endl;
+    delete bmark;
 
     if ( fileIter )
         delete fileIter;
