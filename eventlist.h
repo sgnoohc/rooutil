@@ -38,6 +38,9 @@
 #include "TLorentzVector.h"
 #include "Math/LorentzVector.h"
 
+#include "stringutil.h"
+#include "printutil.h"
+
 //#define MAP std::unordered_map
 //#define STRING std::string
 #define MAP std::map
@@ -55,9 +58,9 @@ namespace RooUtil
     {
         public:
             std::vector<std::vector<int>> event_list;
-            EventList( TString filename );
+            EventList( TString filename, TString delim=":" );
             ~EventList();
-            void load( TString );
+            void load( TString, TString );
             bool has( int, int, int );
     };
 
