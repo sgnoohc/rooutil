@@ -58,9 +58,10 @@ namespace RooUtil
     {
         public:
             std::vector<std::vector<int>> event_list;
+            EventList();
             EventList( TString filename, TString delim=":" );
             ~EventList();
-            void load( TString, TString );
+            void load( TString, TString=":" );
             bool has( int, int, int );
     };
 
