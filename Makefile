@@ -11,7 +11,7 @@ LIB=rooutil.so
 # how to make it 
 #
 
-$(LIB): $(OBJECTS) 
+$(LIB): $(OBJECTS)
 	$(LD) $(LDFLAGS) $(SOFLAGS) $(OBJECTS) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
 
 %.o:	%.cc
