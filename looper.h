@@ -82,6 +82,7 @@ namespace RooUtil
         // Functions
         Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
         ~Looper();
+        void init(TChain* chain, TREECLASS* treeclass, int nEventsToProcess);
         void setTChain( TChain* c );
         void setTreeClass( TREECLASS* t );
         void printCurrentEventIndex();
@@ -149,6 +150,14 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     skimtree( 0 ),
     nEventsSkimmed( 0 ),
     silent( false )
+{
+    if ( c && t )
+        init( c, t, nevtToProc );
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
 {
     initProgressBar();
     print( "Start EventLooping" );
