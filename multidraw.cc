@@ -361,7 +361,7 @@ bool TMultiDrawTreePlayer::execute() {
 
         // if (entryNumber % 10000 == 0) std::cout << entryNumber << std::endl;
 
-        if(entryNumber%period == 0) {
+        if(period > 0 && entryNumber%period == 0) {
             auto now = std::chrono::system_clock::now();
             double dt = ((std::chrono::duration<double>)(now - t_old)).count();
             t_old = now;
