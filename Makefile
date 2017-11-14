@@ -11,19 +11,18 @@ LIB=rooutil.so
 # how to make it 
 #
 
-$(LIB): $(OBJECTS)
-	$(LD) $(LDFLAGS) $(SOFLAGS) $(OBJECTS) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
+$(LIB): dictionary.cc
+	$(LD) $(CXXFLAGS) $(LDFLAGS) -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $(SOURCES) $^ $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
 
-%.o:	%.cc
-	$(CXX) -Wunused-variable -ITMultiDrawTreePlayer $(CXXFLAGS) -c $< -o $@
-
-#
-# target to build
-# likelihood id library
-#
+dictionary.cc:
+	cd TMultiDrawTreePlayer; \
+	rootcint -f dictionary.cc -c -p classes.h LinkDef.h; \
+	mv dictionary.cc ../
 
 all: $(LIB) 
 clean:
+	rm -f TMultiDrawTreePlayer/dictionary* \
+	rm -f dictionary.cc \
 	rm -f *.o \
 	rm -f *.d \
 	rm -f *.so \
