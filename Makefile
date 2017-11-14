@@ -15,7 +15,7 @@ $(LIB): $(OBJECTS)
 	$(LD) $(LDFLAGS) $(SOFLAGS) $(OBJECTS) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
 
 %.o:	%.cc
-	$(CXX) -Wunused-variable $(CXXFLAGS) -c $< -o $@
+	$(CXX) -Wunused-variable -ITMultiDrawTreePlayer $(CXXFLAGS) -c $< -o $@
 
 #
 # target to build
