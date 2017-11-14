@@ -1,6 +1,3 @@
 [submodule "cxxopts"]
 	path = cxxopts
 	url = git@github.com:jarro2783/cxxopts.git
-[submodule "TMultiDrawTreePlayer"]
-	path = TMultiDrawTreePlayer
-	url = git@github.com:aminnj/TMultiDrawTreePlayer.git

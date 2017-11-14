@@ -11,13 +11,13 @@ LIB=rooutil.so
 # how to make it 
 #
 
-$(LIB): dictionary.cc
-	$(LD) $(CXXFLAGS) $(LDFLAGS) -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $(SOURCES) $^ $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
+$(LIB): $(SOURCES)
+	$(LD) $(CXXFLAGS) $(LDFLAGS) -fPIC -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $^ $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
 
-dictionary.cc:
-	cd TMultiDrawTreePlayer; \
-	rootcint -f dictionary.cc -c -p classes.h LinkDef.h; \
-	mv dictionary.cc ../
+#dictionary.cc:
+#	cd TMultiDrawTreePlayer; \
+#	rootcint -f dictionary.cc -c -p classes.h LinkDef.h; \
+#	mv dictionary.cc ../
 
 all: $(LIB) 
 clean:
