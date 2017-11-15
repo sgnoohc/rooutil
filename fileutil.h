@@ -14,6 +14,7 @@ namespace RooUtil
     namespace FileUtil
     {
         TChain* createTChain(TString, TString);
+        TMultiDrawTreePlayer* createTMulti(TChain*);
         TMultiDrawTreePlayer* createTMulti(TString, TString);
         TH1* get(TString);
 

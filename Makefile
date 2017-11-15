@@ -5,14 +5,15 @@ include Makefile.arch
 #
 SOURCES=$(wildcard *.cc)
 OBJECTS=$(SOURCES:.cc=.o)
+HEADERS=$(SOURCES:.cc=.h)
 LIB=rooutil.so
 
 #
 # how to make it 
 #
 
-$(LIB): $(SOURCES) looper.h
-	$(LD) $(CXXFLAGS) $(LDFLAGS) -fPIC -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $^ $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
+$(LIB): $(SOURCES) $(HEADERS)
+	$(LD) $(CXXFLAGS) $(LDFLAGS) -fPIC -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $(SOURCES) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
 
 all: $(LIB) 
 clean:

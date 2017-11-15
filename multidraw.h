@@ -33,6 +33,7 @@
 
 #include "multiselect.h"
 
+#include <TTree.h>
 #include <TVirtualTreePlayer.h>
 
 #include <memory>

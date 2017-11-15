@@ -10,12 +10,17 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     return chain;
 }
 
+TMultiDrawTreePlayer* RooUtil::FileUtil::createTMulti(TChain* t)
+{
+    TMultiDrawTreePlayer* p = new TMultiDrawTreePlayer();
+    if (p) p->SetTree((TTree*) t);
+    return p;
+}
+
 TMultiDrawTreePlayer* RooUtil::FileUtil::createTMulti(TString name, TString inputs)
 {
-    TVirtualTreePlayer::SetPlayer("TMultiDrawTreePlayer");
     TChain* t = RooUtil::FileUtil::createTChain(name, inputs);
-    TMultiDrawTreePlayer* p = dynamic_cast<TMultiDrawTreePlayer*>(t->GetPlayer());
-    return p;
+    return createTMulti(t);
 }
 
 TH1* RooUtil::FileUtil::get(TString name)
