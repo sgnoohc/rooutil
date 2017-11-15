@@ -8,7 +8,7 @@ Bool_t TSelectorMultiDraw::CompileVariables(const char *varexp/* = ""*/, const c
     if (fSelect)
         fSelect->SetQuickLoad(false);
 
-    for (size_t i = 0; i < fDimension; i++) {
+    for (size_t i = 0; i < (size_t) fDimension; i++) {
         fVar[i]->SetQuickLoad(false);
     }
 

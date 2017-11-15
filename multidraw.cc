@@ -1,4 +1,5 @@
 #include "multidraw.h"
+#include "printutil.h"
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -350,6 +351,11 @@ bool TMultiDrawTreePlayer::execute() {
     int period = nentries/3000;
     int smoothing = 40;
 
+    RooUtil::print( "Start EventLooping using TMultiDrawTreePlayer" );
+    RooUtil::start();
+    TBenchmark* bmark = new TBenchmark();
+    bmark->Start("benchmark");
+    RooUtil::print( Form("Total events to loop over = %lld", nentries) );
 
     for (entry=firstentry;entry<firstentry+nentries;entry++) {
         entryNumber = fTree->GetEntryNumber(entry);
@@ -365,7 +371,7 @@ bool TMultiDrawTreePlayer::execute() {
             auto now = std::chrono::system_clock::now();
             double dt = ((std::chrono::duration<double>)(now - t_old)).count();
             t_old = now;
-            if (deq.size() >= smoothing) deq.erase(deq.begin());
+            if (deq.size() >= (unsigned int) smoothing) deq.erase(deq.begin());
             deq.push_back(dt);
             double avgdt = std::accumulate(deq.begin(),deq.end(),0.)/deq.size();
             float prate = (float)period/avgdt;
@@ -427,6 +433,18 @@ bool TMultiDrawTreePlayer::execute() {
             skipToNextFile = false;
         }
     }
+
+    RooUtil::end();
+     
+    // return
+    using namespace std;
+    bmark->Stop("benchmark");
+    cout << endl;
+    cout << "------------------------------" << endl;
+    cout << "CPU  Time:	" << Form( "%.01f", bmark->GetCpuTime("benchmark")  ) << endl;
+    cout << "Real Time:	" << Form( "%.01f", bmark->GetRealTime("benchmark") ) << endl;
+    cout << endl;
+    delete bmark;
 
     delete timer;
     //we must reset the cache

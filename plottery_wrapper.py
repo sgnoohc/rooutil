@@ -79,6 +79,10 @@ mycolors.append(r.TColor(2010 , 120 / 255. , 160 / 255. , 0   / 255.)) #light gr
 mycolors.append(r.TColor(2011 , 0   / 255. , 158 / 255. , 115 / 255.)) #green
 mycolors.append(r.TColor(2012 , 204 / 255. , 121 / 255. , 167 / 255.)) #pink?
 
+default_colors = []
+default_colors.extend(range(2001, 2013))
+default_colors.extend(range(7001, 7018))
+
 
 
 
@@ -130,6 +134,19 @@ def get_total_err_hist(hists):
     for i in xrange(0, totalhist.GetNbinsX() + 2):
         errhist.SetBinContent(i, totalhist.GetBinError(i))
     return errhist
+
+#______________________________________________________________________________________________________________________
+def getYaxisRange(hist):
+    maximum = 0
+    if hist:
+        for ibin in xrange(1, hist.GetNbinsX()+1):
+            c = hist.GetBinContent(ibin)
+            e = hist.GetBinError(ibin)
+            v = c + e
+            if v > maximum:
+                maximum = v
+
+    return maximum
 
 #______________________________________________________________________________________________________________________
 def get_max_yaxis_range(hists):
@@ -198,11 +215,9 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
     print_yield_table_from_list(hists, options["output_name"], prec)
 
 def copy_nice_plot_index_php(options):
-    if len(os.environ["ANALYSIS_BASE"]) == 0:
-        return;
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
-    os.system("cp {}/scripts/syncfiles/miscfiles/index.php {}/".format(os.environ["ANALYSIS_BASE"], plotdir))
+    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 
 
@@ -211,7 +226,7 @@ def copy_nice_plot_index_php(options):
 # ====================
 
 #______________________________________________________________________________________________________________________
-def plot_hist_1d(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
+def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
     """
     Wrapper function to call Plottery.
     """
@@ -245,7 +260,7 @@ def plot_hist_1d(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], s
     hcolors = colors
     if len(colors) == 0:
         for index, hbg in enumerate(bgs):
-            hcolors.append(2001 + index)
+            hcolors.append(default_colors[index])
     hlegend_labels = []
     if len(legend_labels) == 0:
         for hbg in bgs:
@@ -349,14 +364,14 @@ def plot_hist_1d(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], s
     if not "xaxis_tick_length_scale"  in options: options["xaxis_tick_length_scale"]   = -0.8
     if not "yaxis_tick_length_scale"  in options: options["yaxis_tick_length_scale"]   = -0.8
     if not "ratio_tick_length_scale"  in options: options["ratio_tick_length_scale"]   = -1.0
-    if not "output_name"              in options: options["output_name"]               = "plot.png"
+    if not "output_name"              in options: options["output_name"]               = "plots/plot.png"
     if not "cms_label"                in options: options["cms_label"]                 = "Preliminary"
     if not "lumi_value"               in options: options["lumi_value"]                = "35.9"
     if not "bkg_err_fill_style"       in options: options["bkg_err_fill_style"]        = 3245
     if not "bkg_err_fill_color"       in options: options["bkg_err_fill_color"]        = 1
 
     # Call Plottery! I hope you win the Lottery!
-    p.plot_hist(
+    c1 = p.plot_hist(
             data          = data,
             bgs           = bgs,
             sigs          = sigs,
@@ -367,259 +382,12 @@ def plot_hist_1d(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], s
             options       = options
             )
 
+    c1.SaveAs("plots/plot.pdf")
+    c1.SaveAs("plots/plot.C")
+
     # Set permission
     os.system("chmod 644 {}".format(options["output_name"]))
 
     # Call nice plots
     copy_nice_plot_index_php(options)
-
-
-
-
-
-
-
-
-
-# ------------===============------------===============------------===============------------===============------------===============------------===============
-# ------------===============------------===============------------===============------------===============------------===============------------===============
-# ------------===============------------===============------------===============------------===============------------===============------------===============
-# ------------===============------------===============------------===============------------===============------------===============------------===============
-
-
-# Below are all deprecated for now
-
-
-
-
-
-class HistData:
-    """
-    HistData class to hold the histograms I need.
-    """
-    def __init__(self):
-        self.nom = None
-        self.systs = []
-        self.upsysts = []
-        self.downsysts = []
-        self.normsysts = []
-        self.totalerr = None
-
-def cloneTH1(obj, name=""):
-    """
-    Clone any TH1 object with the same name or new name.
-    """
-    if name == "":
-        name = obj.GetName()
-    rtn = obj.Clone(name)
-    rtn.SetTitle("")
-    if not rtn.GetSumw2N():
-        rtn.Sumw2()
-    rtn.SetDirectory(0)
-    # https://root-forum.cern.ch/t/setbinlabel-causes-unexpected-behavior-when-handling-the-histograms/26202/2
-    labels = rtn.GetXaxis().GetLabels()
-    if labels:
-        rtn.GetXaxis().SetRange(1, rtn.GetXaxis().GetNbins())
-    return rtn;
-
-def getTotalErrByMaxDiff(nom, systs):
-    """
-    Given a nominal histogram and list of systematics,
-    returns a single histogram that takes the maximum
-    variation from the list of systs. The returned
-    histogram has nominal value + difference in each
-    bin.
-    """
-    err = cloneTH1(nom)
-    rtn = cloneTH1(nom)
-    err.Reset()
-    for syst in systs:
-        for ibin in xrange(0, syst.GetNbinsX()+2):
-            systcontent = syst.GetBinContent(ibin)
-            nomicontent = nom.GetBinContent(ibin)
-            thisdiff = abs(systcontent - nomicontent)
-            currmaxdiff = err.GetBinContent(ibin)
-            if currmaxdiff < thisdiff:
-                err.SetBinContent(ibin, thisdiff)
-                rtn.SetBinContent(ibin, thisdiff + nomicontent)
-    return rtn
-
-def getTotalErrBySqSum(nom, systs, normfracsyst=0):
-    """
-    Given a nominal histogram and list of systematics
-    (optional: plus a single fractional normalization
-    systematics), returns a single histogram that has
-    the total uncertainty (in absolute value) on each bin.
-    """
-    if nom:
-        err = cloneTH1(nom)
-    else:
-        try:
-            err = cloneTH1(systs[0])
-        except:
-            print "ERROR - Neither nominal nor systematic histograms are provided"
-    err.Reset()
-    if nom:
-        for ibin in xrange(0, nom.GetNbinsX()+2):
-            err.SetBinContent(ibin, nom.GetBinError(ibin))
-    for syst in systs:
-        for ibin in xrange(0, syst.GetNbinsX()+2):
-            systcontent = syst.GetBinContent(ibin)
-            nomicontent = 0
-            if nom:
-                nomicontent = nom.GetBinContent(ibin)
-            thiserr = abs(systcontent - nomicontent)
-            currerr = err.GetBinContent(ibin)
-            thiserr = math.sqrt(thiserr ** 2 + currerr ** 2)
-            err.SetBinContent(ibin, thiserr)
-    if normfracsyst > 0:
-        for ibin in xrange(0, syst.GetNbinsX()+2):
-            currerr = err.GetBinContent(ibin)
-            nomicontent = nom.GetBinContent(ibin)
-            normsyst = nomicontent * normfracsyst
-            thiserr = math.sqrt(normsyst ** 2 + currerr ** 2)
-            err.SetBinContent(ibin, thiserr)
-    return err
-
-def getTotalErrFromSystLists(nom, upsysts, dnsysts, normfracsyst=0):
-    """
-    Combine two lists of up and down variations into
-    a single error systematics histogram
-    """
-    if len(upsysts) != len(dnsysts):
-        print "ERROR - the number of up and down systematic variations do not match."
-        sys.exit()
-    systs = []
-    for pair in zip(upsysts, dnsysts):
-        systs.append(getTotalErrByMaxDiff(nom, [pair[0], pair[1]]))
-    return getTotalErrBySqSum(nom, systs, normfracsyst)
-
-def makeHistDataFromTH2(th2, dosyst=True, options={}):
-    """
-    Creates an instance of "HistData" class from a single TH2.
-    I use TH2's to represent a single process histograms.
-    TH2's y-bin-index = 1 is the nominal histogram
-    TH2's y-bin-index > 1 are are the systematic histograms. (Absolute values not fractional or difference.)
-    TH2's even y-bin-index are the up variations.
-    TH2's odd y-bin-index are the down variations.
-    TH2's 0, 0 is the overall norm systematics.
-    """
-    if not th2:
-        return HistData()
-    hist = HistData()
-    for ibin in xrange(1, th2.GetYaxis().GetNbins() + 1):
-        if not dosyst:
-            if ibin > 1:
-                break
-        name = th2.GetName()
-        # https://root-forum.cern.ch/t/setbinlabel-causes-unexpected-behavior-when-handling-the-histograms/26202/2
-        labels = th2.GetXaxis().GetLabels()
-        if labels:
-            th2.GetXaxis().SetRange(1, th2.GetXaxis().GetNbins())
-        if ibin != 1:
-            name += "syst{}".format(ibin - 1)
-        projhist = th2.ProjectionX("{}".format(uuid.uuid4()), ibin, ibin)
-        projhist.SetName(name)
-        projhist.SetDirectory(0)
-        if "nbin" in options:
-            currnbin = projhist.GetNbinsX()
-            frac = currnbin / options["nbin"]
-            projhist.Rebin(frac)
-        if ibin == 1:
-            hist.nom = projhist
-        else:
-            if ibin % 2 == 0:
-                hist.upsysts.append(projhist)
-            else:
-                hist.downsysts.append(projhist)
-    hist.normsysts.append(th2.GetBinContent(0, 0))
-    if dosyst:
-        hist.totalerr = getTotalErrFromSystLists(hist.nom, hist.upsysts, hist.downsysts, hist.normsysts[0])
-    else:
-        hist.totalerr = cloneTH1(hist.nom)
-    return hist
-
-def makeHistDatasFromTH2s(th2s, options={}):
-    """
-    From a list of TH2s, return a list of nominal
-    histograms and a list of error histograms.
-    """
-    noms = []
-    errs = []
-    for th2 in th2s:
-        hist = makeHistDataFromTH2(th2, options=options)
-        noms.append(hist.nom)
-        errs.append(hist.totalerr)
-    totalerr = getTotalErrBySqSum(get_total_hist(noms), errs)
-    return noms, errs
-
-def makeBkgHistDatasFromTH2s(th2s, options={}):
-    """
-    From a list of TH2s, return a list of nominal
-    bkg histograms and a single combined total error histograms.
-    """
-    noms, errs = makeHistDatasFromTH2s(th2s, options)
-    totalerr = getTotalErrBySqSum(None, errs)
-    return noms, totalerr
-
-def makeRatioHist(hdata, hbkgs):
-    totalbkg = get_total_hist(hbkgs)
-    ratio = totalbkg.Clone("Ratio")
-    ratio.Reset()
-    ratio.Divide(hdata, totalbkg)
-    return ratio
-
-def getYaxisRange(hist):
-    maximum = 0
-    if hist:
-        for ibin in xrange(1, hist.GetNbinsX()+1):
-            c = hist.GetBinContent(ibin)
-            e = hist.GetBinError(ibin)
-            v = c + e
-            if v > maximum:
-                maximum = v
-
-    return maximum
-
-def rebin(hists, nbin):
-    for hist in hists:
-        if not hist: continue
-        currnbin = hist.GetNbinsX()
-        fac = currnbin / nbin
-        hist.Rebin(fac)
-
-
-def plot_hist(th2_data, th2s_bkg, th2s_sig, options, colors=[], sig_labels=[], legend_labels=[]):
-    """
-    Plot 1d plot based off of th2s
-    bkg histograms and a single combined total error histograms.
-    Some operations are additionally done.
-    """
-    hdata_histdata = makeHistDataFromTH2(th2_data, True, options=options)
-    hdata = hdata_histdata.nom
-    hdataerr = hdata_histdata.totalerr
-    hbgs = []
-    hsyst = None
-    if len(th2s_bkg) != 0:
-        hbgs, hsyst = makeBkgHistDatasFromTH2s(th2s_bkg, options=options)
-        hsyst.Print("all")
-#    hdataerr.Print("all")
-#    hsyst.Print("all")
-    if len(th2s_bkg) != 0:
-        hsyst = getTotalErrBySqSum(None, [hsyst])
-        #if "blind" in options and options["blind"]: hsyst = getTotalErrBySqSum(None, [hsyst])
-        #else:                                       hsyst = getTotalErrBySqSum(hdataerr, [hsyst])
-#    hsyst.Print("all")
-    hsigs = []
-    hsigerrs = []
-    if len(th2s_sig) > 0:
-        hsigs, hsigerrs = makeHistDatasFromTH2s(th2s_sig, options=options)
-    # Rebinning occurs during "makeHist" delete the option afterwards
-    if "nbin" in options:
-        del options["nbin"]
-    if "blind" in options:
-        if options["blind"]:
-            hdata = None
-        del options["blind"]
-    plot_hist_1d(hdata, hbgs, hsigs, hsyst, options, colors, sig_labels, legend_labels)
 
