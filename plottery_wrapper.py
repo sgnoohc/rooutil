@@ -211,13 +211,13 @@ def copy_nice_plot_index_php(options):
 # ====================
 
 #______________________________________________________________________________________________________________________
-def plot_hist_1d(hdata=None, hbkgs=[], hsigs=[], hsyst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
+def plot_hist_1d(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
     """
     Wrapper function to call Plottery.
     """
 
     # Sanity check. If no histograms exit
-    if not hdata and len(hbkgs) == 0 and len(hsigs) == 0:
+    if not data and len(bgs) == 0 and len(sigs) == 0:
         print "[plottery_wrapper] >>> Nothing to do!"
         return
 
@@ -225,37 +225,37 @@ def plot_hist_1d(hdata=None, hbkgs=[], hsigs=[], hsyst=None, options={}, colors=
     # The later step will set the histogram of data to all zero
     if "blind" in options:
         if options["blind"]:
-            hdata = None
+            data = None
         del options["blind"]
 
-    # If hdata is none clone one hist and fill with 0
-    if not hdata:
-        if len(hbkgs) != 0:
-            hdata = hbkgs[0].Clone("Data")
-            hdata.Reset()
-        elif len(hsigs) != 0:
-            hdata = hsigs[0].Clone("Data")
-            hdata.Reset()
+    # If data is none clone one hist and fill with 0
+    if not data:
+        if len(bgs) != 0:
+            data = bgs[0].Clone("Data")
+            data.Reset()
+        elif len(sigs) != 0:
+            data = sigs[0].Clone("Data")
+            data.Reset()
 
     # Compute some arguments that are missing (viz. colors, sig_labels, legend_labels)
     hsig_labels = []
     if len(sig_labels) == 0:
-        for hsig in hsigs:
+        for hsig in sigs:
             hsig_labels.append(hsig.GetName())
     hcolors = colors
     if len(colors) == 0:
-        for index, hbg in enumerate(hbkgs):
+        for index, hbg in enumerate(bgs):
             hcolors.append(2001 + index)
     hlegend_labels = []
     if len(legend_labels) == 0:
-        for hbg in hbkgs:
+        for hbg in bgs:
             hlegend_labels.append(hbg.GetName())
 
     # Set maximum of the plot
     totalbkg = None
-    if len(hbkgs) != 0:
-        totalbkg = get_total_hist(hbkgs)
-    yaxismax = get_max_yaxis_range([hdata, totalbkg]) * 1.8
+    if len(bgs) != 0:
+        totalbkg = get_total_hist(bgs)
+    yaxismax = get_max_yaxis_range([data, totalbkg]) * 1.8
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
@@ -275,38 +275,38 @@ def plot_hist_1d(hdata=None, hbkgs=[], hsigs=[], hsyst=None, options={}, colors=
 
     # Print histogram content for debugging
     #totalbkg.Print("all")
-    #if len(hsigs) > 0:
-    #    hsigs[0].Print("all")
-    #for hbg in hbkgs:
+    #if len(sigs) > 0:
+    #    sigs[0].Print("all")
+    #for hbg in bgs:
     #    hbg.Print("all")
 
     # Print yield table if the option is turned on
     if "print_yield" in options:
         if options["print_yield"]:
-            print_yield_table(hdata, hbkgs, hsigs, hsyst, options)
+            print_yield_table(data, bgs, sigs, syst, options)
         del options["print_yield"]
 
     # Inject signal option
     if "inject_signal" in options:
         if options["inject_signal"]:
-            if len(hsigs) > 0:
-                hdata = hsigs[0].Clone("test")
-                hdata.Reset()
-                for hsig in hsigs:
-                    hdata.Add(hsig)
-                for hbkg in hbkgs:
-                    hdata.Add(hbkg)
-                for i in xrange(1, hdata.GetNbinsX() + 1):
-                    hdata.SetBinError(i, 0)
+            if len(sigs) > 0:
+                data = sigs[0].Clone("test")
+                data.Reset()
+                for hsig in sigs:
+                    data.Add(hsig)
+                for hbkg in bgs:
+                    data.Add(hbkg)
+                for i in xrange(1, data.GetNbinsX() + 1):
+                    data.SetBinError(i, 0)
                 options["legend_datalabel"] = "Sig+Bkg"
         del options["inject_signal"]
 
-    # If hsyst is not provided, compute one yourself from the bkg histograms
-    if not hsyst:
-        hsyst = get_total_err_hist(hbkgs)
+    # If syst is not provided, compute one yourself from the bkg histograms
+    if not syst:
+        syst = get_total_err_hist(bgs)
 
-    # The uncertainties are all accounted in the hsyst so remove all errors from bkgs
-    remove_errors(hbkgs)
+    # The uncertainties are all accounted in the syst so remove all errors from bkgs
+    remove_errors(bgs)
 
     # Here are my default options for plottery
     if not "canvas_width"             in options: options["canvas_width"]              = 604
@@ -357,10 +357,10 @@ def plot_hist_1d(hdata=None, hbkgs=[], hsigs=[], hsyst=None, options={}, colors=
 
     # Call Plottery! I hope you win the Lottery!
     p.plot_hist(
-            data          = hdata,
-            bgs           = hbkgs,
-            sigs          = hsigs,
-            syst          = hsyst,
+            data          = data,
+            bgs           = bgs,
+            sigs          = sigs,
+            syst          = syst,
             sig_labels    = hsig_labels,
             colors        = hcolors,
             legend_labels = hlegend_labels,
