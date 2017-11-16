@@ -78,6 +78,7 @@ namespace RooUtil
         unsigned int nEventsSkimmed;
         std::vector<TString> skimbrfiltpttn;
         bool silent;
+        bool isinit;
         public:
         // Functions
         Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
@@ -149,8 +150,10 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     skimfile( 0 ),
     skimtree( 0 ),
     nEventsSkimmed( 0 ),
-    silent( false )
+    silent( false ),
+    isinit( false )
 {
+    bmark = new TBenchmark();
     if ( c && t )
         init( c, t, nevtToProc );
 }
@@ -175,31 +178,34 @@ void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
     c->GetEntry( 0 );
     t->Init( c->GetTree() );
 
-    bmark = new TBenchmark();
     bmark->Start("benchmark");
+    isinit = true;
 }
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
 RooUtil::Looper<TREECLASS>::~Looper()
 {
-    end();
-     
-    // return
-    using namespace std;
-    bmark->Stop("benchmark");
-    cout << endl;
-    cout << "------------------------------" << endl;
-    cout << "CPU  Time:	" << Form( "%.01f", bmark->GetCpuTime("benchmark")  ) << endl;
-    cout << "Real Time:	" << Form( "%.01f", bmark->GetRealTime("benchmark") ) << endl;
-    cout << endl;
-    delete bmark;
+    if (isinit)
+    {
+        end();
 
-    if ( fileIter )
-        delete fileIter;
+        // return
+        using namespace std;
+        bmark->Stop("benchmark");
+        cout << endl;
+        cout << "------------------------------" << endl;
+        cout << "CPU  Time:	" << Form( "%.01f", bmark->GetCpuTime("benchmark")  ) << endl;
+        cout << "Real Time:	" << Form( "%.01f", bmark->GetRealTime("benchmark") ) << endl;
+        cout << endl;
+        delete bmark;
 
-    if ( tfile )
-        delete tfile;
+        if ( fileIter )
+            delete fileIter;
+
+        if ( tfile )
+            delete tfile;
+    }
 }
 
 //_________________________________________________________________________________________________

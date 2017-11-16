@@ -6,7 +6,11 @@
 TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
 {
     TChain* chain = new TChain(name);
-    for (auto& ff : RooUtil::StringUtil::split(inputs, ",")) chain->Add(ff);
+    for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
+    {
+        RooUtil::print(Form("Adding %s", ff.Data()));
+        chain->Add(ff);
+    }
     return chain;
 }
 

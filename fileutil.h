@@ -8,6 +8,7 @@
 #include "TDirectory.h"
 #include "stringutil.h"
 #include "multidraw.h"
+#include "printutil.h"
 
 namespace RooUtil
 {
