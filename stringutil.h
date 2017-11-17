@@ -16,6 +16,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 // ROOT
 #include "TString.h"
@@ -35,9 +36,10 @@ namespace RooUtil
         // -- Python-like functions
         void          rstrip(TString &in,   TString separator="#"                                       );
         vecTString    split (TString in,    TString separator=" "                                       );
-        TString       join  (vecTString in, TString joiner=":",                        Int_t rm_blanks=1);
+        TString       join  (vecTString in, TString joiner=",",                        Int_t rm_blanks=1);
         TString       sjoin (TString in,    TString separator=" ", TString joiner=":", Int_t rm_blanks=1);
         vecVecTString chunk (vecTString in, Int_t   nchunk                                              );
+        TString       formexpr(vecTString in);
     }
 }
 

@@ -14720,3 +14720,33 @@ inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std
 #undef NLOHMANN_BASIC_JSON_TPL
 
 #endif
+
+#ifndef json_h
+#define json_h
+
+#include "stringutil.h"
+
+#include <vector>
+#include <string>
+
+#include "TString.h"
+
+namespace nlohmann {
+    template <>
+    struct adl_serializer<TString> {
+        // note: the return type is no longer 'void', and the method only takes
+        // one argument
+        static TString from_json(const json& j) {
+            return {j.get<std::string>()};
+        }
+        
+        // Here's the catch! You must provide a to_json method! Otherwise you
+        // will not be able to convert TString to json, since you fully
+        // specialized adl_serializer on that type
+        static void to_json(json& j, TString t) {
+            j = t.Data();
+        }
+    };
+}
+
+#endif

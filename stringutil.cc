@@ -101,3 +101,13 @@ RooUtil::StringUtil::vecVecTString RooUtil::StringUtil::chunk(RooUtil::StringUti
     }
     return bunches;
 }
+
+//#############################################################################
+// From std::vector<TString> form an expression for TTree::Draw
+TString RooUtil::StringUtil::formexpr(vecTString in)
+{
+    in.erase(std::remove_if(in.begin(), in.end(), [](TString s) { return s.EqualTo("1"); } ), in.end());
+    if (in.size() == 0)
+        in.push_back("1");
+    return Form("(%s)", RooUtil::StringUtil::join(in, ")*(").Data());
+}
