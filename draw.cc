@@ -16,11 +16,20 @@ RooUtil::DrawExprTool::pairVecTStr RooUtil::DrawExprTool::getDrawExprPairs()
             print("ERROR - Did not find any cuts field for this json");
             std::cout << std::setw(4) << g << std::endl;
         }
-        std::vector<TString> this_reg_draw_sel = getFullDrawSelExprs(g["cuts"]);
-        std::vector<TString> this_reg_draw_cmd = getFullDrawSelExprs(g["cuts"]); // TODO
-        for (auto& sel : this_reg_draw_sel)
+        if (!g.count("histograms"))
         {
-            std::cout << sel << std::endl;
+            warning("This json has no histograms defined. Seems unusual. Is this correct?");
+            std::cout << std::setw(4) << g << std::endl;
+        }
+        std::vector<TString> this_reg_draw_cmd = getFullDrawCmdExprs(g["histograms"]);
+        std::vector<TString> this_reg_draw_sel = getFullDrawSelExprs(g["cuts"]);
+        for (auto& cmd : this_reg_draw_cmd)
+        {
+            for (auto& sel : this_reg_draw_sel)
+            {
+                draw_cmd.push_back(cmd);
+                draw_sel.push_back(sel);
+            }
         }
     }
     return std::make_tuple(draw_cmd, draw_sel);
@@ -136,8 +145,35 @@ std::vector<TString> RooUtil::DrawExprTool::getFullDrawSelExprs(json& j)
         std::vector<TString> cutexpr(individ_selections.begin(), individ_selections.begin() + isel + 1);
         std::vector<TString> wgtexpr(individ_selections_weights.begin(), individ_selections_weights.begin() + isel + 1);
         TString full_draw_sel_expr = Form("(%s)*(%s)", formexpr(cutexpr).Data(), formexpr(wgtexpr).Data());
+        full_draw_sel_expr = cleanparantheses(full_draw_sel_expr);
         draw_sel.push_back(full_draw_sel_expr);
     }
 
     return draw_sel;
+}
+
+std::vector<TString> RooUtil::DrawExprTool::getFullDrawCmdExprs(json& j)
+{
+    std::vector<TString> draw_cmd;
+    for (json::iterator it_hist = j.begin(); it_hist != j.end(); ++it_hist)
+    {
+        json& histj = it_hist.value();
+        if (!histj.count("var"))
+        {
+            print("ERROR - Did not find 'var' field for this histogram definition");
+            std::cout << std::setw(4) << histj << std::endl;
+        }
+        if (!histj.count("bin"))
+        {
+            print("ERROR - Did not find 'bin' field for this histogram definition");
+            std::cout << std::setw(4) << histj << std::endl;
+        }
+        TString name = it_hist.key();
+        TString var = it_hist.value()["var"];
+        TString bin = it_hist.value()["bin"];
+        TString cmd = Form("%s>>", var.Data()) + TString("%s") + Form("%s", name.Data()) + Form("%s", bin.Data());
+        cmd = sjoin(cmd, " ", "");
+        draw_cmd.push_back(cmd);
+    }
+    return draw_cmd;
 }

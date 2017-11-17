@@ -33,6 +33,7 @@ namespace RooUtil
             pairTStr getPairTStrFromRegionFromExpr(json& j, TString expr);
             TString getExprFromRegion(json& j, TString expr);
             std::vector<TString> getFullDrawSelExprs(json& j);
+            std::vector<TString> getFullDrawCmdExprs(json& j);
     };
 }
 

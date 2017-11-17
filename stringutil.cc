@@ -111,3 +111,103 @@ TString RooUtil::StringUtil::formexpr(vecTString in)
         in.push_back("1");
     return Form("(%s)", RooUtil::StringUtil::join(in, ")*(").Data());
 }
+
+//#############################################################################
+// Clean unwanted parantheses
+TString RooUtil::StringUtil::cleanparantheses(TString input)
+{
+    std::string s = input.Data();
+    remove_parantheses(s);
+    return s.c_str();
+}
+
+//#############################################################################
+// Under the hood for cleaning unwanted parantheses
+void RooUtil::StringUtil::remove_parantheses(std::string& S)
+{
+    using namespace std;
+    map<int, bool> pmap;
+    for (size_t i = 0; i < S.size(); i++)
+    {
+        map<int, bool>::iterator it;
+        if (S.at(i) == '(')
+        {
+            pmap[i] = true;
+        }
+        else if (S.at(i) == ')')
+        {
+            it = pmap.end();
+            it--;
+            if (!(*it).second)
+            {
+                pmap.erase(it);
+            }
+            else
+            {
+                S.erase(S.begin() + i);
+                S.erase(S.begin() + (*it).first);
+                pmap.erase(it);
+                i = i - 2;
+            }
+        }
+        else
+        {
+            if (!pmap.empty())
+            {
+                it = pmap.end();
+                it--;
+                (*it).second = false;
+            }
+        }
+    }
+}
+
+//std::string RooUtil::StringUtil::parser(std::string _input, int loc_){
+//
+//    using namespace std;
+//
+//    string input = _input;
+//
+//    set<char> support;
+//    support.insert('+');
+//    support.insert('-');
+//    support.insert('*');
+//    support.insert('/');
+//    support.insert('>');
+//    support.insert('<');
+//    support.insert('=');
+//
+//    string expi;
+//    set<char> op;
+//    int loc = loc_;
+//    int size = input.size();
+//
+//    while(1){
+//        if(input[loc] ==  '('){
+//            expi += parser(input,loc+1);
+//        }else if(input[loc] == ')'){
+//          if((input[loc+1] != '*') && (input[loc+1] != '/')){
+//              return expi;
+//          }else{
+//              if ((op.find('+') == op.end()) && (op.find('-') == op.end())){
+//                  return expi;
+//              }else{
+//                  return '('+expi+')';
+//              }
+//          }
+//        }else{
+//            char temp = input[loc];
+//            expi=expi+temp;
+//            if(support.find(temp) != support.end()){
+//                op.insert(temp);
+//            }
+//        }
+//        loc++;
+//        if(loc >= size){
+//            break;
+//        }
+//    }
+//
+//    return expi;
+//}
+

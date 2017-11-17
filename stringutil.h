@@ -17,6 +17,10 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <iostream>
+#include <stack>
+#include <set>
+#include <map>
 
 // ROOT
 #include "TString.h"
@@ -40,6 +44,9 @@ namespace RooUtil
         TString       sjoin (TString in,    TString separator=" ", TString joiner=":", Int_t rm_blanks=1);
         vecVecTString chunk (vecTString in, Int_t   nchunk                                              );
         TString       formexpr(vecTString in);
+        std::string   parser(std::string input, int);
+        void          remove_parantheses(std::string& S);
+        TString       cleanparantheses(TString expr);
     }
 }
 
