@@ -3,6 +3,83 @@
 using namespace RooUtil::StringUtil;
 using namespace RooUtil;
 
+std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, json& j, TString prefix, bool nowgt)
+{
+    std::map<TString, TH1*> ret_hists;
+    TMultiDrawTreePlayer* p = RooUtil::FileUtil::createTMulti(c);
+    std::vector<TString> cmds;
+    std::vector<TString> sels;
+    std::vector<TString> wgts;
+    std::tie(cmds, sels, wgts) = getDrawExprs(j);
+    int nentries = c->GetEntries();
+    for (size_t ith = 0; ith < cmds.size(); ++ith)
+    {
+        TString cmd = Form(cmds[ith].Data(), prefix.Data());
+        TString sel = sels[ith].Data();
+        TString wgt = nowgt ? "1" : wgts[ith].Data();
+        std::cout <<  " cmd: " << cmd <<  " sel: " << sel <<  " wgt: " << wgt <<  std::endl;
+        p->queueDraw(
+                cmd.Data(),
+                Form("(%s)*(%s)", sel.Data(), wgt.Data()),
+                "goffe",
+                nentries);
+    }
+    p->execute();
+    for (size_t ith = 0; ith < cmds.size(); ++ith)
+    {
+        TString histname = Form(split(split(cmds[ith], ">>")[1], "(")[0], prefix.Data());
+        TH1* h = RooUtil::FileUtil::get(histname);
+        if (h)
+            ret_hists[histname] = h;
+    }
+    return ret_hists;
+}
+
+RooUtil::DrawExprTool::tripleVecTStr RooUtil::Draw::getDrawExprs(json& j)
+{
+    RooUtil::DrawExprTool dt;
+    dt.setJson(j);
+    return dt.getDrawExprTriple();
+}
+
+RooUtil::DrawExprTool::tripleVecTStr RooUtil::DrawExprTool::getDrawExprTriple()
+{
+    std::vector<TString> draw_cmd;
+    std::vector<TString> draw_sel;
+    std::vector<TString> draw_wgt;
+    for (json::iterator it_reg = _j.begin(); it_reg != _j.end(); ++it_reg)
+    {
+        json g(_j[it_reg.key()]);
+        TString reg = it_reg.key().c_str();
+        if (!g.count("cuts"))
+        {
+            print("ERROR - Did not find any cuts field for this json");
+            std::cout << std::setw(4) << g << std::endl;
+        }
+        if (!g.count("histograms"))
+        {
+            warning("This json has no histograms defined. Seems unusual. Is this correct?");
+            std::cout << std::setw(4) << g << std::endl;
+        }
+        std::vector<TString> this_reg_draw_cmd = getFullDrawCmdExprs(g["histograms"]);
+        std::vector<TString> this_reg_draw_sel;
+        std::vector<TString> this_reg_draw_wgt;
+        std::tie(this_reg_draw_sel, this_reg_draw_wgt) = getFullDrawSelExprsAndWgts(g["cuts"]);
+        for (auto& cmd : this_reg_draw_cmd)
+        {
+            for (size_t isel = 0; isel < this_reg_draw_sel.size(); ++isel)
+            {
+                TString cmd_w_name = Form(cmd.Data(), (TString("%s_") + Form("%s_cut%zu_", reg.Data(), isel)).Data());
+                TString sel = this_reg_draw_sel[isel];
+                TString wgt = this_reg_draw_wgt[isel];
+                draw_cmd.push_back(cmd_w_name);
+                draw_sel.push_back(sel);
+                draw_wgt.push_back(wgt);
+            }
+        }
+    }
+    return std::make_tuple(draw_cmd, draw_sel, draw_wgt);
+}
 
 RooUtil::DrawExprTool::pairVecTStr RooUtil::DrawExprTool::getDrawExprPairs()
 {
@@ -28,7 +105,7 @@ RooUtil::DrawExprTool::pairVecTStr RooUtil::DrawExprTool::getDrawExprPairs()
         {
             for (size_t isel = 0; isel < this_reg_draw_sel.size(); ++isel)
             {
-                TString cmd_w_name = Form(cmd.Data(), (TString("%s_") + Form("%s_cut%d_", reg.Data(), isel)).Data());
+                TString cmd_w_name = Form(cmd.Data(), (TString("%s_") + Form("%s_cut%zu_", reg.Data(), isel)).Data());
                 TString sel = this_reg_draw_sel[isel];
                 draw_cmd.push_back(cmd_w_name);
                 draw_sel.push_back(sel);
@@ -110,7 +187,10 @@ RooUtil::DrawExprTool::pairTStr RooUtil::DrawExprTool::getPairTStrFromRegionFrom
     TString exclude_str = expr_tokens.size() > 1 ? expr_tokens[1] : "";
     std::vector<int> exclude;
     for (auto& elem : split(exclude_str, ","))
-        exclude.push_back(elem.Atoi());
+    {
+        if (!elem.IsNull())
+            exclude.push_back(elem.Atoi());
+    }
     return getPairTStrFromRegion(j, region, exclude);
 }
 
@@ -118,6 +198,37 @@ TString RooUtil::DrawExprTool::getExprFromRegion(json& j, TString expr)
 {
     pairTStr p = getPairTStrFromRegionFromExpr(j, expr);
     return Form("%s ^ %s", std::get<0>(p).Data(), std::get<1>(p).Data());
+}
+
+RooUtil::DrawExprTool::pairVecTStr RooUtil::DrawExprTool::getFullDrawSelExprsAndWgts(json& j)
+{
+    // Parse the "selections" data in a given region json.
+    std::vector<TString> individ_selections;
+    std::vector<TString> individ_selections_weights;
+    if (j.count("selections"))
+        std::tie(individ_selections, individ_selections_weights) = getPairVecTStr(j["selections"]);
+
+    // Parse the "preselections" data in a given region json.
+    TString preselection = "1";
+    TString preselection_weight = "1";
+    if (j.count("preselections"))
+        std::tie(preselection, preselection_weight) = getPairTStr(j["preselections"]);
+
+    // Pre-pend the preselections to the selections
+    individ_selections.insert(individ_selections.begin(), preselection);
+    individ_selections_weights.insert(individ_selections_weights.begin(), preselection_weight);
+
+    // Now collapse the selections into a list of selections
+    std::vector<TString> selections;
+    std::vector<TString> selections_weights;
+    for (size_t isel = 0; isel < individ_selections.size(); ++isel)
+    {
+        std::vector<TString> cutexpr(individ_selections.begin(), individ_selections.begin() + isel + 1);
+        std::vector<TString> wgtexpr(individ_selections_weights.begin(), individ_selections_weights.begin() + isel + 1);
+        selections.push_back(formexpr(cutexpr));
+        selections_weights.push_back(formexpr(wgtexpr));
+    }
+    return std::make_tuple(selections, selections_weights);
 }
 
 std::vector<TString> RooUtil::DrawExprTool::getFullDrawSelExprs(json& j)
