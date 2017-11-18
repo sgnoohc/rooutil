@@ -11,6 +11,7 @@ RooUtil::DrawExprTool::pairVecTStr RooUtil::DrawExprTool::getDrawExprPairs()
     for (json::iterator it_reg = _j.begin(); it_reg != _j.end(); ++it_reg)
     {
         json g(_j[it_reg.key()]);
+        TString reg = it_reg.key().c_str();
         if (!g.count("cuts"))
         {
             print("ERROR - Did not find any cuts field for this json");
@@ -25,9 +26,11 @@ RooUtil::DrawExprTool::pairVecTStr RooUtil::DrawExprTool::getDrawExprPairs()
         std::vector<TString> this_reg_draw_sel = getFullDrawSelExprs(g["cuts"]);
         for (auto& cmd : this_reg_draw_cmd)
         {
-            for (auto& sel : this_reg_draw_sel)
+            for (size_t isel = 0; isel < this_reg_draw_sel.size(); ++isel)
             {
-                draw_cmd.push_back(cmd);
+                TString cmd_w_name = Form(cmd.Data(), (TString("%s_") + Form("%s_cut%d_", reg.Data(), isel)).Data());
+                TString sel = this_reg_draw_sel[isel];
+                draw_cmd.push_back(cmd_w_name);
                 draw_sel.push_back(sel);
             }
         }
