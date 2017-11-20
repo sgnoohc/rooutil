@@ -21,6 +21,7 @@
 #include <stack>
 #include <set>
 #include <map>
+#include <tuple>
 
 // ROOT
 #include "TString.h"
@@ -47,6 +48,7 @@ namespace RooUtil
         std::string   parser(std::string input, int);
         void          remove_parantheses(std::string& S);
         TString       cleanparantheses(TString expr);
+        TString       format(TString tmp, std::vector<TString>);
     }
 }
 

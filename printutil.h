@@ -36,6 +36,10 @@
 #include "TLorentzVector.h"
 #include "Math/LorentzVector.h"
 
+#include "json.h"
+
+using json = nlohmann::json;
+
 namespace RooUtil
 {
 
@@ -51,7 +55,7 @@ namespace RooUtil
     void announce (TString msg="", int quiet=0);
     void start    (int quiet=0, int sleep_time=0);
     void end      (int quiet=0);
-
+    void jsoncheck(json& j, TString field);
 }
 
 #endif

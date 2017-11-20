@@ -3,6 +3,143 @@
 using namespace RooUtil::StringUtil;
 using namespace RooUtil;
 
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+
+//##################################################################################################################################
+// Parses jsons like the following,
+//
+//    "histograms":
+//    {
+//        "MllSS" : { "var" : "MllSS", "bin" : "(25, 0, 250)", "options" : { "doall" : true } },
+//        "nb"    : { "var" : "nb"   , "bin" : "( 7, 0,   7)", "options" : { "doall" : true } }
+//    }
+//
+std::vector<std::tuple<TString, TString, TString>> RooUtil::Draw::getHistogramBookings(json& j)
+{
+    std::vector<std::tuple<TString, TString, TString>> ret;
+    for (json::iterator it_hist = j.begin(); it_hist != j.end(); ++it_hist)
+    {
+        json& histj = it_hist.value();
+        if (!histj.count("var"))
+        {
+            print("ERROR - Did not find 'var' field for this histogram definition");
+            std::cout << std::setw(4) << histj << std::endl;
+        }
+        if (!histj.count("bin"))
+        {
+            print("ERROR - Did not find 'bin' field for this histogram definition");
+            std::cout << std::setw(4) << histj << std::endl;
+        }
+        TString name = it_hist.key();
+        TString var = it_hist.value()["var"];
+        TString bin = it_hist.value()["bin"];
+        bin = sjoin(bin, " ", "");
+        ret.push_back(std::make_tuple(name, var, bin));
+    }
+    return ret;
+}
+
+//##################################################################################################################################
+// Parses jsons like the following,
+//
+//    "Analysis" :
+//    {
+//        "SSPreselection":
+//        {
+//            "cuts":
+//            {
+//                "preselections" :
+//                [
+//                    "ntrk == 0 ^ weight*lepsf*trigsf*purewgt",  <--- Cuts are counted from here. cut0
+//                    "pass_offline_trig>0",                                                       cut1
+//                    "pass_online_trig>0",                                                        cut2 <-- drop (See below part)
+//                    "n_tight_ss_lep==2",                                                         cut3 <-- drop
+//                    "n_veto_ss_lep==3",                                                          cut4
+//                    "nj>=2",                                                                     cut5
+//                    "MllSS > 40."                                                                cut6
+//                ]
+//            }
+//        },
+//        "SSee":
+//        {
+//            "cuts":
+//            {
+//                "preselections":
+//                [
+//                    "#SSPreselection%2,3",               <---- NOTE the notations on #, %, and numbers.
+//                    "lep_flav_prod_ss==121"                    # means "take from regions with the name matching what follows # up to the end or up to %.
+//                ],                                             % means "I am going to exclude some cuts."
+//                "selections":                                  , separated numbers mean "Drop cuts matching those indices."
+//                [
+//                    "nb==0"
+//                ]
+//            }
+//        }
+//    }
+//
+// There is a twist to this that a string pattern match and replace is supported.
+// This is because depending on samples sometimes you want to apply slightly different cuts.
+// So we provide {pattern} keywords to allow the users to provide a list of std::vector<TString> = {"pattern=blah", "pattern2=blah2"};
+// If not all {pattern}'s are resolved it will print out warning but not quit. (In case, users wishes to handle the logic on their own.)
+//
+std::vector<std::tuple<TString, int, TString, TString>> RooUtil::Draw::getCutsAndWeights(json& j, std::vector<TString> modifiers)
+{
+    // Modifying the json based off of modifiers
+    std::string origjson_str = j.dump();
+    TString origjson = origjson_str;
+    TString newjson = format(origjson, modifiers);
+    json h = json::parse(newjson.Data());
+    std::vector<std::tuple<TString, int, TString, TString>> ret;
+    RooUtil::DrawExprTool dt;
+    dt.setJson(h);
+    for (json::iterator it_reg = j.begin(); it_reg != j.end(); ++it_reg)
+    {
+        TString region = it_reg.key().c_str();
+        json g(j[it_reg.key()]);
+        std::vector<TString> this_reg_draw_sel;
+        std::vector<TString> this_reg_draw_wgt;
+        std::tie(this_reg_draw_sel, this_reg_draw_wgt) = dt.getFullDrawSelExprsAndWgts(g["cuts"]);
+        for (size_t ith = 0; ith < this_reg_draw_sel.size(); ++ith)
+        {
+            TString sel = this_reg_draw_sel[ith];
+            TString wgt = this_reg_draw_wgt[ith];
+            if (sel.Contains("{") || sel.Contains("}")) warning(Form("This selection still has unresolved {} sel: %s", sel.Data()));
+            if (wgt.Contains("{") || wgt.Contains("}")) warning(Form("This weight still has unresolved {} wgt: %s", wgt.Data()));
+            ret.push_back(std::make_tuple(region, (int) ith, sel, wgt));
+        }
+    }
+    return ret;
+}
+
+std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, std::vector<std::tuple<TString, TString, TString>> exprs)
+{
+    std::map<TString, TH1*> ret_hists;
+    TMultiDrawTreePlayer* p = RooUtil::FileUtil::createTMulti(c);
+    int nentries = c->GetEntries();
+    for (auto& expr : exprs)
+    {
+        TString cmd = std::get<0>(expr);
+        TString sel = std::get<1>(expr);
+        TString wgt = std::get<2>(expr);
+        p->queueDraw( cmd.Data(), Form("(%s)*(%s)", sel.Data(), wgt.Data()), "goffe", nentries);
+    }
+    p->execute();
+    for (auto& expr : exprs)
+    {
+        TString histname = split(split(std::get<0>(expr), ">>")[1], "(")[0];
+        TH1* h = RooUtil::FileUtil::get(histname);
+        if (h) ret_hists[histname] = h;
+    }
+    return ret_hists;
+}
+
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+
 std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, json& j, TString prefix, bool nowgt)
 {
     std::map<TString, TH1*> ret_hists;
@@ -17,7 +154,6 @@ std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, json& j, TStrin
         TString cmd = Form(cmds[ith].Data(), prefix.Data());
         TString sel = sels[ith].Data();
         TString wgt = nowgt ? "1" : wgts[ith].Data();
-        std::cout <<  " cmd: " << cmd <<  " sel: " << sel <<  " wgt: " << wgt <<  std::endl;
         p->queueDraw(
                 cmd.Data(),
                 Form("(%s)*(%s)", sel.Data(), wgt.Data()),
@@ -56,11 +192,11 @@ RooUtil::DrawExprTool::tripleVecTStr RooUtil::DrawExprTool::getDrawExprTriple()
             print("ERROR - Did not find any cuts field for this json");
             std::cout << std::setw(4) << g << std::endl;
         }
-        if (!g.count("histograms"))
-        {
-            warning("This json has no histograms defined. Seems unusual. Is this correct?");
-            std::cout << std::setw(4) << g << std::endl;
-        }
+//        if (!g.count("histograms"))
+//        {
+//            warning("This json has no histograms defined. Seems unusual. Is this correct?");
+//            std::cout << std::setw(4) << g << std::endl;
+//        }
         std::vector<TString> this_reg_draw_cmd = getFullDrawCmdExprs(g["histograms"]);
         std::vector<TString> this_reg_draw_sel;
         std::vector<TString> this_reg_draw_wgt;
@@ -269,6 +405,7 @@ std::vector<TString> RooUtil::DrawExprTool::getFullDrawSelExprs(json& j)
 std::vector<TString> RooUtil::DrawExprTool::getFullDrawCmdExprs(json& j)
 {
     std::vector<TString> draw_cmd;
+    draw_cmd.push_back("0>>%scount(1,0,1)");
     for (json::iterator it_hist = j.begin(); it_hist != j.end(); ++it_hist)
     {
         json& histj = it_hist.value();
@@ -291,3 +428,4 @@ std::vector<TString> RooUtil::DrawExprTool::getFullDrawCmdExprs(json& j)
     }
     return draw_cmd;
 }
+

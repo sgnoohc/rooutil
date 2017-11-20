@@ -162,6 +162,21 @@ void RooUtil::StringUtil::remove_parantheses(std::string& S)
     }
 }
 
+//#############################################################################
+// Given a template replace tokens by pattern.
+// Could be thought of as "".format() from python. (although it's not nearly as good as that...)
+TString RooUtil::StringUtil::format(TString tmp, std::vector<TString> tokens)
+{
+    for (auto& token : tokens)
+    {
+        TString key = split(token, "=")[0];
+        TString val = split(token, "=")[1];
+        tmp.ReplaceAll(Form("{%s}", key.Data()), val);
+    }
+    return tmp;
+}
+
+
 //std::string RooUtil::StringUtil::parser(std::string _input, int loc_){
 //
 //    using namespace std;

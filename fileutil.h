@@ -4,11 +4,18 @@
 #ifndef fileutil_h
 #define fileutil_h
 
+#include <vector>
+#include <map>
+
 #include "TChain.h"
 #include "TDirectory.h"
+#include "TH1.h"
 #include "stringutil.h"
 #include "multidraw.h"
 #include "printutil.h"
+#include "json.h"
+
+using json = nlohmann::json;
 
 namespace RooUtil
 {
@@ -18,7 +25,10 @@ namespace RooUtil
         TMultiDrawTreePlayer* createTMulti(TChain*);
         TMultiDrawTreePlayer* createTMulti(TString, TString);
         TH1* get(TString);
-
+        std::map<TString, TH1*> getAllHistograms(TFile*);
+        void saveAllHistograms(std::map<TString, TH1*>, TFile*);
+        void saveJson(json& j, TFile*, TString="json");
+        json getJson(TFile*, TString="json");
     }
 }
 

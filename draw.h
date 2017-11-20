@@ -1,3 +1,5 @@
+// I wish these were more customizable. But unforutnately, I do use some hardcoded values. So may not be completely ideal, but it is what it is.
+
 #ifndef draw_h
 #define draw_h
 
@@ -6,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <utility>
 
 #include "TString.h"
 
@@ -43,8 +46,14 @@ namespace RooUtil
 
     namespace Draw
     {
+        // =========================================================================================================
+        std::vector<std::tuple<TString, TString, TString>> getHistogramBookings(json& j);
+        std::vector<std::tuple<TString, int, TString, TString>> getCutsAndWeights(json& j, std::vector<TString> a=std::vector<TString>());
+        std::vector<std::tuple<TString, int, TString, TString>> multiply(std::vector<std::tuple<TString, int, TString, TString>>, std::vector<std::tuple<TString, TString, TString>>, bool nowgt=false);
+        std::map<TString, TH1*> drawHistograms(TChain* c, std::vector<std::tuple<TString, TString, TString>> exprs);
+        // =========================================================================================================
         DrawExprTool::tripleVecTStr getDrawExprs(json& j);
-        std::map<TString, TH1*> drawHistograms(TChain*,  json&, TString="", bool=false);
+        std::map<TString, TH1*> drawHistograms(TChain*, json&, TString="", bool=false);
     }
 }
 

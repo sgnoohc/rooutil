@@ -145,4 +145,15 @@ void RooUtil::end(int q)
     print();
 }
 
+//_________________________________________________________________________________________________
+void RooUtil::jsoncheck(json& j, TString field)
+{
+    if (!j.count(field.Data()))
+    {
+        RooUtil::print("ERROR - Did not find field = %s from the json", field.Data());
+        std::cout << std::setw(4) << j << std::endl;
+        RooUtil::error("");
+    }
+}
+
 //eof

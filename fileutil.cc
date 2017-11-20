@@ -31,3 +31,41 @@ TH1* RooUtil::FileUtil::get(TString name)
 {
     return (TH1*) gDirectory->Get(name);
 }
+
+std::map<TString, TH1*> RooUtil::FileUtil::getAllHistograms(TFile* f)
+{
+    std::map<TString, TH1*> hists;
+    for (int ikey = 0; ikey < f->GetListOfKeys()->GetEntries(); ++ikey)
+    {
+        TString histname = f->GetListOfKeys()->At(ikey)->GetName();
+        hists[histname] = (TH1*) f->Get(histname);
+    }
+    return hists;
+}
+
+void RooUtil::FileUtil::saveAllHistograms(std::map<TString, TH1*> allhists, TFile* ofile)
+{
+    ofile->cd();
+    for (auto& hist : allhists)
+        if (hist.second)
+            hist.second->Write();
+}
+
+void RooUtil::FileUtil::saveJson(json& j, TFile* ofile, TString jsonname)
+{
+    ofile->cd();
+    std::string s = j.dump();
+    std::vector<std::string> v = {s};
+    ofile->cd();
+    ofile->WriteObjectAny(&v, "vector<string>", jsonname.Data());
+}
+
+json RooUtil::FileUtil::getJson(TFile* ofile, TString jsonname)
+{
+    ofile->cd();
+    std::vector<std::string>* vp = 0;
+    ofile->GetObject(jsonname.Data(), vp);
+    std::string s = vp->at(0);
+    json j = json::parse(s);
+    return j;
+}
