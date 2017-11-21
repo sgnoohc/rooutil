@@ -46,6 +46,21 @@ RooUtil::StringUtil::vecTString RooUtil::StringUtil::split(TString in, TString s
 }
 
 //#############################################################################
+// Convert TString -> vector<TString>
+// like ' '.rsplit()
+//
+RooUtil::StringUtil::vecTString RooUtil::StringUtil::rsplit(TString in, TString separator)
+{
+    TString left = in;
+    rstrip(left, separator);
+    int size = left.Length();
+    vecTString rtn;
+    rtn.push_back(left);
+    rtn.push_back(in(size + 1, in.Length() - size - 1));
+    return rtn;
+}
+
+//#############################################################################
 // Convert vector<TString> -> TString
 // like ':'.join()
 //
@@ -169,8 +184,9 @@ TString RooUtil::StringUtil::format(TString tmp, std::vector<TString> tokens)
 {
     for (auto& token : tokens)
     {
-        TString key = split(token, "=")[0];
-        TString val = split(token, "=")[1];
+        std::vector<TString> v = rsplit(token, "=");
+        TString key = v[0];
+        TString val = v[1];
         tmp.ReplaceAll(Form("{%s}", key.Data()), val);
     }
     return tmp;

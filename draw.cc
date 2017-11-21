@@ -16,9 +16,9 @@ using namespace RooUtil;
 //        "nb"    : { "var" : "nb"   , "bin" : "( 7, 0,   7)", "options" : { "doall" : true } }
 //    }
 //
-std::vector<std::tuple<TString, TString, TString>> RooUtil::Draw::getHistogramBookings(json& j)
+RooUtil::DrawUtil::HistDefs RooUtil::DrawUtil::getHistDefs(json& j)
 {
-    std::vector<std::tuple<TString, TString, TString>> ret;
+    HistDefs ret;
     for (json::iterator it_hist = j.begin(); it_hist != j.end(); ++it_hist)
     {
         json& histj = it_hist.value();
@@ -36,7 +36,11 @@ std::vector<std::tuple<TString, TString, TString>> RooUtil::Draw::getHistogramBo
         TString var = it_hist.value()["var"];
         TString bin = it_hist.value()["bin"];
         bin = sjoin(bin, " ", "");
-        ret.push_back(std::make_tuple(name, var, bin));
+        HistDef hist;
+        hist.name = name;
+        hist.var = var;
+        hist.bin = bin;
+        ret.push_back(hist);
     }
     return ret;
 }
@@ -84,20 +88,22 @@ std::vector<std::tuple<TString, TString, TString>> RooUtil::Draw::getHistogramBo
 // So we provide {pattern} keywords to allow the users to provide a list of std::vector<TString> = {"pattern=blah", "pattern2=blah2"};
 // If not all {pattern}'s are resolved it will print out warning but not quit. (In case, users wishes to handle the logic on their own.)
 //
-std::vector<std::tuple<TString, int, TString, TString>> RooUtil::Draw::getCutsAndWeights(json& j, std::vector<TString> modifiers)
+RooUtil::DrawUtil::Cuts RooUtil::DrawUtil::getCuts(json& j, std::vector<TString> modifiers)
 {
     // Modifying the json based off of modifiers
     std::string origjson_str = j.dump();
     TString origjson = origjson_str;
     TString newjson = format(origjson, modifiers);
     json h = json::parse(newjson.Data());
-    std::vector<std::tuple<TString, int, TString, TString>> ret;
+    Cuts ret;
     RooUtil::DrawExprTool dt;
     dt.setJson(h);
-    for (json::iterator it_reg = j.begin(); it_reg != j.end(); ++it_reg)
+    for (json::iterator it_reg = h.begin(); it_reg != h.end(); ++it_reg)
     {
         TString region = it_reg.key().c_str();
-        json g(j[it_reg.key()]);
+        json g(h[it_reg.key()]);
+        if (g.count("skip") && g["skip"])
+            continue;
         std::vector<TString> this_reg_draw_sel;
         std::vector<TString> this_reg_draw_wgt;
         std::tie(this_reg_draw_sel, this_reg_draw_wgt) = dt.getFullDrawSelExprsAndWgts(g["cuts"]);
@@ -105,42 +111,80 @@ std::vector<std::tuple<TString, int, TString, TString>> RooUtil::Draw::getCutsAn
         {
             TString sel = this_reg_draw_sel[ith];
             TString wgt = this_reg_draw_wgt[ith];
-            if (sel.Contains("{") || sel.Contains("}")) warning(Form("This selection still has unresolved {} sel: %s", sel.Data()));
-            if (wgt.Contains("{") || wgt.Contains("}")) warning(Form("This weight still has unresolved {} wgt: %s", wgt.Data()));
-            ret.push_back(std::make_tuple(region, (int) ith, sel, wgt));
+            Cut cut;
+            cut.reg = region;
+            cut.idx = ith;
+            cut.cut = sel;
+            cut.wgt = wgt;
+            ret.push_back(cut);
         }
     }
     return ret;
 }
 
-std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, std::vector<std::tuple<TString, TString, TString>> exprs)
+//##################################################################################################################################
+// From a list of parsed cuts from the Json, replace the {} modifiers
+RooUtil::DrawUtil::Cuts RooUtil::DrawUtil::compileCuts(RooUtil::DrawUtil::Cuts cuts, std::vector<TString> modifiers)
+{
+    Cuts all_cuts;
+    for (auto& c : cuts)
+    {
+        TString reg = c.reg;
+        int     idx = c.idx;
+        TString cut = c.cut;
+        TString wgt = c.wgt;
+        reg = format(reg, modifiers);
+        cut = format(cut, modifiers);
+        wgt = format(wgt, modifiers);
+        Cut cutobj;
+        cutobj.reg = reg;
+        cutobj.idx = idx;
+        cutobj.cut = cut;
+        cutobj.wgt = wgt;
+        all_cuts.push_back(cutobj);
+    }
+    return all_cuts;
+}
+
+//##################################################################################################################################
+// From a list of "DrawExpr" (just a struct with three TStrings) perform parallel ttree::draw.
+std::map<TString, TH1*> RooUtil::DrawUtil::drawHistograms(TChain* c, RooUtil::DrawUtil::DrawExprs exprs)
 {
     std::map<TString, TH1*> ret_hists;
     TMultiDrawTreePlayer* p = RooUtil::FileUtil::createTMulti(c);
     int nentries = c->GetEntries();
+    // Sanity check book keeping. Users cannot book SAME HISTOGRAM TWICE.
+    std::vector<TString> histnames;
     for (auto& expr : exprs)
     {
-        TString cmd = std::get<0>(expr);
-        TString sel = std::get<1>(expr);
-        TString wgt = std::get<2>(expr);
-        p->queueDraw( cmd.Data(), Form("(%s)*(%s)", sel.Data(), wgt.Data()), "goffe", nentries);
+        TString cmd = expr.cmd;
+        TString cut = expr.cut;
+        TString wgt = expr.wgt;
+        TString histname = split(split(cmd, ">>")[1], "(")[0];
+        if (std::find(histnames.begin(), histnames.end(), histname) != histnames.end())
+            error(Form("You have booked same histograms! Please fix this problem. TMultiDrawTreePlayer does not support queuing draw commands with same histogram names! offending histname=%s", histname.Data()));
+        else
+            histnames.push_back(histname);
+        p->queueDraw( cmd.Data(), Form("(%s)*(%s)", cut.Data(), wgt.Data()), "goffe", nentries);
     }
     p->execute();
-    for (auto& expr : exprs)
+    for (auto& histname : histnames)
     {
-        TString histname = split(split(std::get<0>(expr), ">>")[1], "(")[0];
         TH1* h = RooUtil::FileUtil::get(histname);
         if (h) ret_hists[histname] = h;
     }
     return ret_hists;
 }
 
+void RooUtil::DrawUtil::printHistDefs(HistDefs histdefs) { for (auto& h : histdefs) h.print(); }
+void RooUtil::DrawUtil::printCuts(Cuts cuts) { for (auto& c : cuts) c.print(); }
+void RooUtil::DrawUtil::printDrawExprs(DrawExprs exprs) { for (auto& e : exprs) e.print(); }
 //==================================================================================================================================
 //==================================================================================================================================
 //==================================================================================================================================
 //==================================================================================================================================
 
-std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, json& j, TString prefix, bool nowgt)
+std::map<TString, TH1*> RooUtil::DrawUtil::drawHistograms(TChain* c, json& j, TString prefix, bool nowgt)
 {
     std::map<TString, TH1*> ret_hists;
     TMultiDrawTreePlayer* p = RooUtil::FileUtil::createTMulti(c);
@@ -171,7 +215,7 @@ std::map<TString, TH1*> RooUtil::Draw::drawHistograms(TChain* c, json& j, TStrin
     return ret_hists;
 }
 
-RooUtil::DrawExprTool::tripleVecTStr RooUtil::Draw::getDrawExprs(json& j)
+RooUtil::DrawExprTool::tripleVecTStr RooUtil::DrawUtil::getDrawExprs(json& j)
 {
     RooUtil::DrawExprTool dt;
     dt.setJson(j);

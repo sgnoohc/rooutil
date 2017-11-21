@@ -44,13 +44,50 @@ namespace RooUtil
             std::vector<TString> getFullDrawCmdExprs(json& j);
     };
 
-    namespace Draw
+    namespace DrawUtil
     {
+        struct HistDef
+        {
+            TString name;
+            TString var;
+            TString bin;
+            void print()
+            {
+                std::cout <<  " name: " << name <<  " var: " << var <<  " bin: " << bin <<  std::endl;
+            }
+        };
+        struct Cut
+        {
+            TString reg;
+            int idx;
+            TString cut;
+            TString wgt;
+            void print()
+            {
+                std::cout <<  " reg: " << reg <<  " idx: " << idx <<  " cut: " << RooUtil::StringUtil::cleanparantheses(cut) <<  " wgt: " << wgt <<  std::endl;
+            }
+        };
+        struct DrawExpr
+        {
+            TString cmd;
+            TString cut;
+            TString wgt;
+            void print()
+            {
+                std::cout <<  " cmd: " << cmd <<  " cut: " << cut <<  " wgt: " << wgt <<  std::endl;
+            }
+        };
+        typedef std::vector<HistDef> HistDefs;
+        typedef std::vector<Cut> Cuts;
+        typedef std::vector<DrawExpr> DrawExprs;
         // =========================================================================================================
-        std::vector<std::tuple<TString, TString, TString>> getHistogramBookings(json& j);
-        std::vector<std::tuple<TString, int, TString, TString>> getCutsAndWeights(json& j, std::vector<TString> a=std::vector<TString>());
-        std::vector<std::tuple<TString, int, TString, TString>> multiply(std::vector<std::tuple<TString, int, TString, TString>>, std::vector<std::tuple<TString, TString, TString>>, bool nowgt=false);
-        std::map<TString, TH1*> drawHistograms(TChain* c, std::vector<std::tuple<TString, TString, TString>> exprs);
+        HistDefs getHistDefs(json& j);
+        Cuts getCuts(json& j, std::vector<TString> a=std::vector<TString>());
+        Cuts compileCuts(Cuts, std::vector<TString> a=std::vector<TString>());
+        void printHistDefs(HistDefs histdefs);
+        void printCuts(Cuts cuts);
+        void printDrawExprs(DrawExprs exprs);
+        std::map<TString, TH1*> drawHistograms(TChain* c, DrawExprs exprs);
         // =========================================================================================================
         DrawExprTool::tripleVecTStr getDrawExprs(json& j);
         std::map<TString, TH1*> drawHistograms(TChain*, json&, TString="", bool=false);

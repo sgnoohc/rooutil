@@ -102,6 +102,7 @@ namespace RooUtil
         TTreePerfStats* getTTreePerfStats() { return ps; }
         unsigned int getCurrentEventIndex() { return indexOfEventInTTree - 1; }
         TFile* getCurrentFile() { return tfile; }
+        TString getCurrentFileBaseName() { return gSystem->BaseName(tfile->GetName()); }
         TString getCurrentFileName() { return TString(tfile->GetName()); }
         TString getCurrentFileTitle() { return TString(tfile->GetTitle()); }
         private:
