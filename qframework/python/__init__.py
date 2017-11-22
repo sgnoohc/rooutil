@@ -42,7 +42,7 @@ else:
     if ROOT.gSystem.Load("libQFramework.so"): raise ImportError("unable to load QFramework")
     if ROOT.gSystem.DynamicPathName("libRooFitUtils.so",True):
       ROOT.gSystem.Load("libRooFitUtils.so")
-    ROOT.gSystem.Load("libSFramework.so")
+    #ROOT.gSystem.Load("libSFramework.so")
 
 # define some print commands that are available as preprocessor macros in the library
 def BREAK(arg):
