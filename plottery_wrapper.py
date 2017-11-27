@@ -163,6 +163,14 @@ def remove_errors(hists):
         for ibin in xrange(0, hist.GetNbinsX()+2):
             hist.SetBinError(ibin, 0)
 
+#______________________________________________________________________________________________________________________
+def rebin(hists, nbin):
+    for hist in hists:
+        if not hist: continue
+        currnbin = hist.GetNbinsX()
+        fac = currnbin / nbin
+        hist.Rebin(fac)
+
 
 
 
@@ -242,6 +250,15 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         if options["blind"]:
             data = None
         del options["blind"]
+
+    # "nbins" initiate rebinning
+    if "nbins" in options:
+        nbins = options["nbins"]
+        rebin(sigs, nbins)
+        rebin(bgs, nbins)
+        rebin([data], nbins)
+        del options["nbins"]
+
 
     # If data is none clone one hist and fill with 0
     if not data:
@@ -369,6 +386,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "lumi_value"               in options: options["lumi_value"]                = "35.9"
     if not "bkg_err_fill_style"       in options: options["bkg_err_fill_style"]        = 3245
     if not "bkg_err_fill_color"       in options: options["bkg_err_fill_color"]        = 1
+    if not "output_ic"                in options: options["output_ic"]                 = 1
 
     # Call Plottery! I hope you win the Lottery!
     c1 = p.plot_hist(
