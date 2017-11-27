@@ -383,13 +383,17 @@ TObjArray * TQUtils::getBranchNames(const TString& input) {
       endPos = str.size();
  
     TString bname = TQStringUtils::trim(input(startPos,endPos-startPos));
+    bool addfCoordinates = false;
     if(endPos < (int)(str.size())){
       char next = input[endPos];
       if(next == '[' || next == '.'){
         bname.Append("*");
+        addfCoordinates = true;
       }
     }
     params -> Add(new TObjString(bname));
+    if(addfCoordinates)
+        params -> Add(new TObjString("fCoordinates*"));
  
     int nextPos = str.find_first_of(sepChars.Data(), endPos);
     if(nextPos == -1) break;
