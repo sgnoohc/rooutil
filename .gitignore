@@ -3,3 +3,4 @@
 *.d
 *.pcm
 *.pyc
+qframework/Root/*.h
