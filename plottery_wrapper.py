@@ -139,7 +139,8 @@ def get_total_err_hist(hists):
 def getYaxisRange(hist):
     maximum = 0
     if hist:
-        for ibin in xrange(1, hist.GetNbinsX()+1):
+        for ibin in xrange(0, hist.GetNbinsX()+2):
+        #for ibin in xrange(1, hist.GetNbinsX()+1):
             c = hist.GetBinContent(ibin)
             e = hist.GetBinError(ibin)
             v = c + e
@@ -169,12 +170,197 @@ def rebin(hists, nbin):
         if not hist: continue
         currnbin = hist.GetNbinsX()
         fac = currnbin / nbin
-        hist.Rebin(fac)
+        if float(fac).is_integer() and fac > 0:
+            hist.Rebin(fac)
 
 
+# =================
+# Significance scan
+# =================
 
+#______________________________________________________________________________________________________________________
+# S / sqrt(B) fom
+def fom_SoverSqrtB(s, serr, b, berr, totals, totalb):
+    if b > 0:
+        return s / math.sqrt(b), 0
+    else:
+        return 0, 0
 
+#______________________________________________________________________________________________________________________
+# S / sqrt(B +sB^2) fom
+def fom_SoverSqrtBwErr(s, serr, b, berr, totals, totalb):
+    if b > 0:
+        return r.RooStats.NumberCountingUtils.BinomialExpZ(s, b, float(berr / b)), 0
+        #return s / math.sqrt(b + berr*berr), 0
+    else:
+        return 0, 0
 
+#______________________________________________________________________________________________________________________
+# S / sqrt(B) fom
+def fom_acceptance(s, serr, b, berr, totals, totalb):
+    if totals != 0:
+        return s / totals, 0
+    else:
+        return 0, 0
+
+#______________________________________________________________________________________________________________________
+# For each signal and total background return scan from left/right of fom (figure of merit) func.
+def plot_sigscan2d(sig, bkg, fom=fom_SoverSqrtB):
+    nbin = sig.GetNbinsX()
+    if nbin != bkg.GetNbinsX():
+        print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
+    scan = cloneTH1(sig)
+    scan.Reset()
+    xmin = scan.GetXaxis().GetBinLowEdge(1)
+    xwidth = scan.GetXaxis().GetBinWidth(1)
+    max_f = 0
+    max_f_cut_low = 0
+    max_f_cut_high = 0
+    totalsig = sig.Integral(0, nbin + 1)
+    totalbkg = bkg.Integral(0, nbin + 1)
+
+    for i in xrange(1, nbin + 1):
+        local_max_f = 0
+        local_max_f_err = 0
+        for j in xrange(i + 1, nbin + 1):
+            sigerr = r.Double(0)
+            sigint = sig.IntegralAndError(i, j, sigerr)
+            bkgerr = r.Double(0)
+            bkgint = bkg.IntegralAndError(i, j, bkgerr)
+            f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
+            if max_f < f:
+                max_f = f
+                max_f_cut_low = xmin + xwidth * (i - 1)
+                max_f_cut_high = xmin + xwidth * j
+            if local_max_f < f:
+                local_max_f = f
+                local_max_f_err = ferr
+        scan.SetBinContent(i, local_max_f)
+        scan.SetBinError(i, ferr)
+    scan.SetName("{:.4f} ({:.4f},{:.4f})".format(max_f, max_f_cut_low, max_f_cut_high))
+    return scan
+
+#______________________________________________________________________________________________________________________
+# For each signal and total background return scan from left/right of fom (figure of merit) func.
+def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+    nbin = sig.GetNbinsX()
+    if nbin != bkg.GetNbinsX():
+        print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
+    leftscan = cloneTH1(sig)
+    leftscan.Reset()
+    xmin = leftscan.GetXaxis().GetBinLowEdge(1)
+    xwidth = leftscan.GetXaxis().GetBinWidth(1)
+    max_f = 0
+    max_f_cut = 0
+    totalsig = sig.Integral(0, nbin + 1)
+    totalbkg = bkg.Integral(0, nbin + 1)
+    for i in xrange(1, nbin + 1):
+        sigerr = r.Double(0)
+        sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
+        bkgerr = r.Double(0)
+        bkgint = bkg.IntegralAndError(i, nbin + 1, bkgerr)
+        f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
+        leftscan.SetBinContent(i, f)
+        leftscan.SetBinError(i, ferr)
+        if max_f < f:
+            max_f = f
+            max_f_cut = xmin + xwidth * (i - 1)
+    leftscan.SetName("#rightarrow {:.4f} ({:.4f})".format(max_f, max_f_cut))
+    rightscan = cloneTH1(sig)
+    rightscan.Reset()
+    max_f = 0
+    max_f_cut = 0
+    for i in reversed(xrange(1, nbin + 1)):
+        sigerr = r.Double(0)
+        sigint = sig.IntegralAndError(0, i, sigerr)
+        bkgerr = r.Double(0)
+        bkgint = bkg.IntegralAndError(0, i, bkgerr)
+        f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
+        rightscan.SetBinContent(i, f)
+        rightscan.SetBinError(i, ferr)
+        if max_f < f:
+            max_f = f
+            max_f_cut = xmin + xwidth * i
+    rightscan.SetName("#leftarrow {:.4f} ({:.4f})".format(max_f, max_f_cut))
+    return leftscan, rightscan
+
+#______________________________________________________________________________________________________________________
+# For each signal and indvidiual background plus systematics
+def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
+
+    bkg = get_total_hist(bkgs)
+
+    if len(bkgs) != len(systs) and len(systs) > 0:
+        print "Error - The provided systs list does not have the same number of entries as the bkgs", bkgs, systs
+
+    nbin = sig.GetNbinsX()
+    if nbin != bkg.GetNbinsX():
+        print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
+    leftscan = cloneTH1(sig)
+    leftscan.Reset()
+    xmin = leftscan.GetXaxis().GetBinLowEdge(1)
+    xwidth = leftscan.GetXaxis().GetBinWidth(1)
+    max_f = -999
+    max_f_cut = 0
+    totalsig = sig.Integral(0, nbin + 1)
+    totalbkg = bkg.Integral(0, nbin + 1)
+    sigaccept = 0
+    for i in xrange(1, nbin + 1):
+        sigerr = r.Double(0)
+        sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
+        bkgerr = r.Double(0)
+        bkgint = bkg.IntegralAndError(i, nbin + 1, bkgerr)
+        count_s = E(sigint, sigerr)
+        count_b = E(bkgint, bkgerr)
+        counts = []
+        for index, bg in enumerate(bkgs):
+            e = r.Double(0)
+            c = bg.IntegralAndError(i, nbin + 1, e)
+            ne = math.sqrt(e*e + c*systs[index]*c*systs[index])
+            counts.append(E(c, ne))
+        count_b_w_syst = E(0, 0)
+        for count in counts:
+            count_b_w_syst = count_b_w_syst + count
+        bkgerr = count_b_w_syst.err
+        f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
+        #print i, f
+        leftscan.SetBinContent(i, f)
+        leftscan.SetBinError(i, ferr)
+        if max_f < f:
+            max_f = f
+            max_f_cut = xmin + xwidth * (i - 1)
+            sigaccept = sigint / totalsig
+    leftscan.SetName("#rightarrow {:.4f} ({:.4f} {:.4f})".format(max_f, max_f_cut, sigaccept))
+
+    rightscan = cloneTH1(sig)
+    rightscan.Reset()
+    max_f = -999
+    max_f_cut = 0
+    for i in reversed(xrange(1, nbin + 1)):
+        sigerr = r.Double(0)
+        sigint = sig.IntegralAndError(0, i, sigerr)
+        bkgerr = r.Double(0)
+        bkgint = bkg.IntegralAndError(0, i, bkgerr)
+        count_s = E(sigint, sigerr)
+        count_b = E(bkgint, bkgerr)
+        counts = []
+        for index, bg in enumerate(bkgs):
+            e = r.Double(0)
+            c = bg.IntegralAndError(0, i, e)
+            ne = math.sqrt(e*e + c*systs[index]*c*systs[index])
+            counts.append(E(c, ne))
+        count_b_w_syst = E(0, 0)
+        for count in counts:
+            count_b_w_syst = count_b_w_syst + count
+        f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
+        rightscan.SetBinContent(i, f)
+        rightscan.SetBinError(i, ferr)
+        if max_f < f:
+            max_f = f
+            max_f_cut = xmin + xwidth * (i - 1)
+    rightscan.SetName("#leftarrow {:.4f} ({:.4f})".format(max_f, max_f_cut))
+
+    return leftscan, rightscan
 
 # ====================
 # Yield table printing
@@ -261,7 +447,9 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
 
 
     # If data is none clone one hist and fill with 0
+    didnothaveanydata = False
     if not data:
+        didnothaveanydata = True
         if len(bgs) != 0:
             data = bgs[0].Clone("Data")
             data.Reset()
@@ -344,7 +532,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "canvas_width"             in options: options["canvas_width"]              = 604
     if not "canvas_height"            in options: options["canvas_height"]             = 728
     if not "yaxis_range"              in options: options["yaxis_range"]               = [0., yaxismax]
-    if not "legend_ncolumns"          in options: options["legend_ncolumns"]           = 2
+    if not "legend_ncolumns"          in options: options["legend_ncolumns"]           = 2 if len(bgs) > 4 else 1
     if not "legend_alignment"         in options: options["legend_alignment"]          = "topleft"
     if not "legend_smart"             in options: options["legend_smart"]              = True
     if not "legend_scalex"            in options: options["legend_scalex"]             = 1.2
@@ -386,7 +574,11 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "lumi_value"               in options: options["lumi_value"]                = "35.9"
     if not "bkg_err_fill_style"       in options: options["bkg_err_fill_style"]        = 3245
     if not "bkg_err_fill_color"       in options: options["bkg_err_fill_color"]        = 1
-    if not "output_ic"                in options: options["output_ic"]                 = 1
+    if not "output_ic"                in options: options["output_ic"]                 = 0
+
+    # If you did not pass any data then set data back to None
+    if didnothaveanydata:
+        data = None
 
     # Call Plottery! I hope you win the Lottery!
     c1 = p.plot_hist(
@@ -408,4 +600,22 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
 
     # Call nice plots
     copy_nice_plot_index_php(options)
+
+#______________________________________________________________________________________________________________________
+def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
+    hsigs = []
+    hbgs = []
+    if syst:
+        leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
+    else:
+        leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
+    hbgs.append(leftscan)
+    hsigs.append(rightscan)
+    hsigs.append(plot_sigscan2d(sigs[0], get_total_hist(bgs)))
+    leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs), fom_acceptance)
+    hsigs.append(leftscan)
+    hsigs.append(rightscan)
+    options["bkg_err_fill_color"] = 0
+    options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
+    plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
 

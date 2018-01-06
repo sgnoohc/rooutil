@@ -75,7 +75,7 @@ int TQEventlistPrinter::writeEventlists(const TString& jobname, const TString& o
       TQNamedTaggable* cut = citr.readNext();
       TString cutname = cut->getTagStringDefault(".name",cut->GetName());
       TString evtlistname = TQFolder::concatPaths(cutname,jobname);
-      TQTable* evtlist = this->fReader->getEventlist(path,evtlistname);
+      TQTable* evtlist = this->fReader->getEventlist(path, evtlistname, &tags);
       if(!evtlist){
         if(verbose) WARNclass("unable to retrieve event list '%s' from path '%s'",evtlistname.Data(),path.Data());
         continue;

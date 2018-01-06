@@ -1027,7 +1027,7 @@ TString TQTable::formatEntryContents(TQTaggable* entry, const TString& format){
       if((exponent != 0) && (this->getTagBoolDefault("format.useExponentialNotation",false))){
         DEBUGclass("using exponential notation (int): exponent=%d", exponent);
         //@tag: [format.nSignificantDigits] This object tag determines the number of significant digits shown in the table, default: 2
-        int nDigits = entry->getTagIntegerDefault("format.nSignificantDigits",this->getTagIntegerDefault("format.nSignificantDigits",2));
+        int nDigits = entry->getTagIntegerDefault("format.nSignificantDigits",this->getTagIntegerDefault("format.nSignificantDigits",5));
         double roundVal = TQUtils::round(double(val)/pow(10,exponent),nDigits);
         //@tag: [format.useSIsuffix] If this object tag is set to true, SI prefixes (m,k,M,...) are used as suffixes for numbers.
         TString suffix = this->makeExpSuffix(exponent,format,this->getTagBoolDefault("useSIsuffix",false));
@@ -1043,7 +1043,7 @@ TString TQTable::formatEntryContents(TQTaggable* entry, const TString& format){
       double val = entry->getTagDoubleDefault("content.value",0);
       int exponent = floor(log10(val)/3)*3;
       //for tag documentation see above
-      int nDigits = entry->getTagIntegerDefault("format.nSignificantDigits",this->getTagIntegerDefault("format.nSignificantDigits",2));
+      int nDigits = entry->getTagIntegerDefault("format.nSignificantDigits",this->getTagIntegerDefault("format.nSignificantDigits",5));
       TString ndig = TString::Format("%d",nDigits);
       double roundVal = TQUtils::round(val/pow(10,exponent),nDigits);
       //@tag: [content.uncertainty] This entry tag contains the uncertainty of the numerical content of the corresponding cell.
