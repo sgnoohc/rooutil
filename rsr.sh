@@ -10,9 +10,10 @@ usage()
 }
 
 # Parsing command-line opts
-while getopts ":th" OPTION; do
+while getopts ":tdh" OPTION; do
     case $OPTION in
         t) TREENAME=${OPTARG};;
+        d) DELETE=true;;
         h) usage;;
         :) usage;;
     esac
@@ -30,6 +31,13 @@ if [ -z $1 ]; then
     usage
 else
     FILENAME=$1
+fi
+
+# Print disclaimer to cover my ass
+if [ "$DELETE" == true ]; then
+    echo "[RSR] WARNING: DELETE MODE IS ON!!!"
+    echo "[RSR] If the script finds a bad root file it will DELETE IT!!!"
+    echo "[RSR] DON'T SAY I DIDN'T WARN YA"
 fi
 
 # Write the script to a temporary file in order to avoid clash when running parallel
@@ -87,8 +95,10 @@ root -l -b -q ${MACRO}+\(\"$FILENAME\",\"$TREENAME\"\)
 # If return code is non-zero delete the file
 if [ $? -ne 0 ]; then
     echo "[RSR] failed the rigorous sweeproot"
-    echo "[RSR] Deleting the file $FILENAME"
-    rm $FILENAME
+    if [ "$DELETE" == true ]; then
+        echo "[RSR] Deleting the file $FILENAME"
+        rm $FILENAME
+    fi
 fi
 
 #eof
