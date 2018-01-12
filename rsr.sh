@@ -33,7 +33,7 @@ else
 fi
 
 # Write the script to a temporary file in order to avoid clash when running parallel
-MACRONAME=$(mktemp XXXXXXXXX)
+MACRONAME=$(mktemp stupid_numbers_XXXXXXXXX)
 MACRO=/tmp/${MACRONAME}.C
 
 # Dumping the macro to the tmp file
