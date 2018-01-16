@@ -99,6 +99,9 @@ if [ $? -ne 0 ]; then
         echo "[RSR] Deleting the file $FILENAME"
         rm $FILENAME
     fi
+    exit 1
 fi
+
+exit 0
 
 #eof
