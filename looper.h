@@ -201,11 +201,11 @@ RooUtil::Looper<TREECLASS>::~Looper()
         cout << endl;
         delete bmark;
 
-        if ( fileIter )
-            delete fileIter;
-
-        if ( tfile )
-            delete tfile;
+//        if ( fileIter )
+//            delete fileIter;
+//
+//        if ( tfile )
+//            delete tfile;
     }
 }
 
