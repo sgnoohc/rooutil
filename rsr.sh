@@ -89,6 +89,8 @@ int ${MACRONAME}(TString fname, TString treename)
 }" > $MACRO
 #------------------------------------------------------------
 
+rm ${MACRONAME}.C
+
 # Perform a rigorous sweep
 root -l -b -q ${MACRO}+\(\"$FILENAME\",\"$TREENAME\"\)
 
