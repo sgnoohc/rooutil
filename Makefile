@@ -14,6 +14,7 @@ LIB=rooutil.so
 
 $(LIB): $(SOURCES) $(HEADERS)
 	$(LD) $(CXXFLAGS) $(LDFLAGS) -fPIC -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $(SOURCES) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
+	ln -sf rooutil.so librooutil.so
 
 all: $(LIB) 
 clean:
