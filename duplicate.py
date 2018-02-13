@@ -19,6 +19,7 @@ args = parser.parse_args()
 
 import ROOT as r
 import os
+r.gROOT.SetBatch(True)
 thispypathdir = os.path.dirname(os.path.realpath(__file__))
 r.gSystem.Load(os.path.join(thispypathdir, "rooutil.so"))
 r.gROOT.ProcessLine('.L {}'.format(os.path.join(thispypathdir, "dorky.h")))
