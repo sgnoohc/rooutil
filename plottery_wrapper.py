@@ -173,6 +173,154 @@ def rebin(hists, nbin):
         if float(fac).is_integer() and fac > 0:
             hist.Rebin(fac)
 
+#______________________________________________________________________________________________________________________
+def single_divide_by_bin_width(hist):
+    for ibin in xrange(1,hist.GetNbinsX()+2):
+        hist.SetBinContent(ibin, hist.GetBinContent(ibin) / hist.GetBinWidth(ibin))
+        hist.SetBinError(ibin, hist.GetBinError(ibin) / hist.GetBinWidth(ibin))
+
+#______________________________________________________________________________________________________________________
+def divide_by_bin_width(hists):
+    for hist in hists:
+        single_divide_by_bin_width(hist)
+
+#______________________________________________________________________________________________________________________
+def move_overflow(hists):
+    def func(hist):
+        of_bc = hist.GetBinContent(hist.GetNbinsX()+1)
+        of_be = hist.GetBinError(hist.GetNbinsX()+1)
+        lb_bc = hist.GetBinContent(hist.GetNbinsX())
+        lb_be = hist.GetBinError(hist.GetNbinsX())
+        lb_bc_new = lb_bc + of_bc
+        lb_be_new = math.sqrt(lb_be**2 + of_be**2)
+        hist.SetBinContent(hist.GetNbinsX(), lb_bc_new)
+        hist.SetBinError(hist.GetNbinsX(), lb_be_new)
+        hist.SetBinContent(hist.GetNbinsX()+1, 0)
+        hist.SetBinError(hist.GetNbinsX()+1, 0)
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist)
+    else:
+        func(hists)
+    return hists
+
+#______________________________________________________________________________________________________________________
+def apply_nf(hists, nfs):
+    def func(hist, nfs):
+        if isinstance(nfs, list) and len(nfs) == 0:
+            pass
+        elif isinstance(nfs, float):
+            for i in xrange(0, hist.GetNbinsX()+2):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                hist.SetBinContent(i, bc * nfs)
+                hist.SetBinError(i, be * nfs)
+        elif len(nfs) == hist.GetNbinsX():
+            for i in xrange(1, hist.GetNbinsX()+1):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                hist.SetBinContent(i, bc * nfs[i-1])
+                hist.SetBinError(i, be * nfs[i-1])
+        elif len(nfs) == hist.GetNbinsX()+2:
+            for i in xrange(0, hist.GetNbinsX()+2):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                hist.SetBinContent(i, bc * nfs[i])
+                hist.SetBinError(i, be * nfs[i])
+        elif len(nfs) == 1:
+            for i in xrange(0, hist.GetNbinsX()+2):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                hist.SetBinContent(i, bc * nfs[0])
+                hist.SetBinError(i, be * nfs[0])
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist, nfs)
+    else:
+        func(hists, nfs)
+    return hists
+
+#______________________________________________________________________________________________________________________
+def apply_nf_w_error(hists, nfs):
+    def func(hist, nfs):
+        if isinstance(nfs, list) and len(nfs) == 0:
+            pass
+        elif isinstance(nfs, float):
+            for i in xrange(0, hist.GetNbinsX()+2):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                hist.SetBinContent(i, bc * nfs)
+                hist.SetBinError(i, be * nfs)
+        elif len(nfs) == hist.GetNbinsX():
+            for i in xrange(1, hist.GetNbinsX()+1):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                bfe = be / bc if bc != 0 else 0
+                nf = nfs[i-1][0]
+                ne = nfs[i-1][1]
+                nfe = ne / nf if nf != 0 else 0
+                nbc = bc * nf
+                nbe = math.sqrt(bfe**2 + nfe**2) * nbc
+                hist.SetBinContent(i, nbc)
+                hist.SetBinError(i, nbe)
+        elif len(nfs) == hist.GetNbinsX()+2:
+            for i in xrange(0, hist.GetNbinsX()+2):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                bfe = be / bc if bc != 0 else 0
+                nf = nfs[i][0]
+                ne = nfs[i][1]
+                nfe = ne / nf if nf != 0 else 0
+                nbc = bc * nf
+                nbe = math.sqrt(bfe**2 + nfe**2) * nbc
+                hist.SetBinContent(i, nbc)
+                hist.SetBinError(i, nbe)
+        elif len(nfs) == 1:
+            for i in xrange(0, hist.GetNbinsX()+2):
+                bc = hist.GetBinContent(i)
+                be = hist.GetBinError(i)
+                bfe = be / bc if bc != 0 else 0
+                nf = nfs[0][0]
+                ne = nfs[0][1]
+                nfe = ne / nf if nf != 0 else 0
+                nbc = bc * nf
+                nbe = math.sqrt(bfe**2 + nfe**2) * nbc
+                hist.SetBinContent(i, nbc)
+                hist.SetBinError(i, nbe)
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist, nfs)
+    else:
+        func(hists, nfs)
+    return hists
+
+#______________________________________________________________________________________________________________________
+def apply_nf_w_error_2d(hists, nfs):
+    def func(hist, nfs):
+        if isinstance(nfs, list) and len(nfs) == 0:
+            pass
+        elif len(nfs) == 1:
+            for i in xrange(0, hist.GetNbinsX()+2):
+                for j in xrange(0, hist.GetNbinsY()+2):
+                    bc = hist.GetBinContent(i, j)
+                    be = hist.GetBinError(i, j)
+                    bfe = be / bc if bc != 0 else 0
+                    nf = nfs[0][0]
+                    ne = nfs[0][1]
+                    nfe = ne / nf if nf != 0 else 0
+                    nbc = bc * nf
+                    nbe = math.sqrt(bfe**2 + nfe**2) * nbc
+                    hist.SetBinContent(i, j, nbc)
+                    hist.SetBinError(i, j, nbe)
+        else:
+            print "WARNING - apply_nf_w_error_2d: something went wrong."
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist, nfs)
+    else:
+        func(hists, nfs)
+    return hists
+
 
 # =================
 # Significance scan
@@ -445,6 +593,12 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         rebin([data], nbins)
         del options["nbins"]
 
+    if "divide_by_bin_width" in options:
+        if options["divide_by_bin_width"]:
+            divide_by_bin_width(sigs)
+            divide_by_bin_width(bgs)
+            divide_by_bin_width([data])
+        del options["divide_by_bin_width"]
 
     # If data is none clone one hist and fill with 0
     didnothaveanydata = False
