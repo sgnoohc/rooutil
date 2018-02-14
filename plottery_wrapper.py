@@ -312,6 +312,19 @@ def apply_nf_w_error_2d(hists, nfs):
                     nbe = math.sqrt(bfe**2 + nfe**2) * nbc
                     hist.SetBinContent(i, j, nbc)
                     hist.SetBinError(i, j, nbe)
+        elif len(nfs) == hist.GetNbinsX():
+            for i in xrange(1, hist.GetNbinsX()+1):
+                for j in xrange(0, hist.GetNbinsY()+2):
+                    bc = hist.GetBinContent(i, j)
+                    be = hist.GetBinError(i, j)
+                    bfe = be / bc if bc != 0 else 0
+                    nf = nfs[i-1][0]
+                    ne = nfs[i-1][1]
+                    nfe = ne / nf if nf != 0 else 0
+                    nbc = bc * nf
+                    nbe = math.sqrt(bfe**2 + nfe**2) * nbc
+                    hist.SetBinContent(i, j, nbc)
+                    hist.SetBinError(i, j, nbe)
         else:
             print "WARNING - apply_nf_w_error_2d: something went wrong."
     if isinstance(hists, list):
@@ -636,8 +649,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         options["yaxis_title_offset"] = 1.8
     elif yaxismax < 0.1:
         options["yaxis_title_offset"] = 1.6
-    elif yaxismax < 1.:
-        options["yaxis_title_offset"] = 1.5
+    elif yaxismax < 10.:
+        options["yaxis_title_offset"] = 1.6
     elif yaxismax < 100:
         options["yaxis_title_offset"] = 1.2
     elif yaxismax < 1000:
@@ -686,11 +699,11 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "canvas_width"             in options: options["canvas_width"]              = 604
     if not "canvas_height"            in options: options["canvas_height"]             = 728
     if not "yaxis_range"              in options: options["yaxis_range"]               = [0., yaxismax]
-    if not "legend_ncolumns"          in options: options["legend_ncolumns"]           = 2 if len(bgs) > 4 else 1
-    if not "legend_alignment"         in options: options["legend_alignment"]          = "topleft"
+    if not "legend_ncolumns"          in options: options["legend_ncolumns"]           = 2 if len(bgs) >= 4 else 1
+    if not "legend_alignment"         in options: options["legend_alignment"]          = "topright"
     if not "legend_smart"             in options: options["legend_smart"]              = True
-    if not "legend_scalex"            in options: options["legend_scalex"]             = 1.2
-    if not "legend_scaley"            in options: options["legend_scaley"]             = 1.2
+    if not "legend_scalex"            in options: options["legend_scalex"]             = 1.0
+    if not "legend_scaley"            in options: options["legend_scaley"]             = 1.0
     if not "legend_border"            in options: options["legend_border"]             = False
     if not "legend_percentageinbox"   in options: options["legend_percentageinbox"]    = False
     if not "hist_line_none"           in options: options["hist_line_none"]            = True
@@ -716,6 +729,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "canvas_ratio_leftmargin"  in options: options["canvas_ratio_leftmargin"]   = 130. / 600.
     if not "xaxis_title_size"         in options: options["xaxis_title_size"]          = 0.06
     if not "yaxis_title_size"         in options: options["yaxis_title_size"]          = 0.06
+    if not "xaxis_title_offset"       in options: options["xaxis_title_offset"]        = 1.4 
+    if not "yaxis_title_offset"       in options: options["yaxis_title_offset"]        = 1.4 
     if not "xaxis_label_size_scale"   in options: options["xaxis_label_size_scale"]    = 1.4
     if not "yaxis_label_size_scale"   in options: options["yaxis_label_size_scale"]    = 1.4
     if not "xaxis_label_offset_scale" in options: options["xaxis_label_offset_scale"]  = 4.0
@@ -729,6 +744,18 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "bkg_err_fill_style"       in options: options["bkg_err_fill_style"]        = 3245
     if not "bkg_err_fill_color"       in options: options["bkg_err_fill_color"]        = 1
     if not "output_ic"                in options: options["output_ic"]                 = 0
+    if not "yaxis_moreloglabels"      in options: options["yaxis_moreloglabels"]       = False
+    if not "yaxis_noexponents"        in options: options["yaxis_noexponents"]         = False
+    if "no_ratio" in options:
+        options["canvas_height"] = 588
+
+    #if "no_ratio" in options:
+    #    if options["no_ratio"]:
+    #        options["canvas_ratio_y2"] = 0.0
+    #        options["canvas_ratio_y1"] = 0.0
+    #        options["canvas_ratio_x2"] = 0.0
+    #        options["canvas_ratio_x1"] = 0.0
+    #    del options["no_ratio"]
 
     # If you did not pass any data then set data back to None
     if didnothaveanydata:
