@@ -303,6 +303,17 @@ TH1* RooUtil::AutoHist::get( STRING name )
 }
 
 //__________________________________________________________________________________________________
+void RooUtil::AutoHist::print()
+{
+    RooUtil::print("Printing histdb ...");
+    for (auto& i : histdb)
+    {
+        TString msg = Form("  %s", i.second->GetName());
+        RooUtil::print(msg.Data());
+    }
+}
+
+//__________________________________________________________________________________________________
 TH1* RooUtil::AutoHist::crop( TH1* orighist, int nbin, double min, double max )
 {
     // Checks whether this is uniform binning

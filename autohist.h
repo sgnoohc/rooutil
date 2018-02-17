@@ -84,6 +84,7 @@ namespace RooUtil
             void fill( double xval, TH1*& h, double wgt = 1, bool norebinning = false );
             TH1* hadd( TH1*, TH1* );
             TH1* get( STRING );
+            void print();
             static int getRes( double range );
             static int getRes( TH1* h );
             static void transfer( TH1*, TH1* );

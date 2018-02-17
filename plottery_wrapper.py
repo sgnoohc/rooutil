@@ -159,6 +159,16 @@ def get_max_yaxis_range(hists):
     return maximum
 
 #______________________________________________________________________________________________________________________
+def get_max_yaxis_range_order_half_modded(maximum):
+    firstdigit = int(str(maximum)[0])
+    order = int(math.log10(maximum))
+    if firstdigit <= 2:
+        middle = (10.**(order - 1))
+    else:
+        middle = (10.**(order))
+    return maximum + middle
+
+#______________________________________________________________________________________________________________________
 def remove_errors(hists):
     for hist in hists:
         for ibin in xrange(0, hist.GetNbinsX()+2):
@@ -611,6 +621,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             divide_by_bin_width(sigs)
             divide_by_bin_width(bgs)
             divide_by_bin_width([data])
+            if "yaxis_label" not in options:
+                options["yaxis_label"] = "Events / Bin Width"
         del options["divide_by_bin_width"]
 
     # If data is none clone one hist and fill with 0
@@ -642,7 +654,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     totalbkg = None
     if len(bgs) != 0:
         totalbkg = get_total_hist(bgs)
-    yaxismax = get_max_yaxis_range([data, totalbkg]) * 1.8
+    yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * 1.8)
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
@@ -696,58 +708,68 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     remove_errors(bgs)
 
     # Here are my default options for plottery
-    if not "canvas_width"             in options: options["canvas_width"]              = 604
-    if not "canvas_height"            in options: options["canvas_height"]             = 728
-    if not "yaxis_range"              in options: options["yaxis_range"]               = [0., yaxismax]
-    if not "legend_ncolumns"          in options: options["legend_ncolumns"]           = 2 if len(bgs) >= 4 else 1
-    if not "legend_alignment"         in options: options["legend_alignment"]          = "topright"
-    if not "legend_smart"             in options: options["legend_smart"]              = True
-    if not "legend_scalex"            in options: options["legend_scalex"]             = 1.0
-    if not "legend_scaley"            in options: options["legend_scaley"]             = 1.0
-    if not "legend_border"            in options: options["legend_border"]             = False
-    if not "legend_percentageinbox"   in options: options["legend_percentageinbox"]    = False
-    if not "hist_line_none"           in options: options["hist_line_none"]            = True
-    if not "show_bkg_errors"          in options: options["show_bkg_errors"]           = False
-    if not "ratio_range"              in options: options["ratio_range"]               = [0.7, 1.3]
-    if not "ratio_name_size"          in options: options["ratio_name_size"]           = 0.13
-    if not "ratio_name_offset"        in options: options["ratio_name_offset"]         = 0.6
-    if not "ratio_xaxis_label_offset" in options: options["ratio_xaxis_label_offset"]  = 0.06
-    if not "ratio_yaxis_label_offset" in options: options["ratio_yaxis_label_offset"]  = 0.03
-    if not "ratio_xaxis_title_offset" in options: options["ratio_xaxis_title_offset"]  = 1.40
-    if not "ratio_xaxis_title_size"   in options: options["ratio_xaxis_title_size"]    = 0.13
-    if not "ratio_label_size"         in options: options["ratio_label_size"]          = 0.13
-    if not "canvas_tick_one_side"     in options: options["canvas_tick_one_side"]      = True
-    if not "canvas_main_y1"           in options: options["canvas_main_y1"]            = 0.2
-    if not "canvas_main_topmargin"    in options: options["canvas_main_topmargin"]     = 0.2 / 0.7 - 0.2
-    if not "canvas_main_rightmargin"  in options: options["canvas_main_rightmargin"]   = 50. / 600.
-    if not "canvas_main_bottommargin" in options: options["canvas_main_bottommargin"]  = 0.2
-    if not "canvas_main_leftmargin"   in options: options["canvas_main_leftmargin"]    = 130. / 600.
-    if not "canvas_ratio_y2"          in options: options["canvas_ratio_y2"]           = 0.342
-    if not "canvas_ratio_topmargin"   in options: options["canvas_ratio_topmargin"]    = 0.05
-    if not "canvas_ratio_rightmargin" in options: options["canvas_ratio_rightmargin"]  = 50. / 600.
-    if not "canvas_ratio_bottommargin"in options: options["canvas_ratio_bottommargin"] = 0.4
-    if not "canvas_ratio_leftmargin"  in options: options["canvas_ratio_leftmargin"]   = 130. / 600.
-    if not "xaxis_title_size"         in options: options["xaxis_title_size"]          = 0.06
-    if not "yaxis_title_size"         in options: options["yaxis_title_size"]          = 0.06
-    if not "xaxis_title_offset"       in options: options["xaxis_title_offset"]        = 1.4 
-    if not "yaxis_title_offset"       in options: options["yaxis_title_offset"]        = 1.4 
-    if not "xaxis_label_size_scale"   in options: options["xaxis_label_size_scale"]    = 1.4
-    if not "yaxis_label_size_scale"   in options: options["yaxis_label_size_scale"]    = 1.4
-    if not "xaxis_label_offset_scale" in options: options["xaxis_label_offset_scale"]  = 4.0
-    if not "yaxis_label_offset_scale" in options: options["yaxis_label_offset_scale"]  = 4.0
-    if not "xaxis_tick_length_scale"  in options: options["xaxis_tick_length_scale"]   = -0.8
-    if not "yaxis_tick_length_scale"  in options: options["yaxis_tick_length_scale"]   = -0.8
-    if not "ratio_tick_length_scale"  in options: options["ratio_tick_length_scale"]   = -1.0
-    if not "output_name"              in options: options["output_name"]               = "plots/plot.png"
-    if not "cms_label"                in options: options["cms_label"]                 = "Preliminary"
-    if not "lumi_value"               in options: options["lumi_value"]                = "35.9"
-    if not "bkg_err_fill_style"       in options: options["bkg_err_fill_style"]        = 3245
-    if not "bkg_err_fill_color"       in options: options["bkg_err_fill_color"]        = 1
-    if not "output_ic"                in options: options["output_ic"]                 = 0
-    if not "yaxis_moreloglabels"      in options: options["yaxis_moreloglabels"]       = False
-    if not "yaxis_noexponents"        in options: options["yaxis_noexponents"]         = False
+    #if not "canvas_width"             in options: options["canvas_width"]              = 604
+    #if not "canvas_height"            in options: options["canvas_height"]             = 728
+    if not "canvas_width"                   in options: options["canvas_width"]                   = 454
+    if not "canvas_height"                  in options: options["canvas_height"]                  = 553
+    if not "yaxis_range"                    in options: options["yaxis_range"]                    = [0., yaxismax]
+    if not "legend_ncolumns"                in options: options["legend_ncolumns"]                = 2 if len(bgs) >= 4 else 1
+    if not "legend_alignment"               in options: options["legend_alignment"]               = "topright"
+    if not "legend_smart"                   in options: options["legend_smart"]                   = True
+    if not "legend_scalex"                  in options: options["legend_scalex"]                  = 0.8
+    if not "legend_scaley"                  in options: options["legend_scaley"]                  = 0.8
+    if not "legend_border"                  in options: options["legend_border"]                  = False
+    if not "legend_percentageinbox"         in options: options["legend_percentageinbox"]         = False
+    if not "hist_line_none"                 in options: options["hist_line_none"]                 = True
+    if not "show_bkg_errors"                in options: options["show_bkg_errors"]                = False
+    if not "ratio_range"                    in options: options["ratio_range"]                    = [0.7, 1.3]
+    if not "ratio_name_size"                in options: options["ratio_name_size"]                = 0.13
+    if not "ratio_name_offset"              in options: options["ratio_name_offset"]              = 0.6
+    if not "ratio_xaxis_label_offset"       in options: options["ratio_xaxis_label_offset"]       = 0.06
+    if not "ratio_yaxis_label_offset"       in options: options["ratio_yaxis_label_offset"]       = 0.03
+    if not "ratio_xaxis_title_offset"       in options: options["ratio_xaxis_title_offset"]       = 1.60 if "xaxis_log" in options and options["xaxis_log"] else 1.40
+    if not "ratio_xaxis_title_size"         in options: options["ratio_xaxis_title_size"]         = 0.13
+    if not "ratio_label_size"               in options: options["ratio_label_size"]               = 0.13
+    if not "canvas_tick_one_side"           in options: options["canvas_tick_one_side"]           = True
+    if not "canvas_main_y1"                 in options: options["canvas_main_y1"]                 = 0.2
+    if not "canvas_main_topmargin"          in options: options["canvas_main_topmargin"]          = 0.2 / 0.7 - 0.2
+    if not "canvas_main_rightmargin"        in options: options["canvas_main_rightmargin"]        = 50. / 600.
+    if not "canvas_main_bottommargin"       in options: options["canvas_main_bottommargin"]       = 0.2
+    if not "canvas_main_leftmargin"         in options: options["canvas_main_leftmargin"]         = 130. / 600.
+    if not "canvas_ratio_y2"                in options: options["canvas_ratio_y2"]                = 0.342
+    if not "canvas_ratio_topmargin"         in options: options["canvas_ratio_topmargin"]         = 0.05
+    if not "canvas_ratio_rightmargin"       in options: options["canvas_ratio_rightmargin"]       = 50. / 600.
+    if not "canvas_ratio_bottommargin"      in options: options["canvas_ratio_bottommargin"]      = 0.4
+    if not "canvas_ratio_leftmargin"        in options: options["canvas_ratio_leftmargin"]        = 130. / 600.
+    if not "xaxis_title_size"               in options: options["xaxis_title_size"]               = 0.06
+    if not "yaxis_title_size"               in options: options["yaxis_title_size"]               = 0.06
+    if not "xaxis_title_offset"             in options: options["xaxis_title_offset"]             = 1.4 
+    if not "yaxis_title_offset"             in options: options["yaxis_title_offset"]             = 1.4 
+    if not "xaxis_label_size_scale"         in options: options["xaxis_label_size_scale"]         = 1.4
+    if not "yaxis_label_size_scale"         in options: options["yaxis_label_size_scale"]         = 1.4
+    if not "xaxis_label_offset_scale"       in options: options["xaxis_label_offset_scale"]       = 4.0
+    if not "yaxis_label_offset_scale"       in options: options["yaxis_label_offset_scale"]       = 4.0
+    if not "xaxis_tick_length_scale"        in options: options["xaxis_tick_length_scale"]        = -0.8
+    if not "yaxis_tick_length_scale"        in options: options["yaxis_tick_length_scale"]        = -0.8
+    if not "ratio_tick_length_scale"        in options: options["ratio_tick_length_scale"]        = -1.0
+    if not "output_name"                    in options: options["output_name"]                    = "plots/plot.png"
+    if not "cms_label"                      in options: options["cms_label"]                      = "Preliminary"
+    if not "lumi_value"                     in options: options["lumi_value"]                     = "35.9"
+    if not "bkg_err_fill_style"             in options: options["bkg_err_fill_style"]             = 3245
+    if not "bkg_err_fill_color"             in options: options["bkg_err_fill_color"]             = 1
+    if not "output_ic"                      in options: options["output_ic"]                      = 0
+    if not "yaxis_moreloglabels"            in options: options["yaxis_moreloglabels"]            = False
+    if not "yaxis_noexponents"              in options: options["yaxis_noexponents"]              = False
+    if not "yaxis_exponent_offset"          in options: options["yaxis_exponent_offset"]          = -0.1
+    if not "yaxis_exponent_vertical_offset" in options: options["yaxis_exponent_vertical_offset"] = 0.02
+    if not "yaxis_ndivisions"               in options: options["yaxis_ndivisions"]               = 508
+    if not "xaxis_ndivisions"               in options: options["xaxis_ndivisions"]               = 508
+    if not "max_digits"                     in options: options["max_digits"]                     = 4
     if "no_ratio" in options:
-        options["canvas_height"] = 588
+        options["canvas_width"] = 566
+        options["canvas_height"] = 553
+        #options["canvas_width"] = (566 - 4) * 2 + 4
+        #options["canvas_height"] = (553 - 28) * 2 + 28
 
     #if "no_ratio" in options:
     #    if options["no_ratio"]:
