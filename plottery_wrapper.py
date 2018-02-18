@@ -654,7 +654,11 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     totalbkg = None
     if len(bgs) != 0:
         totalbkg = get_total_hist(bgs)
-    yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * 1.8)
+    maxmult = 1.8
+    if "ymax_scale" in options:
+        maxmult = options["ymax_scale"]
+        del options["ymax_scale"]
+    yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * maxmult)
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
