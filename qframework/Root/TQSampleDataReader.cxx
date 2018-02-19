@@ -1424,6 +1424,7 @@ int TQSampleDataReader::sumElements( TList * list, T * &histo, TQTaggable * opti
   // sum all elements in the list (histogram variant)
   int nElements = 0;
   if (!list) return -1;
+  bool simpleUseScaleUncertainty = options ? options->getTagBoolDefault("simpleUseScaleUncertainty", true) : true;
   //@tag: [includeScaleUncertainty] This can is used to enable the inclusion of scale ("NF") uncertainties in histograms and counters. Default: false
   bool useScaleUncertainty = options ? options->getTagBoolDefault("includeScaleUncertainty", false) : false;
   //@tag: [.correlate.path, .correlate.value] See "useManualCorrelations"
@@ -1439,9 +1440,11 @@ int TQSampleDataReader::sumElements( TList * list, T * &histo, TQTaggable * opti
     TList* l = itr.readNext();
     if(!l || l->GetSize() < 1) continue;
     double scale = 1.;
+    double scaleerr = 0.;
     for (int j=2; j<l->GetSize(); j++) {
       TQCounter* cnt = dynamic_cast<TQCounter*>(l->At(j));
       if(cnt) scale *= cnt->getCounter();
+      if (cnt) scaleerr = sqrt(scaleerr*scaleerr + cnt->getError()*cnt->getError());
     }
     T* h = dynamic_cast<T*>(l->At(1));
     if (!histo) {
@@ -1454,13 +1457,19 @@ int TQSampleDataReader::sumElements( TList * list, T * &histo, TQTaggable * opti
         ERRORclass("Failed to copy histogram!");
         continue;
       }
-      TQHistogramUtils::scaleHistogram(histo,scale,0.,false);
+      if (simpleUseScaleUncertainty)
+        TQHistogramUtils::scaleHistogram(histo,scale,scaleerr,true);
+      else
+        TQHistogramUtils::scaleHistogram(histo,scale,0.,false);
       DEBUGclass("starting summation with histogram: s(w)=%g, n=%d",histo->Integral(),(int)(histo->GetEntries()));
       nElements = 1;
     } else {
       //ToDo: check for histogram consistency, abort with error message if not!
       DEBUGclass("adding histogram: s(w)=%g, n=%d",h->Integral(),(int)(h->GetEntries()));
-      TQHistogramUtils::addHistogram(histo,h,scale,0.,0.,false);
+      if (simpleUseScaleUncertainty)
+        TQHistogramUtils::addHistogram(histo,h,scale,scaleerr,0.,true);
+      else
+        TQHistogramUtils::addHistogram(histo,h,scale,0.,0.,false);
       nElements++;
     }
   }
@@ -1853,6 +1862,7 @@ int TQSampleDataReader::sumElements( TList * list, TQCounter * &counter, TQTagga
   
   int nElements = 0;
   if (!list) return -1;
+  bool simpleUseScaleUncertainty = options ? options->getTagBoolDefault("simpleUseScaleUncertainty", true) : true;
   bool useScaleUncertainty = options ? options->getTagBoolDefault("includeScaleUncertainty", false) : false;
   bool useManualCorrelations = options ? options->getTagBoolDefault("useManualCorrelations", false) : false;
   bool advancedUncertaintyTreatment = useScaleUncertainty || useManualCorrelations;
@@ -1864,16 +1874,24 @@ int TQSampleDataReader::sumElements( TList * list, TQCounter * &counter, TQTagga
     TQCounter* cnt = dynamic_cast<TQCounter*>(l->At(1));
     if(!cnt) continue;
     double scale = 1.;
+    double scaleerr = 0.;
     for (int j=2; j<l->GetSize(); j++) {
       TQCounter * c = dynamic_cast<TQCounter*>(l->At(j));
       if (c) scale *=c->getCounter();
+      if (c) scaleerr = sqrt(scaleerr*scaleerr + c->getError()*c->getError());
     }
     if (counter) {
       //do not take scale uncertainties into account (yet). Will be done later if useScaleUncert == true.
-      counter->add(cnt,scale,0.,0.,false); 
+      if (simpleUseScaleUncertainty)
+        counter->add(cnt,scale,scaleerr,0.,true); 
+      else
+        counter->add(cnt,scale,0.,0.,false); 
     } else {
       counter = new TQCounter(cnt);
-      counter->scale(scale,0.,false);
+      if (simpleUseScaleUncertainty)
+        counter->scale(scale,scaleerr,true);
+      else
+        counter->scale(scale,0.,false);
     }
     nElements++;
   }
