@@ -241,8 +241,8 @@ def apply_nf(hists, nfs):
             for i in xrange(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
-                hist.SetBinContent(i, bc * nfs[0])
-                hist.SetBinError(i, be * nfs[0])
+                hist.SetBinContent(i, bc * nfs[0][0])
+                hist.SetBinError(i, be * nfs[0][0])
     if isinstance(hists, list):
         for hist in hists:
             func(hist, nfs)
@@ -297,6 +297,37 @@ def apply_nf_w_error(hists, nfs):
                 nbe = math.sqrt(bfe**2 + nfe**2) * nbc
                 hist.SetBinContent(i, nbc)
                 hist.SetBinError(i, nbe)
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist, nfs)
+    else:
+        func(hists, nfs)
+    return hists
+
+#______________________________________________________________________________________________________________________
+def apply_nf_2d(hists, nfs):
+    def func(hist, nfs):
+        if isinstance(nfs, list) and len(nfs) == 0:
+            pass
+        elif len(nfs) == 1:
+            #hist.Scale(nfs[0][0])
+            for i in xrange(0, hist.GetNbinsX()+2):
+                for j in xrange(0, hist.GetNbinsY()+2):
+                    bc = hist.GetBinContent(i, j)
+                    be = hist.GetBinError(i, j)
+                    nf = nfs[0][0]
+                    hist.SetBinContent(i, j, bc * nf)
+                    hist.SetBinError(i, j, be * nf)
+        elif len(nfs) == hist.GetNbinsX():
+            for i in xrange(1, hist.GetNbinsX()+1):
+                for j in xrange(0, hist.GetNbinsY()+2):
+                    bc = hist.GetBinContent(i, j)
+                    be = hist.GetBinError(i, j)
+                    nf = nfs[i-1][0]
+                    hist.SetBinContent(i, j, bc * nf)
+                    hist.SetBinError(i, j, be * nf)
+        else:
+            print "WARNING - apply_nf_w_error_2d: something went wrong."
     if isinstance(hists, list):
         for hist in hists:
             func(hist, nfs)
