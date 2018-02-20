@@ -137,69 +137,55 @@ namespace RooUtil
     };
 
     //_________________________________________________________________________________________________
-    template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val) { mapInt_t     [bn] = val; }
-    template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val) { mapBool_t    [bn] = val; }
-    template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val) { mapFloat_t   [bn] = val; }
-    template <> void TTreeX::setBranch<TString             >(TString bn, TString              val) { mapTString   [bn] = val; }
-    template <> void TTreeX::setBranch<LV                  >(TString bn, LV                   val) { mapLV        [bn] = val; }
-    template <> void TTreeX::setBranch<TBits               >(TString bn, TBits                val) { mapTBits     [bn] = val; }
-    template <> void TTreeX::setBranch<unsigned long long  >(TString bn, unsigned long long   val) { mapULL       [bn] = val; }
-    template <> void TTreeX::setBranch<std::vector<Int_t  >>(TString bn, std::vector<Int_t  > val) { mapVecInt_t  [bn] = val; }
-    template <> void TTreeX::setBranch<std::vector<Bool_t >>(TString bn, std::vector<Bool_t > val) { mapVecBool_t [bn] = val; }
-    template <> void TTreeX::setBranch<std::vector<Float_t>>(TString bn, std::vector<Float_t> val) { mapVecFloat_t[bn] = val; }
-    template <> void TTreeX::setBranch<std::vector<TString>>(TString bn, std::vector<TString> val) { mapVecTString[bn] = val; }
-    template <> void TTreeX::setBranch<std::vector<LV     >>(TString bn, std::vector<LV     > val) { mapVecLV     [bn] = val; }
-    template <> void TTreeX::pushbackToBranch<Int_t        >(TString bn, Int_t       val) { mapVecInt_t  [bn].push_back(val); }
-    template <> void TTreeX::pushbackToBranch<Bool_t       >(TString bn, Bool_t      val) { mapVecBool_t [bn].push_back(val); }
-    template <> void TTreeX::pushbackToBranch<Float_t      >(TString bn, Float_t     val) { mapVecFloat_t[bn].push_back(val); }
-    template <> void TTreeX::pushbackToBranch<TString      >(TString bn, TString     val) { mapVecTString[bn].push_back(val); }
-    template <> void TTreeX::pushbackToBranch<LV           >(TString bn, LV          val) { mapVecLV     [bn].push_back(val); }
+    template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val);
+    template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val);
+    template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val);
+    template <> void TTreeX::setBranch<TString             >(TString bn, TString              val);
+    template <> void TTreeX::setBranch<LV                  >(TString bn, LV                   val);
+    template <> void TTreeX::setBranch<TBits               >(TString bn, TBits                val);
+    template <> void TTreeX::setBranch<unsigned long long  >(TString bn, unsigned long long   val);
+    template <> void TTreeX::setBranch<std::vector<Int_t  >>(TString bn, std::vector<Int_t  > val);
+    template <> void TTreeX::setBranch<std::vector<Bool_t >>(TString bn, std::vector<Bool_t > val);
+    template <> void TTreeX::setBranch<std::vector<Float_t>>(TString bn, std::vector<Float_t> val);
+    template <> void TTreeX::setBranch<std::vector<TString>>(TString bn, std::vector<TString> val);
+    template <> void TTreeX::setBranch<std::vector<LV     >>(TString bn, std::vector<LV     > val);
+    template <> void TTreeX::pushbackToBranch<Int_t        >(TString bn, Int_t       val);
+    template <> void TTreeX::pushbackToBranch<Bool_t       >(TString bn, Bool_t      val);
+    template <> void TTreeX::pushbackToBranch<Float_t      >(TString bn, Float_t     val);
+    template <> void TTreeX::pushbackToBranch<TString      >(TString bn, TString     val);
+    template <> void TTreeX::pushbackToBranch<LV           >(TString bn, LV          val);
 
     //_________________________________________________________________________________________________
-    template <> const Int_t               & TTreeX::getBranch<Int_t               >(TString bn) { return mapInt_t     [bn]; }
-    template <> const Bool_t              & TTreeX::getBranch<Bool_t              >(TString bn) { return mapBool_t    [bn]; }
-    template <> const Float_t             & TTreeX::getBranch<Float_t             >(TString bn) { return mapFloat_t   [bn]; }
-    template <> const TString             & TTreeX::getBranch<TString             >(TString bn) { return mapTString   [bn]; }
-    template <> const LV                  & TTreeX::getBranch<LV                  >(TString bn) { return mapLV        [bn]; }
-    template <> const TBits               & TTreeX::getBranch<TBits               >(TString bn) { return mapTBits     [bn]; }
-    template <> const unsigned long long  & TTreeX::getBranch<unsigned long long  >(TString bn) { return mapULL       [bn]; }
-    template <> const std::vector<Int_t  >& TTreeX::getBranch<std::vector<Int_t  >>(TString bn) { return mapVecInt_t  [bn]; }
-    template <> const std::vector<Bool_t >& TTreeX::getBranch<std::vector<Bool_t >>(TString bn) { return mapVecBool_t [bn]; }
-    template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn) { return mapVecFloat_t[bn]; }
-    template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn) { return mapVecTString[bn]; }
-    template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn) { return mapVecLV     [bn]; }
+    template <> const Int_t               & TTreeX::getBranch<Int_t               >(TString bn);
+    template <> const Bool_t              & TTreeX::getBranch<Bool_t              >(TString bn);
+    template <> const Float_t             & TTreeX::getBranch<Float_t             >(TString bn);
+    template <> const TString             & TTreeX::getBranch<TString             >(TString bn);
+    template <> const LV                  & TTreeX::getBranch<LV                  >(TString bn);
+    template <> const TBits               & TTreeX::getBranch<TBits               >(TString bn);
+    template <> const unsigned long long  & TTreeX::getBranch<unsigned long long  >(TString bn);
+    template <> const std::vector<Int_t  >& TTreeX::getBranch<std::vector<Int_t  >>(TString bn);
+    template <> const std::vector<Bool_t >& TTreeX::getBranch<std::vector<Bool_t >>(TString bn);
+    template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn);
+    template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn);
+    template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn);
 
     //_________________________________________________________________________________________________
-    template <> void TTreeX::createBranch<Int_t               >(TString bn) { ttree->Branch(bn, &(mapInt_t      [bn])); }
-    template <> void TTreeX::createBranch<Bool_t              >(TString bn) { ttree->Branch(bn, &(mapBool_t     [bn])); }
-    template <> void TTreeX::createBranch<Float_t             >(TString bn) { ttree->Branch(bn, &(mapFloat_t    [bn])); }
-    template <> void TTreeX::createBranch<TString             >(TString bn) { ttree->Branch(bn, &(mapTString    [bn])); }
-    template <> void TTreeX::createBranch<LV                  >(TString bn) { ttree->Branch(bn, &(mapLV         [bn])); }
-    template <> void TTreeX::createBranch<TBits               >(TString bn) { ttree->Branch(bn, &(mapTBits      [bn])); }
-    template <> void TTreeX::createBranch<unsigned long long  >(TString bn) { ttree->Branch(bn, &(mapULL        [bn])); }
-    template <> void TTreeX::createBranch<std::vector<Int_t  >>(TString bn) { ttree->Branch(bn, &(mapVecInt_t   [bn])); }
-    template <> void TTreeX::createBranch<std::vector<Bool_t >>(TString bn) { ttree->Branch(bn, &(mapVecBool_t  [bn])); }
-    template <> void TTreeX::createBranch<std::vector<Float_t>>(TString bn) { ttree->Branch(bn, &(mapVecFloat_t [bn])); }
-    template <> void TTreeX::createBranch<std::vector<TString>>(TString bn) { ttree->Branch(bn, &(mapVecTString [bn])); }
-    template <> void TTreeX::createBranch<std::vector<LV     >>(TString bn) { ttree->Branch(bn, &(mapVecLV      [bn])); }
+    template <> void TTreeX::createBranch<Int_t               >(TString bn);
+    template <> void TTreeX::createBranch<Bool_t              >(TString bn);
+    template <> void TTreeX::createBranch<Float_t             >(TString bn);
+    template <> void TTreeX::createBranch<TString             >(TString bn);
+    template <> void TTreeX::createBranch<LV                  >(TString bn);
+    template <> void TTreeX::createBranch<TBits               >(TString bn);
+    template <> void TTreeX::createBranch<unsigned long long  >(TString bn);
+    template <> void TTreeX::createBranch<std::vector<Int_t  >>(TString bn);
+    template <> void TTreeX::createBranch<std::vector<Bool_t >>(TString bn);
+    template <> void TTreeX::createBranch<std::vector<Float_t>>(TString bn);
+    template <> void TTreeX::createBranch<std::vector<TString>>(TString bn);
+    template <> void TTreeX::createBranch<std::vector<LV     >>(TString bn);
 
     //_________________________________________________________________________________________________
-    template <> void TTreeX::setBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx)
-    {
-        for (auto& pair : objidx)
-        {
-            setBranch<Int_t>("n" + pair.first, pair.second.size());
-            setBranch<std::vector<Int_t>>(pair.first, pair.second);
-        }
-    }
-    template <> void TTreeX::createBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx)
-    {
-        for (auto& pair : objidx)
-        {
-            createBranch<Int_t>("n" + pair.first);
-            createBranch<std::vector<Int_t>>(pair.first);
-        }
-    }
+    template <> void TTreeX::setBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx);
+    template <> void TTreeX::createBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx);
 
     template <class T>
     std::vector<T> TTreeX::sortFromRef( std::vector<T> const& in, std::vector<std::pair<size_t, TTreeX::lviter> > const& reference)
