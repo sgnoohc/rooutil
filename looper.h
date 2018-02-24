@@ -173,7 +173,7 @@ void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
     if ( t )
         setTreeClass( t );
 
-    if ( nevtToProc > 5000 )
+    if ( nevtToProc > 5000 || nevtToProc == -1 )
         fastmode = true;
 
     c->GetEntry( 0 );
@@ -276,7 +276,10 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
 
         // Set some fast mode stuff
         if ( fastmode )
-            TTreeCache::SetLearnEntries( 10 );
+        {
+            TTreeCache::SetLearnEntries( 30 );
+            print( "TTreeCache enabled" );
+        }
 
         if ( fastmode )
             ttree->SetCacheSize( 128 * 1024 * 1024 );
