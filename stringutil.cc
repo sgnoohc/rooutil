@@ -42,6 +42,7 @@ RooUtil::StringUtil::vecTString RooUtil::StringUtil::split(TString in, TString s
     }
     if (out.size() == 0)
     { out.push_back(""); }
+    delete list;
     return out;
 }
 
