@@ -167,6 +167,8 @@ void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
     print( "Start EventLooping" );
     start();
 
+    nEventsToProcess = nevtToProc;
+
     if ( c )
         setTChain( c );
 
@@ -175,8 +177,6 @@ void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
 
     if ( nevtToProc > 5000 || nevtToProc == -1 )
         fastmode = true;
-
-    nEventsToProcess = nevtToProc;
 
     c->GetEntry( 0 );
     t->Init( c->GetTree() );
