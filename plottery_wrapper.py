@@ -830,8 +830,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             options       = options
             )
 
-    c1.SaveAs("plots/plot.pdf")
-    c1.SaveAs("plots/plot.C")
+    #c1.SaveAs("plots/plot.pdf")
+    #c1.SaveAs("plots/plot.C")
 
     # Set permission
     os.system("chmod 644 {}".format(options["output_name"]))
