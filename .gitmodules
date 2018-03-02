@@ -1,6 +1,7 @@
 [submodule "cxxopts"]
 	path = cxxopts
-	url = git@github.com:jarro2783/cxxopts.git
+	url = git@github.com:sgnoohc/cxxopts.git
+	branch = master
 [submodule "syncfiles"]
 	path = syncfiles
 	url = git@github.com:Amarang/syncfiles.git
