@@ -279,7 +279,7 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
         // Set some fast mode stuff
         if ( fastmode )
         {
-            TTreeCache::SetLearnEntries( 30 );
+            TTreeCache::SetLearnEntries( 1000 );
             print( "TTreeCache enabled" );
         }
 
