@@ -725,7 +725,7 @@ bool RooUtil::Looper<TREECLASS>::handleBadEvent()
     {
         nskipped += nskipped_batch;
         nskipped_batch = 0;
-        for (int i = 0; i < nbatch_to_skip; ++i)
+        for (unsigned int i = 0; i < nbatch_to_skip; ++i)
         {
             if (!nextEvent())
                 return false;
