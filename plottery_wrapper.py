@@ -615,7 +615,39 @@ def copy_nice_plot_index_php(options):
     if len(plotdir) == 0: plotdir = "./"
     os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
+#______________________________________________________________________________________________________________________
+def autobin(data, bgs):
+    totalbkg = get_total_hist(bgs)
 
+    accumulative = totalbkg.Clone("accumul")
+    norm = accumulative.Integral() if accumulative.Integral() > 0 else 1
+    accumulative.Scale(1. / norm)
+    idx5 = -1
+    idx95 = -1
+    for i in xrange(1, accumulative.GetNbinsX()+2):
+        intg = accumulative.Integral(0, i)
+        if intg > 0.02 and idx5 < 0:
+            idx5 = i
+        if intg > 0.98 and idx95 < 0:
+            idx95 = i
+    minbin = -1
+    for i in xrange(idx5, idx95):
+        bc = data.GetBinContent(i)
+        if bc < minbin or minbin < 0:
+            minbin = bc
+    ndata = int(totalbkg.Integral(idx5, idx95))
+    if ndata > 0:
+        nbin = int(1 + 3.322 * math.log10(ndata))
+    else:
+        nbin = 4
+    width = idx95 - idx5 + 1
+    frac = float(width) / float(data.GetNbinsX())
+    final_nbin = int(nbin / frac)
+    while data.GetNbinsX() % final_nbin != 0:
+        if data.GetNbinsX() < final_nbin:
+            return 4
+        final_nbin += 1
+    return final_nbin
 
 # ====================
 # The plottery wrapper
@@ -627,6 +659,14 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     Wrapper function to call Plottery.
     """
 
+    # If print_all true, print all histogram content
+    if "print_all" in options:
+        if options["print_all"]:
+            for bg in bgs: bg.Print("all")
+            for sig in sigs: sig.Print("all")
+            if data: data.Print("all")
+        del options["print_all"]
+
     # Sanity check. If no histograms exit
     if not data and len(bgs) == 0 and len(sigs) == 0:
         print "[plottery_wrapper] >>> Nothing to do!"
@@ -637,7 +677,27 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if "blind" in options:
         if options["blind"]:
             data = None
+            options["no_ratio"] = True
         del options["blind"]
+
+    # signal scaling
+    if "signal_scale" in options:
+        if options["signal_scale"] == "auto":
+            integral = get_total_hist(bgs).Integral()
+            for sig in sigs:
+                sig.Scale(integral/sig.Integral())
+            del options["signal_scale"]
+        else:
+            for sig in sigs:
+                sig.Scale(options["signal_scale"])
+            del options["signal_scale"]
+
+    # autobin
+    if "autobin" in options and options["autobin"]:
+        options["nbins"] = autobin(data, bgs)
+        del options["autobin"]
+    elif "autobin" in options:
+        del options["autobin"]
 
     # "nbins" initiate rebinning
     if "nbins" in options:
@@ -742,6 +802,16 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     # The uncertainties are all accounted in the syst so remove all errors from bkgs
     remove_errors(bgs)
 
+    # Get xaxis label from data, sig or bkg
+    allhists = []
+    for bg in bgs:
+        allhists.append(bg)
+    for sig in sigs:
+        allhists.append(sig)
+    if data:
+        allhists.append(data)
+    xaxis_label = allhists[0].GetXaxis().GetTitle()
+
     # Here are my default options for plottery
     #if not "canvas_width"             in options: options["canvas_width"]              = 604
     #if not "canvas_height"            in options: options["canvas_height"]             = 728
@@ -800,6 +870,10 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "yaxis_ndivisions"               in options: options["yaxis_ndivisions"]               = 508
     if not "xaxis_ndivisions"               in options: options["xaxis_ndivisions"]               = 508
     if not "max_digits"                     in options: options["max_digits"]                     = 4
+    if not "xaxis_label"                    in options: options["xaxis_label"]                    = xaxis_label
+    if not "ratio_xaxis_title"              in options: options["ratio_xaxis_title"]              = xaxis_label
+    if data == None:
+        options["no_ratio"] = True
     if "no_ratio" in options:
         options["canvas_width"] = 566
         options["canvas_height"] = 553
@@ -855,5 +929,6 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
     hsigs.append(rightscan)
     options["bkg_err_fill_color"] = 0
     options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
+    options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
     plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
 
