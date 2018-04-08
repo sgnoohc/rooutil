@@ -79,6 +79,10 @@ namespace RooUtil
         std::vector<TString> skimbrfiltpttn;
         bool silent;
         bool isinit;
+        unsigned int nskipped_batch;
+        unsigned int nskipped;
+        unsigned int nbatch_skip_threshold;
+        unsigned int nbatch_to_skip;
         public:
         // Functions
         Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
@@ -105,6 +109,11 @@ namespace RooUtil
         TString getCurrentFileBaseName() { return gSystem->BaseName(tfile->GetName()); }
         TString getCurrentFileName() { return TString(tfile->GetName()); }
         TString getCurrentFileTitle() { return TString(tfile->GetTitle()); }
+        void setNbatchToSkip(unsigned int n) { nbatch_to_skip = n; }
+        void setNbadEventThreshold(unsigned int n) { nbatch_skip_threshold = n; }
+        bool handleBadEvent();
+        void printStatus();
+        void printSkippedBadEventStatus();
         private:
         void setFileList();
         void setNEventsToProcess();
@@ -152,7 +161,11 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     skimtree( 0 ),
     nEventsSkimmed( 0 ),
     silent( false ),
-    isinit( false )
+    isinit( false ),
+    nskipped_batch( 0 ),
+    nskipped( 0 ),
+    nbatch_skip_threshold( 500 ),
+    nbatch_to_skip( 5000 )
 {
     bmark = new TBenchmark();
     if ( c && t )
@@ -692,6 +705,56 @@ void RooUtil::Looper<TREECLASS>::saveSkim()
     skimtree->GetCurrentFile()->cd();
     skimtree->Write();
     //    skimfile->Close();
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+bool RooUtil::Looper<TREECLASS>::handleBadEvent()
+{
+    using namespace std;
+    cout << endl;
+    cout << "RooUtil::Looper [CheckCorrupt] Caught an I/O failure in the ROOT file." << endl;
+    cout << "RooUtil::Looper [CheckCorrupt] Possibly corrupted hadoop file." << endl;
+    cout << "RooUtil::Looper [CheckCorrupt] event index = " << getCurrentEventIndex() << " out of " << tchain->GetEntries() << endl;
+    cout << endl;
+
+    nskipped_batch++;
+
+    // If the nskipped is quite large than skip the entire file
+    if (nskipped_batch > nbatch_skip_threshold)
+    {
+        nskipped += nskipped_batch;
+        nskipped_batch = 0;
+        for (unsigned int i = 0; i < nbatch_to_skip; ++i)
+        {
+            if (!nextEvent())
+                return false;
+            nskipped++;
+        }
+    }
+
+    return true;
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+void RooUtil::Looper<TREECLASS>::printStatus()
+{
+    getTree()->PrintCacheStats();
+    printSkippedBadEventStatus();
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+void RooUtil::Looper<TREECLASS>::printSkippedBadEventStatus()
+{
+    using namespace std;
+    nskipped += nskipped_batch;
+
+    if (nskipped)
+    {
+        cout << "RooUtil:Looper [CheckCorrupt] Skipped " << nskipped << " events out of " << tchain->GetEntries() << " [" << float(nskipped) / float(tchain->GetEntries()) * 100 << "% loss]" << endl;
+    }
 }
 
 #endif
