@@ -3,11 +3,8 @@
 import argparse
 parser = argparse.ArgumentParser(description="duplicate event removal and create a new set of TTrees")
 parser.add_argument('--output', '-o', dest='output', default='output.root', help='output root file path')
-parser.add_argument('--size', '-s', dest='size', help='max tree size')
 parser.add_argument('--treename', '-t', dest='treename', default='t', help='treename')
-parser.add_argument('--evt', '-e', dest='evt', default='evt', help='event branch name')
-parser.add_argument('--run', '-r', dest='run', default='run', help='run branch name')
-parser.add_argument('--lumi', '-l', dest='lumi', default='lumi', help='lumi branch name')
+parser.add_argument('--size', '-s', dest='size', help='max tree size in MB')
 parser.add_argument('files', metavar='FILE.root', type=str, nargs='+', help='input files')
 
 args = parser.parse_args()
@@ -26,6 +23,8 @@ for rfile in args.files:
 print chain.GetEntries()
 
 if not args.size:
-    args.size = 0
+    args.size = 500*1048576
+else:
+    args.size = int(args.size) * 1048576
 
-r.RooUtil.remove_duplicate(chain, args.output, args.run, args.lumi, args.evt, args.size)
+r.RooUtil.split_files(chain, args.output, args.size)
