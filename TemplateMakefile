@@ -2,7 +2,7 @@
 
 # Extra Packages
 TARGET = process
-SRCS = process.cc LeptonTree.cc
+SRCS = process.cc MAKECLASSNAME.cc
 OBJS = $(SRCS:.cc=.o)
 ROOTLIBS:= $(shell root-config --libs) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -lRooFit -lRooFitCore -lrooutil -Lrooutil
 

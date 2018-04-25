@@ -22,7 +22,7 @@ echo "==========================================================================
 usage(){
     echo ""
     echo "This script creates CLASSNAME.cc and CLASSNAME.h file."
-    echo "The generated source C++ codes can be used to read a ROOT's TTree with rest of the TasUtil tool at ease."
+    echo "The generated source C++ codes can be used to read a ROOT's TTree with rest of the RooUtil tool at ease."
     echo "The generation of the code relies on:"
     echo "  > https://github.com/cmstas/Software/blob/master/makeCMS3ClassFiles/makeCMS3ClassFiles.C"
     echo ""
@@ -33,7 +33,7 @@ usage(){
     echo ""
     echo ${green}" -h ${reset}: print this message"
     echo ${green}" -f ${reset}: force run this script"
-    echo ${green}" -x ${reset}: create additional looper template files (i.e. ScanChain.C, doAll.C, compile.sh, run.sh, submit_batch.sh)"
+    echo ${green}" -x ${reset}: create additional looper template files (i.e. process.cc, Makefile)"
     echo ""
     echo ${green}" ROOTFILE          ${reset}= Path to the root file that holds an example TTree that you wish to study."
     echo ${green}" TREENAME          ${reset}= The TTree object TKey name in the ROOTFILE"
@@ -65,8 +65,8 @@ shift $(($OPTIND - 1))
 if [ -z $1 ]; then
     if [ -z $2 ]; then
         if [ -z $3 ]; then
-            echo "TasUtil:: No argument is given"
-            echo "TasUtil:: The script will assume to create a CMS3 looper"
+            echo "RooUtil:: No argument is given"
+            echo "RooUtil:: The script will assume to create a CMS3 looper"
         fi
     fi
 fi
@@ -83,18 +83,18 @@ if [ -z ${NAMESPACENAME} ]; then NAMESPACENAME=tas; fi
 if [ -z ${TREEINSTANCENAME} ]; then TREEINSTANCENAME=mytree; fi
 
 echo ""
-e_arrow "TasUtil:: The user has provided following options"
-e_arrow "TasUtil:: $(date)"
-e_arrow "TasUtil:: =========================================="
-e_arrow "TasUtil::  ROOTFILE=$ROOTFILE"
-e_arrow "TasUtil::  TREENAME=$TREENAME"
-e_arrow "TasUtil::  MAKECLASSNAME=$MAKECLASSNAME"
-e_arrow "TasUtil::  TREEINSTANCENAME=$TREEINSTANCENAME"
-e_arrow "TasUtil:: =========================================="
-e_arrow "TasUtil:: "
+e_arrow "RooUtil:: The user has provided following options"
+e_arrow "RooUtil:: $(date)"
+e_arrow "RooUtil:: =========================================="
+e_arrow "RooUtil::  ROOTFILE=$ROOTFILE"
+e_arrow "RooUtil::  TREENAME=$TREENAME"
+e_arrow "RooUtil::  MAKECLASSNAME=$MAKECLASSNAME"
+e_arrow "RooUtil::  TREEINSTANCENAME=$TREEINSTANCENAME"
+e_arrow "RooUtil:: =========================================="
+e_arrow "RooUtil:: "
 
 # Print
-e_arrow "TasUtil:: Generating ${MAKECLASSNAME}.cc/h file which can load the TTree content from ${ROOTFILE}:${TREENAME} ..."
+e_arrow "RooUtil:: Generating ${MAKECLASSNAME}.cc/h file which can load the TTree content from ${ROOTFILE}:${TREENAME} ..."
 
 ROOTFILE=$('cd' $(dirname ${ROOTFILE}); pwd)/$(basename $1)
 
@@ -103,8 +103,8 @@ if [ -e ${MAKECLASSNAME}.cc ]; then
     if [ "${FORCE}" == true ]; then
         :
     else
-        e_error "TasUtil:: ${MAKECLASSNAME}.cc already exists!"
-        e_error "TasUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
+        e_error "RooUtil:: ${MAKECLASSNAME}.cc already exists!"
+        e_error "RooUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
         exit
     fi
 fi
@@ -114,8 +114,8 @@ if [ -e ${MAKECLASSNAME}.h ]; then
     if [ "${FORCE}" == true ]; then
         :
     else
-        e_error "TasUtil:: ${MAKECLASSNAME}.h already exists!"
-        e_error "TasUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
+        e_error "RooUtil:: ${MAKECLASSNAME}.h already exists!"
+        e_error "RooUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
         exit
     fi
 fi
@@ -130,82 +130,81 @@ else
   rm -rf Software
 fi
 
-e_arrow "TasUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
+e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
 
 if [ "$GENERATEEXTRACODE" == true ]; then
 
-    if [ -e ScanChain.C ]; then
+    if [ -e process.cc ]; then
         if [ "${FORCE}" == true ]; then
             :
         else
-            e_error "TasUtil:: ScanChain.C already exists!"
-            e_error "TasUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
+            e_error "RooUtil:: process.cc already exists!"
+            e_error "RooUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
             exit
         fi
     fi
     #
-    # Create ScanChain.C
+    # Create process.cc
     #
-    echo "#include \"tasutil.cc\""                                                             >  ScanChain.C
-    echo "#include \"${MAKECLASSNAME}.cc\""                                                    >> ScanChain.C
-    echo ""                                                                                    >> ScanChain.C
-    echo "void ScanChain(TChain* chain, TString outputname, int nEvents=-1)"                   >> ScanChain.C
-    echo "{"                                                                                   >> ScanChain.C
-    echo "    TasUtil::Looper<${MAKECLASSNAME}> looper(chain, &${TREEINSTANCENAME}, nEvents);" >> ScanChain.C
-    echo "    while (looper.nextEvent())"                                                      >> ScanChain.C
-    echo "    {"                                                                               >> ScanChain.C
-    echo "        // Do what you need to do in for each event here"                            >> ScanChain.C
-    echo "    }"                                                                               >> ScanChain.C
-    echo "}"                                                                                   >> ScanChain.C
+    echo "#include \"looper.h\""                                                               >  process.cc
+    echo "#include \"ttreex.h\""                                                               >> process.cc
+    echo "#include \"${MAKECLASSNAME}.h\""                                                     >> process.cc
+    echo ""                                                                                    >> process.cc
+    echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                 >> process.cc
+    echo "int main(int argc, char** argv)"                                                     >> process.cc
+    echo "{"                                                                                   >> process.cc
+    echo "    // Argument checking"                                                            >> process.cc
+    echo "    if (argc < 3)"                                                                   >> process.cc
+    echo "        return 1;"                                                                   >> process.cc
+    echo "    TChain* ch = new TChain(\"${TTREENAME}\");"                                      >> process.cc
+    echo "    ch->Add(argv[1]);"                                                               >> process.cc
+    echo ""                                                                                    >> process.cc
+    echo "    // Creating output file"                                                         >> process.cc
+    echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                >> process.cc
+    echo "    TTree* t = new TTree(\"t\", \"t\");"                                             >> process.cc
+    echo "    RooUtil::TTreeX tx(t);"                                                          >> process.cc
+    echo "    //tx.createBranch<LV>(\"p0\");"                                                  >> process.cc
+    echo ""                                                                                    >> process.cc
+    echo "    // Looping input file"                                                           >> process.cc
+    echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                    >> process.cc
+    echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"    >> process.cc
+    echo "    while (looper.nextEvent())"                                                      >> process.cc
+    echo "    {"                                                                               >> process.cc
+    echo "        //Do what you need to do in for each event here"                             >> process.cc
+    echo "        //To save use the following function"                                        >> process.cc
+    echo "        //tx.fill();"                                                                >> process.cc
+    echo "    }"                                                                               >> process.cc
+    echo ""                                                                                    >> process.cc
+    echo "    // Writing output file"                                                          >> process.cc
+    echo "    tx.save(ofile);"                                                                 >> process.cc
+    echo "}"                                                                                   >> process.cc
 
-    if [ -e ScanChain.C ]; then
-        if [ "${FORCE}" == true ]; then
-            :
-        else
-            e_error "TasUtil:: doAll.C already exists!"
-            e_error "TasUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
-            exit
-        fi
-    fi
-    #
-    # Create doAll.C
-    #
-    echo "#include \"ScanChain.C\""                                                   >  doAll.C
-    echo "#include \"TChain.h\""                                                      >> doAll.C
-    echo ""                                                                           >> doAll.C
-    echo "void doAll(TString filepath=\"\", TString outputname=\"\", int nEvents=-1)" >> doAll.C
-    echo "{"                                                                          >> doAll.C
-    echo "    if (filepath.IsNull()) return;"                                         >> doAll.C
-    echo "    TChain* chain = new TChain(\"${TTREENAME}\");"                          >> doAll.C
-    echo "    chain->Add(filepath);"                                                  >> doAll.C
-    echo "    ScanChain(chain, outputname, nEvents);"                                 >> doAll.C
-    echo "}"                                                                          >> doAll.C
+    cat $DIR/TemplateMakefile | sed -e "s/MAKECLASSNAME/${MAKECLASSNAME}/" > Makefile
 
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: Contact Philip Chang <philip@physics.ucsd.edu> for any questions."
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: Happy Coding!"
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: Contact Philip Chang <philip@ucsd.edu> for any questions."
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: Happy Coding!"
 
 else
 
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: To use these classes, one includes the source files to your code and get a TTree object from one of the root file and do the following:"
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil::  ... "
-    e_arrow "TasUtil::  ... "
-    e_arrow "TasUtil::  TFile* file = new TFile(\"/path/to/my/rootfile.root\");"
-    e_arrow "TasUtil::  TTree* tree = (TTree*) file->Get(\"${TREENAME}\");"
-    e_arrow "TasUtil::  ${TREEINSTANCENAME}.Init(tree);"
-    e_arrow "TasUtil::  ... "
-    e_arrow "TasUtil::  ... "
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: Contact Philip Chang <philip@physics.ucsd.edu> for any questions."
-    e_arrow "TasUtil:: "
-    e_arrow "TasUtil:: Happy Coding!"
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: To use these classes, one includes the source files to your code and get a TTree object from one of the root file and do the following:"
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil::  ... "
+    e_arrow "RooUtil::  ... "
+    e_arrow "RooUtil::  TFile* file = new TFile(\"/path/to/my/rootfile.root\");"
+    e_arrow "RooUtil::  TTree* tree = (TTree*) file->Get(\"${TREENAME}\");"
+    e_arrow "RooUtil::  ${TREEINSTANCENAME}.Init(tree);"
+    e_arrow "RooUtil::  ... "
+    e_arrow "RooUtil::  ... "
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: Contact Philip Chang <philip@ucsd.edu> for any questions."
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: Happy Coding!"
 
 fi
 #eof
-#!/bin/bash
