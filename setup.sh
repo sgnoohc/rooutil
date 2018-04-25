@@ -5,5 +5,5 @@ cd /cvmfs/cms.cern.ch/$SCRAM_ARCH/cms/cmssw/$CMSSW_VERSION/src
 eval `scramv1 runtime -sh`
 cd - > /dev/null
 
-export LD_LIBRARY_PATH=$PWD/rooutil:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export LD_LIBRARY_PATH=$DIR:$LD_LIBRARY_PATH
