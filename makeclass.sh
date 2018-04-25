@@ -28,7 +28,7 @@ usage(){
     echo ""
     echo "Usage:"
     echo ""
-    echo ${green}"  > sh $(basename $0) [-f] [-h] [-x] ROOTFILE TTREENAME CLASSNAME [NAMESPACENAME=tas] [CLASSINSTANCENAME=mytree] "${reset}
+    echo ${green}"  > sh $(basename $0) [-f] [-h] [-x] ROOTFILE TTREENAME CLASSNAME [NAMESPACENAME=tas] [CLASSINSTANCENAME=cms3] "${reset}
     echo ""
     echo ""
     echo ${green}" -h ${reset}: print this message"
@@ -40,7 +40,7 @@ usage(){
     echo ${green}" CLASSNAME         ${reset}= The name you want to give to the class you are creating"
     echo ${green}" NAMESPACENAME     ${reset}= The name you want to give to the namespace for accessing the ttree"
     echo ${green}" CLASSINSTANCENAME ${reset}= The name of the global instance of the class that you are trying to create"
-    echo "                     (defaults to 'mytree')"
+    echo "                     (defaults to 'cms3')"
     echo ""
     e_underline "${red}NOTE: If no argument is given, it will assume to create a CMS3 looper"${reset}
     echo ""
@@ -80,7 +80,7 @@ MAKECLASSNAME=$3
 NAMESPACENAME=$4
 TREEINSTANCENAME=$5
 if [ -z ${NAMESPACENAME} ]; then NAMESPACENAME=tas; fi
-if [ -z ${TREEINSTANCENAME} ]; then TREEINSTANCENAME=mytree; fi
+if [ -z ${TREEINSTANCENAME} ]; then TREEINSTANCENAME=cms3; fi
 
 echo ""
 e_arrow "RooUtil:: The user has provided following options"
