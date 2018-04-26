@@ -3,6 +3,11 @@
 import os
 import sys
 
+#
+# Searches function calls like "ptratio()" with just () ending in a source file
+# Also can cross reference to CMS3.h or other class header files to eliminate ROOT or custom function calls with '()' ending
+#
+
 def help():
     print "python {} SOURCECODE [CLASSHEADERCODE]".format(sys.argv[0])
     print "e.g. python {} ScanChain.C CMS3.h".format(sys.argv[0])
