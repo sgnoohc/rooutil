@@ -5,6 +5,7 @@ import sys
 
 def help():
     print "python {} SOURCECODE [CLASSHEADERCODE]".format(sys.argv[0])
+    print "e.g. python {} ScanChain.C CMS3.h".format(sys.argv[0])
     sys.exit()
 
 fname = sys.argv[1]
@@ -15,6 +16,7 @@ lines = f.readlines()
 rmchar = ".!,;=<>&\"?|*+/-:"
 paran = "(){}[]"
 
+# gather all the function calls ending with '()'
 funcs = []
 for line in lines:
     line = line.strip()
@@ -29,6 +31,7 @@ for line in lines:
 funcs = list(set(funcs))
 funcs.sort()
 
+# if header file path provided gather all the available () and cross reference and print
 if len(sys.argv) > 2:
     cname = sys.argv[2]
     c = open(cname)
