@@ -24,7 +24,5 @@ print chain.GetEntries()
 
 if not args.size:
     args.size = 500*1048576
-else:
-    args.size = int(args.size) * 1048576
 
-r.RooUtil.split_files(chain, args.output, args.size)
+r.RooUtil.split_files(chain, args.output, int(args.size))
