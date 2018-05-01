@@ -146,38 +146,42 @@ if [ "$GENERATEEXTRACODE" == true ]; then
     #
     # Create process.cc
     #
-    echo "#include \"looper.h\""                                                               >  process.cc
-    echo "#include \"ttreex.h\""                                                               >> process.cc
-    echo "#include \"${MAKECLASSNAME}.h\""                                                     >> process.cc
-    echo ""                                                                                    >> process.cc
-    echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                 >> process.cc
-    echo "int main(int argc, char** argv)"                                                     >> process.cc
-    echo "{"                                                                                   >> process.cc
-    echo "    // Argument checking"                                                            >> process.cc
-    echo "    if (argc < 3)"                                                                   >> process.cc
-    echo "        return 1;"                                                                   >> process.cc
-    echo "    TChain* ch = new TChain(\"${TTREENAME}\");"                                      >> process.cc
-    echo "    ch->Add(argv[1]);"                                                               >> process.cc
-    echo ""                                                                                    >> process.cc
-    echo "    // Creating output file"                                                         >> process.cc
-    echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                >> process.cc
-    echo "    TTree* t = new TTree(\"t\", \"t\");"                                             >> process.cc
-    echo "    RooUtil::TTreeX tx(t);"                                                          >> process.cc
-    echo "    //tx.createBranch<LV>(\"p0\");"                                                  >> process.cc
-    echo ""                                                                                    >> process.cc
-    echo "    // Looping input file"                                                           >> process.cc
-    echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                    >> process.cc
-    echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"    >> process.cc
-    echo "    while (looper.nextEvent())"                                                      >> process.cc
-    echo "    {"                                                                               >> process.cc
-    echo "        //Do what you need to do in for each event here"                             >> process.cc
-    echo "        //To save use the following function"                                        >> process.cc
-    echo "        //tx.fill();"                                                                >> process.cc
-    echo "    }"                                                                               >> process.cc
-    echo ""                                                                                    >> process.cc
-    echo "    // Writing output file"                                                          >> process.cc
-    echo "    tx.save(ofile);"                                                                 >> process.cc
-    echo "}"                                                                                   >> process.cc
+    echo "#include \"looper.h\""                                                                   >  process.cc
+    echo "#include \"ttreex.h\""                                                                   >> process.cc
+    echo "#include \"${MAKECLASSNAME}.h\""                                                         >> process.cc
+    echo ""                                                                                        >> process.cc
+    echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                     >> process.cc
+    echo "int main(int argc, char** argv)"                                                         >> process.cc
+    echo "{"                                                                                       >> process.cc
+    echo "    // Argument checking"                                                                >> process.cc
+    echo "    if (argc < 3)"                                                                       >> process.cc
+    echo "    {"                                                                                   >> process.cc
+    echo "        std::cout << \"Usage:\" << std::endl;"                                           >> process.cc
+    echo "        std::cout << \"  $ ./process INPUTFILEFILE OUTPUTFILE [NEVENTS]\" << std::endl;" >> process.cc
+    echo "        return 1;"                                                                       >> process.cc
+    echo "    }"                                                                                   >> process.cc
+    echo "    TChain* ch = new TChain(\"${TTREENAME}\");"                                          >> process.cc
+    echo "    ch->Add(argv[1]);"                                                                   >> process.cc
+    echo ""                                                                                        >> process.cc
+    echo "    // Creating output file"                                                             >> process.cc
+    echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                    >> process.cc
+    echo "    TTree* t = new TTree(\"t\", \"t\");"                                                 >> process.cc
+    echo "    RooUtil::TTreeX tx(t);"                                                              >> process.cc
+    echo "    //tx.createBranch<LV>(\"p0\");"                                                      >> process.cc
+    echo ""                                                                                        >> process.cc
+    echo "    // Looping input file"                                                               >> process.cc
+    echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                        >> process.cc
+    echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"        >> process.cc
+    echo "    while (looper.nextEvent())"                                                          >> process.cc
+    echo "    {"                                                                                   >> process.cc
+    echo "        //Do what you need to do in for each event here"                                 >> process.cc
+    echo "        //To save use the following function"                                            >> process.cc
+    echo "        //tx.fill();"                                                                    >> process.cc
+    echo "    }"                                                                                   >> process.cc
+    echo ""                                                                                        >> process.cc
+    echo "    // Writing output file"                                                              >> process.cc
+    echo "    tx.save(ofile);"                                                                     >> process.cc
+    echo "}"                                                                                       >> process.cc
 
     cat $DIR/TemplateMakefile | sed -e "s/MAKECLASSNAME/${MAKECLASSNAME}/" > Makefile
 
