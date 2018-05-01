@@ -195,6 +195,18 @@ def divide_by_bin_width(hists):
         single_divide_by_bin_width(hist)
 
 #______________________________________________________________________________________________________________________
+def remove_underflow(hists):
+    def func(hist):
+        hist.SetBinContent(0, 0)
+        hist.SetBinError(0, 0)
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist)
+    else:
+        func(hists)
+    return hists
+
+#______________________________________________________________________________________________________________________
 def move_overflow(hists):
     def func(hist):
         of_bc = hist.GetBinContent(hist.GetNbinsX()+1)

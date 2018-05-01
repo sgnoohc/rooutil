@@ -19,7 +19,7 @@ def printsf(funcname, xthreshs, ythreshs, sfs, errs, filename="", xvar="eta", yv
     funcstr += "float {}(float {}, float {}, int isyst=0)\n".format(funcname, yvar, xvar)
     funcstr += "{\n"
     funcstr += "    if (isyst != 1 && isyst != -1 && isyst != 0)\n"
-    funcstr += "        printf(Form(\"WARNING - in function=%s, isyst=%d is not recommended!\\n\", __FUNCTION__, isyst));\n"
+    funcstr += "        printf(\"%s\",Form(\"WARNING - in function=%s, isyst=%d is not recommended!\\n\", __FUNCTION__, isyst));\n"
     for i, xthresh in enumerate(xthreshs):
         for j, ythresh in enumerate(ythreshs):
             sf = sfs[i][j]
