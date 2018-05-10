@@ -127,7 +127,7 @@ def getSampleLists(samples):
     return sample_names, sample_full_names
 
 ########################################################################################
-def connectNtuples(samples, config, path, priority="<2"):
+def connectNtuples(samples, config, path, priority="<2", excludepriority=""):
     parser = TQXSecParser(samples);
     parser.readCSVfile(config)
     parser.readMappingFromColumn("*path*")
@@ -137,6 +137,12 @@ def connectNtuples(samples, config, path, priority="<2"):
     elif priority.find("<") != -1:
         priority_value = int(priority.split("<")[1])
         parser.enableSamplesWithPriorityLessThan("priority", priority_value)
+    if excludepriority.find(">") != -1:
+        priority_value = int(excludepriority.split(">")[1])
+        parser.disableSamplesWithPriorityGreaterThan("priority", priority_value)
+    elif excludepriority.find("<") != -1:
+        priority_value = int(excludepriority.split("<")[1])
+        parser.disableSamplesWithPriorityLessThan("priority", priority_value)
     parser.addAllSamples(True)
     # By "visiting" the samples with the initializer we actually hook up the samples with root files
     init = TQSampleInitializer(path, 1)

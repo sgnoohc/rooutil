@@ -146,8 +146,30 @@ def getYaxisRange(hist):
             v = c + e
             if v > maximum:
                 maximum = v
-
     return maximum
+
+#______________________________________________________________________________________________________________________
+def getYaxisNonZeroMin(hist):
+    minimum = 999999999999999999
+    if hist:
+        for ibin in xrange(0, hist.GetNbinsX()+2):
+        #for ibin in xrange(1, hist.GetNbinsX()+1):
+            c = hist.GetBinContent(ibin)
+            e = hist.GetBinError(ibin)
+            v = c + e
+            if float(c) != float(0):
+                if v < minimum:
+                    minimum = v
+    return minimum
+
+#______________________________________________________________________________________________________________________
+def get_nonzeromin_yaxis_range(hists):
+    minimum = 9999999999999999999
+    for hist in hists:
+        v = getYaxisNonZeroMin(hist)
+        if v < minimum:
+            minimum = v
+    return minimum
 
 #______________________________________________________________________________________________________________________
 def get_max_yaxis_range(hists):
@@ -762,6 +784,11 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         maxmult = options["ymax_scale"]
         del options["ymax_scale"]
     yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * maxmult)
+    yaxismin = get_nonzeromin_yaxis_range(bgs)
+
+    if "yaxis_log" in options:
+        if options["yaxis_log"]:
+            options["yaxis_range"] = [yaxismin, 2*(yaxismax-yaxismin)+yaxismax]
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
@@ -916,8 +943,21 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             options       = options
             )
 
-    #c1.SaveAs("plots/plot.pdf")
-    #c1.SaveAs("plots/plot.C")
+    # Set permission
+    os.system("chmod 644 {}".format(options["output_name"]))
+
+    options["output_name"] = options["output_name"].replace("pdf","png")
+    # Call Plottery! I hope you win the Lottery!
+    c1 = p.plot_hist(
+            data          = data,
+            bgs           = bgs,
+            sigs          = sigs,
+            syst          = syst,
+            sig_labels    = hsig_labels,
+            colors        = hcolors,
+            legend_labels = hlegend_labels,
+            options       = options
+            )
 
     # Set permission
     os.system("chmod 644 {}".format(options["output_name"]))
