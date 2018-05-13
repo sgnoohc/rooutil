@@ -108,6 +108,7 @@ namespace RooUtil
         TFile* getCurrentFile() { return tfile; }
         TString getCurrentFileBaseName() { return gSystem->BaseName(tfile->GetName()); }
         TString getCurrentFileName() { return TString(tfile->GetName()); }
+        TString getListOfFileNames();
         TString getCurrentFileTitle() { return TString(tfile->GetTitle()); }
         void setNbatchToSkip(unsigned int n) { nbatch_to_skip = n; }
         void setNbadEventThreshold(unsigned int n) { nbatch_skip_threshold = n; }
@@ -746,6 +747,23 @@ void RooUtil::Looper<TREECLASS>::printStatus()
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
+TString RooUtil::Looper<TREECLASS>::getListOfFileNames()
+{
+    TString rtnstring = "";
+    TObjArray* filepaths = tchain->GetListOfFiles();
+    for (Int_t ifile = 0; ifile < filepaths->GetEntries(); ++ifile)
+    {
+        TString filepath = ((TObjString*)filepaths->At(ifile))->GetString();
+        if (rtnstring.IsNull())
+            rtnstring = filepath;
+        else
+            rtnstring += "," + filepath;
+    }
+    return rtnstring;
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
 void RooUtil::Looper<TREECLASS>::printSkippedBadEventStatus()
 {
     using namespace std;
@@ -753,7 +771,7 @@ void RooUtil::Looper<TREECLASS>::printSkippedBadEventStatus()
 
     if (nskipped)
     {
-        cout << "RooUtil:Looper [CheckCorrupt] Skipped " << nskipped << " events out of " << tchain->GetEntries() << " [" << float(nskipped) / float(tchain->GetEntries()) * 100 << "% loss]" << endl;
+        cout << "RooUtil:Looper [CheckCorrupt] Skipped " << nskipped << " events out of " << tchain->GetEntries() << " [" << float(nskipped) / float(tchain->GetEntries()) * 100 << "% loss]" << " POSSIBLE BADFILES = " << getListOfFileNames() << endl;
     }
 }
 

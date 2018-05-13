@@ -2,9 +2,10 @@
 
 import os
 import sys
+import datetime
 import ROOT as r
 
-def printsf(funcname, xthreshs, ythreshs, sfs, errs, filename="", xvar="eta", yvar="pt", xvarabs=False, yvarabs=False):
+def printsf(funcname, xthreshs, ythreshs, sfs, errs, filename="", xvar="eta", yvar="pt", xvarabs=False, yvarabs=False, command=""):
     """
     Function to print scale factors (or fake rate) from arrays of numbers
     """
@@ -14,12 +15,24 @@ def printsf(funcname, xthreshs, ythreshs, sfs, errs, filename="", xvar="eta", yv
     if yvarabs: yvarabsstr = "fabs"
     if xvarabs: xvarabsstr = "fabs"
 
+    # Get the boundary
+    xvarmaxthresh = xthreshs[-1] - abs(xthreshs[-1]) * 0.001
+    xvarminthresh = xthreshs[0] - abs(xthreshs[0]) * 0.001
+    yvarmaxthresh = ythreshs[-1] - abs(ythreshs[-1]) * 0.001
+    yvarminthresh = ythreshs[0] - abs(ythreshs[0]) * 0.001
+
     # Form the function sring
-    funcstr = ""
-    funcstr += "float {}(float {}, float {}, int isyst=0)\n".format(funcname, yvar, xvar)
+    funcstr =  "// Auto generated from https://github.com/sgnoohc/rooutil/blob/master/printsf.py\n"
+    funcstr += "// Created on {}\n".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    funcstr += "// Created by the command:\n"
+    if len(command):
+        funcstr += "//   > {}\n".format(command)
+    funcstr += "float {}(float {}_raw, float {}_raw, int isyst=0)\n".format(funcname, yvar, xvar)
     funcstr += "{\n"
     funcstr += "    if (isyst != 1 && isyst != -1 && isyst != 0)\n"
-    funcstr += "        printf(Form(\"WARNING - in function=%s, isyst=%d is not recommended!\\n\", __FUNCTION__, isyst));\n"
+    funcstr += "        printf(\"%s\",Form(\"WARNING - in function=%s, isyst=%d is not recommended!\\n\", __FUNCTION__, isyst));\n"
+    funcstr += "    float {xvar} = std::min((float) {xvarmaxthresh}, std::max((float) {xvarminthresh}, {xvar}_raw)); // minimum values are just below the first bin upper edge\n".format(xvar=xvar, xvarmaxthresh=xvarmaxthresh, xvarminthresh=xvarminthresh)
+    funcstr += "    float {yvar} = std::min((float) {yvarmaxthresh}, std::max((float) {yvarminthresh}, {yvar}_raw)); // minimum values are just below the first bin upper edge\n".format(yvar=yvar, yvarmaxthresh=yvarmaxthresh, yvarminthresh=yvarminthresh)
     for i, xthresh in enumerate(xthreshs):
         for j, ythresh in enumerate(ythreshs):
             sf = sfs[i][j]
@@ -43,7 +56,7 @@ def printsf(funcname, xthreshs, ythreshs, sfs, errs, filename="", xvar="eta", yv
     else:
         print funcstr
 
-def printsf_th2(funcname, th2, filename="", xvar="eta", yvar="pt", xvarabs=False, yvarabs=False):
+def printsf_th2(funcname, th2, filename="", xvar="eta", yvar="pt", xvarabs=False, yvarabs=False, command=""):
     """
     Function to print scale factors (or fake rate) from TH2
     """
@@ -60,7 +73,7 @@ def printsf_th2(funcname, th2, filename="", xvar="eta", yvar="pt", xvarabs=False
             sfs[i-1].append(th2.GetBinContent(i, j))
             errs[i-1].append(th2.GetBinError(i, j))
 
-    printsf(funcname, xthreshs, ythreshs, sfs, errs, filename, xvar, yvar, xvarabs, yvarabs)
+    printsf(funcname, xthreshs, ythreshs, sfs, errs, filename, xvar, yvar, xvarabs, yvarabs, command)
 
 def printsf_tgraph1d(funcname, tgraph1d, filename="", xvar="eta", yvar="pt", xvarabs=False, yvarabs=False):
     """
@@ -82,5 +95,41 @@ def printsf_tgraph1d(funcname, tgraph1d, filename="", xvar="eta", yvar="pt", xva
         sfs[0].append(y)
         errs[0].append(tgraph1d.GetErrorYhigh(index))
     printsf(funcname, xthreshs, ythreshs, sfs, errs, filename, xvar, yvar, xvarabs, yvarabs)
+
+if __name__ == "__main__":
+    default_func_name = "th2d_weight"
+    def help():
+        print "Usage:"
+        print ""
+        print "    python {} FILENAME TH2NAME \"CONFIGSTRING\" [OUTPUTFUNCNAME={}] [OUTPUTFILENAME]".format(sys.argv[0], default_func_name)
+        print ""
+        print "    CONFIGSTRING defines the xvar and yvar name and whether they are absolute or not"
+        print "    NOTE: Make sure to escape string for CONFIGSTRING"
+        print ""
+        print "    e.g. |xvar|:yvar"
+        print ""
+        sys.exit()
+    if len(sys.argv) < 3:
+        help()
+    filename = sys.argv[1]
+    histname = sys.argv[2]
+    configstring = sys.argv[3]
+    xvar = configstring.split(":")[0]
+    yvar = configstring.split(":")[1]
+    xvarabs = True if len(xvar.replace("|", "")) != len(xvar) else False
+    yvarabs = True if len(yvar.replace("|", "")) != len(yvar) else False
+    xvar = xvar.replace("|", "")
+    yvar = yvar.replace("|", "")
+    try:
+        funcname = sys.argv[4]
+    except:
+        funcname = default_func_name
+    try:
+        oname = sys.argv[5]
+    except:
+        oname = ""
+    f = r.TFile(filename)
+    h = f.Get(histname)
+    printsf_th2(funcname, h, oname, xvar, yvar, xvarabs, yvarabs, " ".join(sys.argv))
 
 #eof
