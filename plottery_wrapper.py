@@ -217,6 +217,21 @@ def divide_by_bin_width(hists):
         single_divide_by_bin_width(hist)
 
 #______________________________________________________________________________________________________________________
+def flatten_th2(th2):
+    nx = th2.GetNbinsX()
+    ny = th2.GetNbinsY()
+    th1 = r.TH1F(th2.GetName(), th2.GetTitle(), nx*ny, 0, nx*ny)
+    for ix in xrange(nx):
+        for iy in xrange(ny):
+            bc = th2.GetBinContent(ix+1, iy+1)
+            be = th2.GetBinError(ix+1, iy+1)
+            #th1.SetBinContent(ix+1+(iy)*nx, bc)
+            #th1.SetBinError(ix+1+(iy)*nx, be)
+            th1.SetBinContent(iy+1+(ix)*ny, bc)
+            th1.SetBinError(iy+1+(ix)*ny, be)
+    return th1
+
+#______________________________________________________________________________________________________________________
 def remove_underflow(hists):
     def func(hist):
         hist.SetBinContent(0, 0)
