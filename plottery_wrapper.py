@@ -999,3 +999,182 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
     options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
     plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
 
+#______________________________________________________________________________________________________________________
+def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],options={},_persist=[]):
+
+    #opts = Options(options, kind="graph")
+
+    #style = utils.set_style()
+
+    #c1 = r.TCanvas()
+    #if opts["canvas_width"] and opts["canvas_height"]:
+    #    width = opts["canvas_width"]
+    #    height = opts["canvas_height"]
+    #    c1 = r.TCanvas("c1", "c1", width, height)
+    #_persist.append(c1) # need this to avoid segfault with garbage collection
+
+    #pad_main = r.TPad("pad1","pad1",0.,0.,1.,1.)
+    #if opts["canvas_main_topmargin"]: pad_main.SetTopMargin(opts["canvas_main_topmargin"])
+    #if opts["canvas_main_rightmargin"]: pad_main.SetRightMargin(opts["canvas_main_rightmargin"])
+    #if opts["canvas_main_bottommargin"]: pad_main.SetBottomMargin(opts["canvas_main_bottommargin"])
+    #if opts["canvas_main_leftmargin"]: pad_main.SetLeftMargin(opts["canvas_main_leftmargin"])
+    #if opts["canvas_tick_one_side"]: pad_main.SetTicks(0, 0)
+    #pad_main.Draw()
+
+    #pad_main.cd()
+
+    map(u.move_in_overflows, tps)
+    map(u.move_in_overflows, fps)
+
+    #legend = get_legend(opts)
+
+    # generalize later
+    if len(tps) != len(fps):
+        print len(tps), len(fps)
+        print ">>> number of true positive hists and false positive hists must match"
+        sys.exit(-1)
+
+    debug = False
+
+    ## do your thing
+    valpairs = []
+    pointpairs = []
+    ref_seff = 0
+    ref_beff = 0
+    for index, _ in enumerate(tps):
+
+        sighist = tps[index]
+        bkghist = fps[index]
+        cutval = cutvals[index] if len(cutvals) == len(tps) else -999
+
+        if debug: print "[DEBUG] >>> here", sighist.GetName(), bkghist.GetName()
+
+        error = r.Double()
+
+        stot = sighist.IntegralAndError(0, sighist.GetNbinsX()+1, error)
+        btot = bkghist.IntegralAndError(0, bkghist.GetNbinsX()+1, error)
+
+        if debug: print '[DEBUG] >>>', stot, btot
+        if debug: print '[DEBUG] >>> sighist.GetMean()', sighist.GetMean()
+        if debug: print '[DEBUG] >>> bkghist.GetMean()', bkghist.GetMean()
+
+        x=[]
+        y=[]
+        cuteffset = False
+
+        for i in range(0, sighist.GetNbinsX()+2):
+            if len(scanreverse) > 0:
+                doreverse = scanreverse[index]
+            else:
+                doreverse = False
+            s = sighist.IntegralAndError(sighist.GetNbinsX()-i, sighist.GetNbinsX()+1, error)
+            b = bkghist.IntegralAndError(sighist.GetNbinsX()-i, bkghist.GetNbinsX()+1, error)
+            if doreverse:
+                s = sighist.IntegralAndError(0, 1 + i, error)
+                b = bkghist.IntegralAndError(0, 1 + i, error)
+            #s = sighist.IntegralAndError(0, i, error)
+            #b = bkghist.IntegralAndError(0, i, error)
+            seff = s / stot
+            beff = b / btot
+            curval = sighist.GetXaxis().GetBinUpEdge(sighist.GetNbinsX()) - i * sighist.GetXaxis().GetBinWidth(1)
+            if doreverse:
+                curval = sighist.GetXaxis().GetBinUpEdge(1 + i)
+            print seff, beff, curval
+#            if abs(ref_seff - seff) < 0.03:
+#                print abs(ref_seff - seff) < 0.03
+#                print ref_seff
+#                print cuteffset
+#                print cutval == -999, cutval
+            if abs(ref_seff - seff) < 0.01 and ref_seff > 0 and not cuteffset and cutval == -999:
+#                print 'here'
+                cuteffset = True
+                legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                pointpairs.append(([beff], [seff]))
+            if curval <= cutval and not cuteffset:
+                legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                pointpairs.append(([beff], [seff]))
+                cuteffset = True
+                if ref_seff == 0: ref_seff = seff
+                if ref_beff == 0: ref_beff = beff
+            if debug:
+                if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.10) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.07) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(beff - 0.07) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(beff - 0.04) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(seff - 0.91) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+            #if beff != 0:
+            #    print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff), s, b, stot, btot
+            x.append(beff)
+            y.append(seff)
+
+        valpairs.append((x,y))
+
+        #graph = ROOT.TGraph(len(x))
+        #for index, i in enumerate(x):
+        #    graph.SetPoint(index, x[index], y[index])
+
+        #graph.SetTitle(legend_labels[index])
+        #graph.SetName(legend_labels[index])
+        #graph.SetMinimum(0.)
+        #graph.SetMaximum(1)
+        ##graph.GetXaxis().SetRangeUser(0.05,1)
+        #graph.SetLineColor(colors[index])
+        #graph.SetLineWidth(colors[index])
+        ##graph.GetXaxis().SetTitle("Eff Background")
+        ##graph.GetYaxis().SetTitle("Eff Signal")
+        ##self.histmanager.set_histaxis_settings(graph, 1.0)
+        ##from copy import deepcopy
+        #graphs.append(graph)
+        ##self.objs.append(deepcopy(graph))
+
+    #ymin, ymax = 0., 1. # generally ROC curves are always between 0. to 1.
+
+    #for index, graph in enumerate(graphs):
+    #    if index == 0:
+    #        if opts["yaxis_range"]:
+    #            graph.SetMinimum(opts["yaxis_range"][0])
+    #            graph.SetMaximum(opts["yaxis_range"][1])
+    #            ymin, ymax = opts["yaxis_range"]
+    #        graph.SetMinimum(ymin)
+    #        graph.SetMaximum(ymax)
+    #        graph.Draw("alp")
+    #    else:
+    #        graph.Draw("lp")
+
+    #draw_cms_lumi(pad_main, opts)
+    #handle_axes(pad_main, stack, opts)
+    #draw_extra_stuff(pad_main, opts)
+
+    ## ymin ymax needs to be defined
+    #if opts["legend_smart"]:
+    #    utils.smart_legend(legend, bgs, data=data, ymin=ymin, ymax=ymax, opts=opts)
+    #legend.Draw()
+
+    #save(c1, opts)
+    if not "legend_alignment"               in options: options["legend_alignment"]               = "bottomright"
+    if not "legend_scalex"                  in options: options["legend_scalex"]                  = 1.5
+    if not "legend_scaley"                  in options: options["legend_scaley"]                  = 0.8
+    if not "legend_border"                  in options: options["legend_border"]                  = False
+
+    valpairs.extend(pointpairs)
+
+    draw_styles=[]
+    for i in colors: draw_styles.append(1)
+
+    colors.extend(colors)
+
+    ll = []
+    for x in legend_labels:
+        if len(x) > 0:
+            ll.append(x)
+    legend_labels = ll
+
+    c1 = p.plot_graph(valpairs, colors=colors, legend_labels=legend_labels, options=options, draw_styles=draw_styles)
+
+    copy_nice_plot_index_php(options)
+
+    return c1
+
+
