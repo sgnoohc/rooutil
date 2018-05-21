@@ -6,7 +6,13 @@ import os
 import errno    
 import sys
 from QFramework import TQSampleFolder, TQXSecParser, TQCut, TQAnalysisSampleVisitor, TQSampleInitializer, TQCutflowAnalysisJob, TQCutflowPrinter, TQHistoMakerAnalysisJob, TQNFCalculator, TQCounter
+from syncfiles.pyfiles.errors import E
 
+########################################################################################
+def QE(samples, proc, cut):
+    count = samples.getCounter(proc, cut).getCounter()
+    error = samples.getCounter(proc, cut).getError()
+    return E(count, error)
 
 ########################################################################################
 def addCuts(base, prefix_base, cutdefs, doNm1=True):
