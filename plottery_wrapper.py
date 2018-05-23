@@ -160,6 +160,8 @@ def getYaxisNonZeroMin(hist):
             if float(c) != float(0):
                 if v < minimum:
                     minimum = v
+    if minimum == 999999999999999999:
+        minimum = 0.1
     return minimum
 
 #______________________________________________________________________________________________________________________
@@ -169,6 +171,8 @@ def get_nonzeromin_yaxis_range(hists):
         v = getYaxisNonZeroMin(hist)
         if v < minimum:
             minimum = v
+    if minimum == 9999999999999999999:
+        minimum = 0.1
     return minimum
 
 #______________________________________________________________________________________________________________________
