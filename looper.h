@@ -79,6 +79,7 @@ namespace RooUtil
         std::vector<TString> skimbrfiltpttn;
         bool silent;
         bool isinit;
+        bool use_treeclass_progress;
         unsigned int nskipped_batch;
         unsigned int nskipped;
         unsigned int nbatch_skip_threshold;
@@ -163,6 +164,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
+    use_treeclass_progress( true ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -518,6 +520,7 @@ template <class TREECLASS>
 void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
 {
 
+
     if (silent)
         return;
 
@@ -525,6 +528,12 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
 
     int entry = nEventsProcessed;
     int totalN = nEventsToProcess;
+
+    if (use_treeclass_progress)
+    {
+        treeclass->progress(nEventsProcessed, nEventsToProcess);
+        return;
+    }
 
     if ( totalN < 20 )
         totalN = 20;
