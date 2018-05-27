@@ -537,6 +537,7 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
     if (use_tqdm_progress_bar)
     {
         bar.progress(nEventsProcessed, nEventsToProcess);
+        return;
     }
 
     if (use_treeclass_progress)
