@@ -38,6 +38,8 @@
 
 #include "printutil.h"
 
+#include "tqdm.h"
+
 namespace RooUtil
 {
 
@@ -80,10 +82,12 @@ namespace RooUtil
         bool silent;
         bool isinit;
         bool use_treeclass_progress;
+        bool use_tqdm_progress_bar;
         unsigned int nskipped_batch;
         unsigned int nskipped;
         unsigned int nbatch_skip_threshold;
         unsigned int nbatch_to_skip;
+        tqdm bar;
         public:
         // Functions
         Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
@@ -165,6 +169,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     silent( false ),
     isinit( false ),
     use_treeclass_progress( true ),
+    use_tqdm_progress_bar( true ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -528,6 +533,11 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
 
     int entry = nEventsProcessed;
     int totalN = nEventsToProcess;
+
+    if (use_tqdm_progress_bar)
+    {
+        bar.progress(nEventsProcessed, nEventsToProcess);
+    }
 
     if (use_treeclass_progress)
     {
