@@ -206,4 +206,6 @@ TQValueInteger=ROOT.TQValueInteger
 TQValueBool=ROOT.TQValueBool
 TQValueString=ROOT.TQValueString
 TQVectorAuxObservable=ROOT.TQVectorAuxObservable
+TQWWWClosureEvtType=ROOT.TQWWWClosureEvtType
+TQWWWMTOneLep=ROOT.TQWWWMTOneLep
 TQXSecParser=ROOT.TQXSecParser

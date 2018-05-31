@@ -187,6 +187,7 @@ def get_max_yaxis_range(hists):
 #______________________________________________________________________________________________________________________
 def get_max_yaxis_range_order_half_modded(maximum):
     firstdigit = int(str(maximum)[0])
+    maximum = max(maximum, 0.001)
     order = int(math.log10(maximum))
     if firstdigit <= 2:
         middle = (10.**(order - 1))
@@ -240,6 +241,18 @@ def remove_underflow(hists):
     def func(hist):
         hist.SetBinContent(0, 0)
         hist.SetBinError(0, 0)
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist)
+    else:
+        func(hists)
+    return hists
+
+#______________________________________________________________________________________________________________________
+def remove_overflow(hists):
+    def func(hist):
+        hist.SetBinContent(hist.GetNbinsX()+1, 0)
+        hist.SetBinError(hist.GetNbinsX()+1, 0)
     if isinstance(hists, list):
         for hist in hists:
             func(hist)
@@ -806,7 +819,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     yaxismin = get_nonzeromin_yaxis_range(bgs)
 
     if "yaxis_log" in options:
-        if options["yaxis_log"]:
+        if options["yaxis_log"] and "yaxis_range" not in options:
             options["yaxis_range"] = [yaxismin, 2*(yaxismax-yaxismin)+yaxismax]
 
     # Once maximum is computed, set the y-axis label location
@@ -870,15 +883,19 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         allhists.append(data)
     xaxis_label = allhists[0].GetXaxis().GetTitle()
 
+    if "yaxis_range" in options and options["yaxis_range"] == []:
+        del options["yaxis_range"]
+
     # Here are my default options for plottery
     #if not "canvas_width"             in options: options["canvas_width"]              = 604
     #if not "canvas_height"            in options: options["canvas_height"]             = 728
+    if not "yaxis_log"                      in options: options["yaxis_log"]                      = False
     if not "canvas_width"                   in options: options["canvas_width"]                   = 454
     if not "canvas_height"                  in options: options["canvas_height"]                  = 553
     if not "yaxis_range"                    in options: options["yaxis_range"]                    = [0., yaxismax]
     if not "legend_ncolumns"                in options: options["legend_ncolumns"]                = 2 if len(bgs) >= 4 else 1
     if not "legend_alignment"               in options: options["legend_alignment"]               = "topright"
-    if not "legend_smart"                   in options: options["legend_smart"]                   = True
+    if not "legend_smart"                   in options: options["legend_smart"]                   = True if not options["yaxis_log"] else False
     if not "legend_scalex"                  in options: options["legend_scalex"]                  = 0.8
     if not "legend_scaley"                  in options: options["legend_scaley"]                  = 0.8
     if not "legend_border"                  in options: options["legend_border"]                  = False
