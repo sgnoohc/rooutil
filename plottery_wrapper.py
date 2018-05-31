@@ -136,6 +136,38 @@ def get_total_err_hist(hists):
     return errhist
 
 #______________________________________________________________________________________________________________________
+def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
+    """
+    Add the difference between nomhist to errhist as an additional error to nomhist
+    """
+    if nomhist.GetNbinsX() != errhist.GetNbinsX(): print "ERROR - the nom hist and err hist have different dimension in X"
+    if nomhist.GetNbinsY() != errhist.GetNbinsY(): print "ERROR - the nom hist and err hist have different dimension in Y"
+    if nomhist.GetNbinsZ() != errhist.GetNbinsZ(): print "ERROR - the nom hist and err hist have different dimension in Z"
+
+    if errhistpairvar:
+        if nomhist.GetNbinsX() != errhistpairvar.GetNbinsX(): print "ERROR - the nom hist and err hist paired variation have different dimension in X"
+        if nomhist.GetNbinsY() != errhistpairvar.GetNbinsY(): print "ERROR - the nom hist and err hist paired variation have different dimension in Y"
+        if nomhist.GetNbinsZ() != errhistpairvar.GetNbinsZ(): print "ERROR - the nom hist and err hist paired variation have different dimension in Z"
+
+    for ix in xrange(0, nomhist.GetNbinsX()+2):
+        for iy in xrange(0, nomhist.GetNbinsY()+2):
+            for iz in xrange(0, nomhist.GetNbinsZ()+2):
+                #print ix, iy, iz
+                nombc = nomhist.GetBinContent(ix, iy, iz)
+                nombe = nomhist.GetBinError(ix, iy, iz)
+                errbc = errhist.GetBinContent(ix, iy, iz)
+                diff = nombc - errbc
+                if errhistpairvar:
+                    errbcpaired = errhistpairvar.GetBinContent(ix, iy, iz)
+                    diffpaired = nombc - errbcpaired
+                    if abs(diff) < abs(diffpaired):
+                        diff = diffpaired
+                newb = E(0, diff) + E(nombc, nombe)
+                #print newb.val, newb.err, diff, nombe, nombc
+                nomhist.SetBinContent(ix, iy, iz, newb.val)
+                nomhist.SetBinError(ix, iy, iz, newb.err)
+
+#______________________________________________________________________________________________________________________
 def getYaxisRange(hist):
     maximum = 0
     if hist:
