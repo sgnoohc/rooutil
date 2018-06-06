@@ -9,6 +9,50 @@ from QFramework import TQSampleFolder, TQXSecParser, TQCut, TQAnalysisSampleVisi
 from syncfiles.pyfiles.errors import E
 
 ########################################################################################
+# Example usage:
+#
+#   test = copyEditCuts(
+#           cut=tqcuts["SRDilep"],
+#           name_edits={"SR":"AR"},
+#           cut_edits={"SRDilep" : TQCut("ARDilep" , "ARDilep" , "(nVlep==2)*(nLlep==2)*(nTlep==1)*(lep_pt[0]>25.)*(lep_pt[1]>25.)" , "lepsf"+lepsfvar_suffix)},
+#           cutdict=tqcuts,
+#           )
+#
+#   tqcuts["ARDilep"].printCuts("trd")
+#
+#   tqcuts["Presel"].addCuts(tqcuts["ARDilep"])
+#
+#
+def copyEditCuts(cut, name_edits, cut_edits, cutdict, parentcut=None):
+
+    # Create a new cut
+    if cut.GetName() in cut_edits:
+        newcut = cut_edits[cut.GetName()]
+    else:
+        name = str(cut.GetName())
+        title = str(cut.GetTitle())
+        cutdef = str(cut.getCutExpression())
+        wgtdef = str(cut.getWeightExpression())
+        newname = reduce(lambda x, y: x.replace(y, name_edits[y]), name_edits, name)
+        newtitle = reduce(lambda x, y: x.replace(y, name_edits[y]), name_edits, title)
+        newcut = TQCut(newname, newtitle, cutdef, wgtdef)
+
+    cutdict[str(newcut.GetName())] = newcut
+
+    if not parentcut:
+        parentcut = newcut
+    else:
+        parentcut.addCut(newcut)
+
+    if len(cut.getCuts()) == 0:
+        return
+
+    # if this cut is to be modded based on what was passed to cut_edits, then replace or add
+    for c in cut.getCuts():
+        copyEditCuts(c, name_edits, cut_edits, cutdict, newcut)
+
+
+########################################################################################
 def QE(samples, proc, cut):
     count = samples.getCounter(proc, cut).getCounter()
     error = samples.getCounter(proc, cut).getError()

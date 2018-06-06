@@ -149,10 +149,24 @@ def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
         if nomhist.GetNbinsY() != errhistpairvar.GetNbinsY(): print "ERROR - the nom hist and err hist paired variation have different dimension in Y"
         if nomhist.GetNbinsZ() != errhistpairvar.GetNbinsZ(): print "ERROR - the nom hist and err hist paired variation have different dimension in Z"
 
-    for ix in xrange(0, nomhist.GetNbinsX()+2):
+    labels = nomhist.GetXaxis().GetLabels()
+    if labels:
+        nomhist.GetXaxis().SetRange(1, nomhist.GetXaxis().GetNbins())
+        nomhist.GetYaxis().SetRange(1, nomhist.GetYaxis().GetNbins())
+        nomhist.GetZaxis().SetRange(1, nomhist.GetZaxis().GetNbins())
+        nomhist.GetXaxis().SetCanExtend(False)
+        nomhist.GetYaxis().SetCanExtend(False)
+        nomhist.GetZaxis().SetCanExtend(False)
+        errhist.GetXaxis().SetRange(1, errhist.GetXaxis().GetNbins())
+        errhist.GetYaxis().SetRange(1, errhist.GetYaxis().GetNbins())
+        errhist.GetZaxis().SetRange(1, errhist.GetZaxis().GetNbins())
+        errhist.GetXaxis().SetCanExtend(False)
+        errhist.GetYaxis().SetCanExtend(False)
+        errhist.GetZaxis().SetCanExtend(False)
+
+    for iz in xrange(0, nomhist.GetNbinsZ()+2):
         for iy in xrange(0, nomhist.GetNbinsY()+2):
-            for iz in xrange(0, nomhist.GetNbinsZ()+2):
-                #print ix, iy, iz
+            for ix in xrange(0, nomhist.GetNbinsX()+2):
                 nombc = nomhist.GetBinContent(ix, iy, iz)
                 nombe = nomhist.GetBinError(ix, iy, iz)
                 errbc = errhist.GetBinContent(ix, iy, iz)
@@ -166,6 +180,10 @@ def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
                 #print newb.val, newb.err, diff, nombe, nombc
                 nomhist.SetBinContent(ix, iy, iz, newb.val)
                 nomhist.SetBinError(ix, iy, iz, newb.err)
+            if nomhist.GetDimension() == 1:
+                return
+        if nomhist.GetDimension() == 2:
+            return
 
 #______________________________________________________________________________________________________________________
 def getYaxisRange(hist):

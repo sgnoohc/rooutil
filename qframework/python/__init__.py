@@ -207,5 +207,6 @@ TQValueBool=ROOT.TQValueBool
 TQValueString=ROOT.TQValueString
 TQVectorAuxObservable=ROOT.TQVectorAuxObservable
 TQWWWClosureEvtType=ROOT.TQWWWClosureEvtType
+TQWWWMTMax3L=ROOT.TQWWWMTMax3L
 TQWWWMTOneLep=ROOT.TQWWWMTOneLep
 TQXSecParser=ROOT.TQXSecParser
