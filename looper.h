@@ -38,7 +38,7 @@
 
 #include "printutil.h"
 
-#include "tqdm.h"
+#include "cpptqdm/tqdm.h"
 
 namespace RooUtil
 {
@@ -168,8 +168,8 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
-    use_treeclass_progress( true ),
-    use_tqdm_progress_bar( true ),
+    use_treeclass_progress( false ),
+    use_tqdm_progress_bar( false ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -178,6 +178,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     bmark = new TBenchmark();
     if ( c && t )
         init( c, t, nevtToProc );
+//    bar.set_theme_circle();
 }
 
 //_________________________________________________________________________________________________
@@ -312,7 +313,7 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
                 TString( tfile->GetName() ) +
                 "/TTree:" +
                 TString( ttree->GetName() ) );
-        printProgressBar(true);
+//        printProgressBar(true);
         // Reset the nEventsTotalInTree in this tree
         nEventsTotalInTree = ttree->GetEntries();
         // Reset the event index as we got a new ttree
@@ -536,12 +537,14 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
 
     if (use_tqdm_progress_bar)
     {
-        bar.progress(nEventsProcessed, nEventsToProcess);
+        if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
+        bar.progress(nEventsProcessed-1, nEventsToProcess); // tqdm expects 0 to N-1 index not 1 to N
         return;
     }
 
     if (use_treeclass_progress)
     {
+        if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
         treeclass->progress(nEventsProcessed, nEventsToProcess);
         return;
     }
