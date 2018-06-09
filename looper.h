@@ -178,6 +178,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     bmark = new TBenchmark();
     if ( c && t )
         init( c, t, nevtToProc );
+    bar.disable_colors();
 }
 
 //_________________________________________________________________________________________________
