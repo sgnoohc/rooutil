@@ -169,7 +169,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     silent( false ),
     isinit( false ),
     use_treeclass_progress( false ),
-    use_tqdm_progress_bar( false ),
+    use_tqdm_progress_bar( true ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -178,7 +178,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     bmark = new TBenchmark();
     if ( c && t )
         init( c, t, nevtToProc );
-//    bar.set_theme_circle();
+    bar.disable_colors();
 }
 
 //_________________________________________________________________________________________________
