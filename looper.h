@@ -90,7 +90,8 @@ namespace RooUtil
         tqdm bar;
         public:
         // Functions
-        Looper( TChain* chain = 0, TREECLASS* treeclass = 0, int nEventsToProcess = -1 );
+        Looper();
+        Looper( TChain* chain, TREECLASS* treeclass, int nEventsToProcess = -1 );
         ~Looper();
         void init(TChain* chain, TREECLASS* treeclass, int nEventsToProcess);
         void setTChain( TChain* c );
@@ -101,6 +102,7 @@ namespace RooUtil
         bool allEventsInChainProcessed();
         bool nextEvent();
         TTree* getTree() { return ttree; }
+        TChain* getTChain() { return tchain; }
         unsigned int getNEventsProcessed() { return nEventsProcessed; }
         void setSkim( TString ofilename );
         void setSkimBranchFilterPattern( std::vector<TString> x ) { skimbrfiltpttn = x; }
@@ -145,6 +147,42 @@ namespace RooUtil
 
 //_________________________________________________________________________________________________
 template <class TREECLASS>
+RooUtil::Looper<TREECLASS>::Looper() :
+    tchain( 0 ),
+    listOfFiles( 0 ),
+    fileIter( 0 ),
+    tfile( 0 ),
+    ttree( 0 ),
+    ps( 0 ),
+    nEventsTotalInChain( 0 ),
+    nEventsTotalInTree( 0 ),
+    nEventsToProcess( -1 ),
+    nEventsProcessed( 0 ),
+    indexOfEventInTTree( 0 ),
+    fastmode( true ),
+    treeclass( 0 ),
+    bar_id( 0 ),
+    print_rate( 432 ),
+    doskim( false ),
+    skimfilename( "" ),
+    skimfile( 0 ),
+    skimtree( 0 ),
+    nEventsSkimmed( 0 ),
+    silent( false ),
+    isinit( false ),
+    use_treeclass_progress( false ),
+    use_tqdm_progress_bar( true ),
+    nskipped_batch( 0 ),
+    nskipped( 0 ),
+    nbatch_skip_threshold( 500 ),
+    nbatch_to_skip( 5000 )
+{
+    bmark = new TBenchmark();
+    bar.disable_colors();
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
 RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     tchain( 0 ),
     listOfFiles( 0 ),
@@ -185,6 +223,9 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
 template <class TREECLASS>
 void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
 {
+    if ( isinit )
+        error( "The Looper is already initialized! Are you calling Looper::init(TChain* c, TREECLASS* t, int nevtToProcess) for the second time?", __FUNCTION__ );
+
     initProgressBar();
     print( "Start EventLooping" );
     start();
@@ -197,7 +238,7 @@ void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
     if ( t )
         setTreeClass( t );
 
-    if ( nevtToProc > 5000 || nevtToProc == -1 )
+    if ( nEventsToProcess > 5000 || nEventsToProcess == -1 )
         fastmode = true;
 
     c->GetEntry( 0 );
@@ -407,6 +448,9 @@ bool RooUtil::Looper<TREECLASS>::nextEventInTree()
 template <class TREECLASS>
 bool RooUtil::Looper<TREECLASS>::nextEvent()
 {
+    if ( !isinit )
+        error( "The Looper is not initialized! please call properly Looper::init(TChain* c, TREECLASS* t, int nevtToProcess) first!", __FUNCTION__ );
+
     // If no tree it means this is the beginning of the loop.
     if ( !ttree )
     {
