@@ -122,6 +122,7 @@ namespace RooUtil
         bool handleBadEvent();
         void printStatus();
         void printSkippedBadEventStatus();
+        void setFastMode( bool f=true ) { fastmode = f; }
         private:
         void setFileList();
         void setNEventsToProcess();
@@ -348,6 +349,8 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
 
         if ( fastmode )
             ttree->SetCacheSize( 128 * 1024 * 1024 );
+        else
+            ttree->SetCacheSize( -1 );
 
         // Print some info to stdout
         print( "Looping " +
