@@ -209,4 +209,5 @@ TQVectorAuxObservable=ROOT.TQVectorAuxObservable
 TQWWWClosureEvtType=ROOT.TQWWWClosureEvtType
 TQWWWMTMax3L=ROOT.TQWWWMTMax3L
 TQWWWMTOneLep=ROOT.TQWWWMTOneLep
+TQWWWVariables=ROOT.TQWWWVariables
 TQXSecParser=ROOT.TQXSecParser

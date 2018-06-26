@@ -9,6 +9,17 @@ from QFramework import TQSampleFolder, TQXSecParser, TQCut, TQAnalysisSampleVisi
 from syncfiles.pyfiles.errors import E
 
 ########################################################################################
+def addWeightSystematics(cut, systvars, cutdict):
+    for systvar in systvars:
+        newname = str(cut.GetName()) + systvar
+        newtitle = str(cut.GetTitle()) + systvar
+        wgtdef = systvars[systvar]
+        print wgtdef
+        newcut = TQCut(newname, newtitle, "1", wgtdef)
+        cutdict[str(newcut.GetName())] = newcut
+        cut.addCut(newcut)
+
+########################################################################################
 # Example usage:
 #
 #   test = copyEditCuts(
@@ -197,6 +208,33 @@ def connectNtuples(samples, config, path, priority="<2", excludepriority=""):
     # By "visiting" the samples with the initializer we actually hook up the samples with root files
     init = TQSampleInitializer(path, 1)
     samples.visitMe(init)
+    # Print the content for debugging purpose
+    #samples.printContents("rtd")
 
+########################################################################################
+def addNtuples(samples, configstr, path, priority="<2", excludepriority=""):
+    parser = TQXSecParser(samples);
+    config_filename = ".temp.samples.cfg"
+    f = open(config_filename, "w")
+    f.write(configstr)
+    f.close()
+    parser.readCSVfile(config_filename)
+    parser.readMappingFromColumn("*path*")
+    if priority.find(">") != -1:
+        priority_value = int(priority.split(">")[1])
+        parser.enableSamplesWithPriorityGreaterThan("priority", priority_value)
+    elif priority.find("<") != -1:
+        priority_value = int(priority.split("<")[1])
+        parser.enableSamplesWithPriorityLessThan("priority", priority_value)
+    if excludepriority.find(">") != -1:
+        priority_value = int(excludepriority.split(">")[1])
+        parser.disableSamplesWithPriorityGreaterThan("priority", priority_value)
+    elif excludepriority.find("<") != -1:
+        priority_value = int(excludepriority.split("<")[1])
+        parser.disableSamplesWithPriorityLessThan("priority", priority_value)
+    parser.addAllSamples(True)
+    # By "visiting" the samples with the initializer we actually hook up the samples with root files
+    init = TQSampleInitializer(path, 1)
+    samples.visitMe(init)
     # Print the content for debugging purpose
     #samples.printContents("rtd")
