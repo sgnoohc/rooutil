@@ -62,6 +62,7 @@ void RooUtil::TTreeX::clear()
     for (auto& pair : mapVecFloat_t) pair.second.clear();
     for (auto& pair : mapVecTString) pair.second.clear();
     for (auto& pair : mapVecLV     ) pair.second.clear();
+    for (auto& pair : mapIsBranchSet) pair.second = false;
 }
 
 //__________________________________________________________________________________________________
@@ -103,37 +104,37 @@ void TTreeX::sortVecBranchesByPt(TString p4_bn, std::vector<TString> aux_float_b
 }
 
 //_________________________________________________________________________________________________
-template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val) { if (mapInt_t     .find(bn) != mapInt_t     .end()) mapInt_t     [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val) { if (mapBool_t    .find(bn) != mapBool_t    .end()) mapBool_t    [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val) { if (mapFloat_t   .find(bn) != mapFloat_t   .end()) mapFloat_t   [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<TString             >(TString bn, TString              val) { if (mapTString   .find(bn) != mapTString   .end()) mapTString   [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<LV                  >(TString bn, LV                   val) { if (mapLV        .find(bn) != mapLV        .end()) mapLV        [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<TBits               >(TString bn, TBits                val) { if (mapTBits     .find(bn) != mapTBits     .end()) mapTBits     [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<unsigned long long  >(TString bn, unsigned long long   val) { if (mapULL       .find(bn) != mapULL       .end()) mapULL       [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<std::vector<Int_t  >>(TString bn, std::vector<Int_t  > val) { if (mapVecInt_t  .find(bn) != mapVecInt_t  .end()) mapVecInt_t  [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<std::vector<Bool_t >>(TString bn, std::vector<Bool_t > val) { if (mapVecBool_t .find(bn) != mapVecBool_t .end()) mapVecBool_t [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<std::vector<Float_t>>(TString bn, std::vector<Float_t> val) { if (mapVecFloat_t.find(bn) != mapVecFloat_t.end()) mapVecFloat_t[bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<std::vector<TString>>(TString bn, std::vector<TString> val) { if (mapVecTString.find(bn) != mapVecTString.end()) mapVecTString[bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::setBranch<std::vector<LV     >>(TString bn, std::vector<LV     > val) { if (mapVecLV     .find(bn) != mapVecLV     .end()) mapVecLV     [bn] = val; else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::pushbackToBranch<Int_t        >(TString bn, Int_t       val) { if (mapVecInt_t  .find(bn) != mapVecInt_t  .end()) mapVecInt_t  [bn].push_back(val); else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::pushbackToBranch<Bool_t       >(TString bn, Bool_t      val) { if (mapVecBool_t .find(bn) != mapVecBool_t .end()) mapVecBool_t [bn].push_back(val); else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::pushbackToBranch<Float_t      >(TString bn, Float_t     val) { if (mapVecFloat_t.find(bn) != mapVecFloat_t.end()) mapVecFloat_t[bn].push_back(val); else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::pushbackToBranch<TString      >(TString bn, TString     val) { if (mapVecTString.find(bn) != mapVecTString.end()) mapVecTString[bn].push_back(val); else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
-template <> void TTreeX::pushbackToBranch<LV           >(TString bn, LV          val) { if (mapVecLV     .find(bn) != mapVecLV     .end()) mapVecLV     [bn].push_back(val); else error(TString::Format("branch doesn't exist bn = %s", bn.Data())); }
+template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val) { if (mapInt_t     .find(bn) != mapInt_t     .end()) {mapInt_t     [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val) { if (mapBool_t    .find(bn) != mapBool_t    .end()) {mapBool_t    [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val) { if (mapFloat_t   .find(bn) != mapFloat_t   .end()) {mapFloat_t   [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<TString             >(TString bn, TString              val) { if (mapTString   .find(bn) != mapTString   .end()) {mapTString   [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<LV                  >(TString bn, LV                   val) { if (mapLV        .find(bn) != mapLV        .end()) {mapLV        [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<TBits               >(TString bn, TBits                val) { if (mapTBits     .find(bn) != mapTBits     .end()) {mapTBits     [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<unsigned long long  >(TString bn, unsigned long long   val) { if (mapULL       .find(bn) != mapULL       .end()) {mapULL       [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<std::vector<Int_t  >>(TString bn, std::vector<Int_t  > val) { if (mapVecInt_t  .find(bn) != mapVecInt_t  .end()) {mapVecInt_t  [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<std::vector<Bool_t >>(TString bn, std::vector<Bool_t > val) { if (mapVecBool_t .find(bn) != mapVecBool_t .end()) {mapVecBool_t [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<std::vector<Float_t>>(TString bn, std::vector<Float_t> val) { if (mapVecFloat_t.find(bn) != mapVecFloat_t.end()) {mapVecFloat_t[bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<std::vector<TString>>(TString bn, std::vector<TString> val) { if (mapVecTString.find(bn) != mapVecTString.end()) {mapVecTString[bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::setBranch<std::vector<LV     >>(TString bn, std::vector<LV     > val) { if (mapVecLV     .find(bn) != mapVecLV     .end()) {mapVecLV     [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::pushbackToBranch<Int_t        >(TString bn, Int_t       val) { if (mapVecInt_t  .find(bn) != mapVecInt_t  .end()) {mapVecInt_t  [bn].push_back(val); mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::pushbackToBranch<Bool_t       >(TString bn, Bool_t      val) { if (mapVecBool_t .find(bn) != mapVecBool_t .end()) {mapVecBool_t [bn].push_back(val); mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::pushbackToBranch<Float_t      >(TString bn, Float_t     val) { if (mapVecFloat_t.find(bn) != mapVecFloat_t.end()) {mapVecFloat_t[bn].push_back(val); mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::pushbackToBranch<TString      >(TString bn, TString     val) { if (mapVecTString.find(bn) != mapVecTString.end()) {mapVecTString[bn].push_back(val); mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
+template <> void TTreeX::pushbackToBranch<LV           >(TString bn, LV          val) { if (mapVecLV     .find(bn) != mapVecLV     .end()) {mapVecLV     [bn].push_back(val); mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
 
 //_________________________________________________________________________________________________
-template <> const Int_t               & TTreeX::getBranch<Int_t               >(TString bn) { return mapInt_t     [bn]; }
-template <> const Bool_t              & TTreeX::getBranch<Bool_t              >(TString bn) { return mapBool_t    [bn]; }
-template <> const Float_t             & TTreeX::getBranch<Float_t             >(TString bn) { return mapFloat_t   [bn]; }
-template <> const TString             & TTreeX::getBranch<TString             >(TString bn) { return mapTString   [bn]; }
-template <> const LV                  & TTreeX::getBranch<LV                  >(TString bn) { return mapLV        [bn]; }
-template <> const TBits               & TTreeX::getBranch<TBits               >(TString bn) { return mapTBits     [bn]; }
-template <> const unsigned long long  & TTreeX::getBranch<unsigned long long  >(TString bn) { return mapULL       [bn]; }
-template <> const std::vector<Int_t  >& TTreeX::getBranch<std::vector<Int_t  >>(TString bn) { return mapVecInt_t  [bn]; }
-template <> const std::vector<Bool_t >& TTreeX::getBranch<std::vector<Bool_t >>(TString bn) { return mapVecBool_t [bn]; }
-template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn) { return mapVecFloat_t[bn]; }
-template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn) { return mapVecTString[bn]; }
-template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn) { return mapVecLV     [bn]; }
+template <> const Int_t               & TTreeX::getBranch<Int_t               >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapInt_t     [bn]; }
+template <> const Bool_t              & TTreeX::getBranch<Bool_t              >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapBool_t    [bn]; }
+template <> const Float_t             & TTreeX::getBranch<Float_t             >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapFloat_t   [bn]; }
+template <> const TString             & TTreeX::getBranch<TString             >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapTString   [bn]; }
+template <> const LV                  & TTreeX::getBranch<LV                  >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapLV        [bn]; }
+template <> const TBits               & TTreeX::getBranch<TBits               >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapTBits     [bn]; }
+template <> const unsigned long long  & TTreeX::getBranch<unsigned long long  >(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapULL       [bn]; }
+template <> const std::vector<Int_t  >& TTreeX::getBranch<std::vector<Int_t  >>(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapVecInt_t  [bn]; }
+template <> const std::vector<Bool_t >& TTreeX::getBranch<std::vector<Bool_t >>(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapVecBool_t [bn]; }
+template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapVecFloat_t[bn]; }
+template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapVecTString[bn]; }
+template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapVecLV     [bn]; }
 
 //_________________________________________________________________________________________________
 template <> void TTreeX::createBranch<Int_t               >(TString bn) { if (mapInt_t     .find(bn) == mapInt_t     .end()) ttree->Branch(bn, &(mapInt_t      [bn])); else error(TString::Format("branch already exists bn = %s", bn.Data()));}

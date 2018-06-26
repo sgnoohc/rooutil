@@ -95,6 +95,8 @@ namespace RooUtil
         std::map<TString, std::vector<TString> > mapVecTString;
         std::map<TString, std::vector<LV     > > mapVecLV;
 
+        std::map<TString, Bool_t > mapIsBranchSet;
+
         public:
         TTreeX();
         TTreeX(TString treename, TString title);
@@ -113,7 +115,7 @@ namespace RooUtil
         template <class T>
         void setBranch(TString, T);
         template <class T>
-        const T& getBranch(TString);
+        const T& getBranch(TString, bool=false);
         template <class T>
         void createBranch(T&);
         template <class T>
@@ -156,18 +158,18 @@ namespace RooUtil
     template <> void TTreeX::pushbackToBranch<LV           >(TString bn, LV          val);
 
     //_________________________________________________________________________________________________
-    template <> const Int_t               & TTreeX::getBranch<Int_t               >(TString bn);
-    template <> const Bool_t              & TTreeX::getBranch<Bool_t              >(TString bn);
-    template <> const Float_t             & TTreeX::getBranch<Float_t             >(TString bn);
-    template <> const TString             & TTreeX::getBranch<TString             >(TString bn);
-    template <> const LV                  & TTreeX::getBranch<LV                  >(TString bn);
-    template <> const TBits               & TTreeX::getBranch<TBits               >(TString bn);
-    template <> const unsigned long long  & TTreeX::getBranch<unsigned long long  >(TString bn);
-    template <> const std::vector<Int_t  >& TTreeX::getBranch<std::vector<Int_t  >>(TString bn);
-    template <> const std::vector<Bool_t >& TTreeX::getBranch<std::vector<Bool_t >>(TString bn);
-    template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn);
-    template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn);
-    template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn);
+    template <> const Int_t               & TTreeX::getBranch<Int_t               >(TString bn, bool check);
+    template <> const Bool_t              & TTreeX::getBranch<Bool_t              >(TString bn, bool check);
+    template <> const Float_t             & TTreeX::getBranch<Float_t             >(TString bn, bool check);
+    template <> const TString             & TTreeX::getBranch<TString             >(TString bn, bool check);
+    template <> const LV                  & TTreeX::getBranch<LV                  >(TString bn, bool check);
+    template <> const TBits               & TTreeX::getBranch<TBits               >(TString bn, bool check);
+    template <> const unsigned long long  & TTreeX::getBranch<unsigned long long  >(TString bn, bool check);
+    template <> const std::vector<Int_t  >& TTreeX::getBranch<std::vector<Int_t  >>(TString bn, bool check);
+    template <> const std::vector<Bool_t >& TTreeX::getBranch<std::vector<Bool_t >>(TString bn, bool check);
+    template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn, bool check);
+    template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn, bool check);
+    template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn, bool check);
 
     //_________________________________________________________________________________________________
     template <> void TTreeX::createBranch<Int_t               >(TString bn);
