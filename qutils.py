@@ -264,3 +264,13 @@ def runParallel(njobs, func, samples, extra_args):
         #job.get()
     pool.close()
     pool.join()
+
+########################################################################################
+def pathToUniqStr(sample_to_run):
+    sample_to_run_prefix = sample_to_run.replace("/","-")
+    sample_to_run_prefix = sample_to_run_prefix.replace("?","q")
+    sample_to_run_prefix = sample_to_run_prefix.replace("[","_")
+    sample_to_run_prefix = sample_to_run_prefix.replace("]","_")
+    sample_to_run_prefix = sample_to_run_prefix.replace("+","-")
+    return sample_to_run_prefix
+
