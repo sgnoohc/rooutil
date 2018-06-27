@@ -23,6 +23,7 @@ protected:
         kNotSet,
         kVarMTlvlvjj,
         kVarMTlvlv,
+        kVarTrigger,
     };
 
     Vars vartype;
@@ -44,6 +45,7 @@ public:
     float mT(LorentzVector p4, float met_pt, float met_phi) const;
     float MTlvlvjj(int syst) const;
     float MTlvlv(int syst) const;
+    float Trigger() const;
 
     TQWWWVariables();
     TQWWWVariables(const TString& expression);

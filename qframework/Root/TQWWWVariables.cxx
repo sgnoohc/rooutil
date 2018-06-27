@@ -41,7 +41,13 @@ TObjArray* TQWWWVariables::getBranchNames() const
     bnames->SetOwner(false);
     // add the branch names needed by your observable here, e.g.
     // bnames->Add(new TObjString("someBranch"));
-    bnames->Add(new TObjString("lep_p4"));
+    bnames->Add(new TObjString("nVlep"));
+    bnames->Add(new TObjString("nLlep"));
+    bnames->Add(new TObjString("lep_pdgId"));
+    bnames->Add(new TObjString("mc_HLT_DoubleEl"));
+    bnames->Add(new TObjString("mc_HLT_DoubleEl_DZ"));
+    bnames->Add(new TObjString("mc_HLT_MuEG"));
+    bnames->Add(new TObjString("mc_HLT_DoubleMu"));
     bnames->Add(new TObjString("lep_p4.fCoordinates.fX"));
     bnames->Add(new TObjString("lep_p4.fCoordinates.fY"));
     bnames->Add(new TObjString("lep_p4.fCoordinates.fZ"));
@@ -101,6 +107,73 @@ float TQWWWVariables::MTlvlv(int syst) const
     met.SetPxPyPzE(met_pt * TMath::Cos(met_phi), met_pt * TMath::Sin(met_phi), 0, met_pt);
 
     return mT(dilep, met_pt, met_phi);
+}
+
+//______________________________________________________________________________________________
+
+float TQWWWVariables::Trigger() const
+{
+    std::vector<int>* lep_pdgId = ((std::vector<int>*) ( (TLeaf*) (this -> fTree -> GetBranch("lep_pdgId") -> GetListOfLeaves() -> At(0))) -> GetValuePointer());
+    int mc_HLT_DoubleEl = *((int*) (((TLeaf*) (this -> fTree -> GetBranch("mc_HLT_DoubleEl") -> GetListOfLeaves() -> At(0))) -> GetValuePointer()));
+    int mc_HLT_DoubleEl_DZ = *((int*) (((TLeaf*) (this -> fTree -> GetBranch("mc_HLT_DoubleEl_DZ") -> GetListOfLeaves() -> At(0))) -> GetValuePointer()));
+    int mc_HLT_MuEG = *((int*) (((TLeaf*) (this -> fTree -> GetBranch("mc_HLT_MuEG") -> GetListOfLeaves() -> At(0))) -> GetValuePointer()));
+    int mc_HLT_DoubleMu = *((int*) (((TLeaf*) (this -> fTree -> GetBranch("mc_HLT_DoubleMu") -> GetListOfLeaves() -> At(0))) -> GetValuePointer()));
+    int nVlep = *((int*) (((TLeaf*) (this -> fTree -> GetBranch("nVlep") -> GetListOfLeaves() -> At(0))) -> GetValuePointer()));
+    int nLlep = *((int*) (((TLeaf*) (this -> fTree -> GetBranch("nLlep") -> GetListOfLeaves() -> At(0))) -> GetValuePointer()));
+
+    if (nVlep != 2 && nVlep != 3)
+        return 0;
+
+    if (nLlep != 2 && nLlep != 3)
+        return 0;
+
+    if (lep_pdgId->size() < 2)
+        return 0;
+
+    if (nVlep == 2 && nLlep == 2)
+    {
+        int lepprod = lep_pdgId->at(0)*lep_pdgId->at(1);
+        if (abs(lepprod) == 121)
+            return (mc_HLT_DoubleEl || mc_HLT_DoubleEl_DZ);
+        else if (abs(lepprod) == 143)
+            return mc_HLT_MuEG;
+        else if (abs(lepprod) == 169)
+            return mc_HLT_DoubleMu;
+        else
+            return 0;
+    }
+    else if (nVlep == 3 && nLlep == 3)
+    {
+        int lepprod01 = lep_pdgId->at(0)*lep_pdgId->at(1);
+        if (abs(lepprod01) == 121 && (mc_HLT_DoubleEl || mc_HLT_DoubleEl_DZ))
+            return true;
+        else if (abs(lepprod01) == 143 && mc_HLT_MuEG)
+            return true;
+        else if (abs(lepprod01) == 169 && mc_HLT_DoubleMu)
+            return true;
+
+        int lepprod02 = lep_pdgId->at(0)*lep_pdgId->at(2);
+        if (abs(lepprod02) == 121 && (mc_HLT_DoubleEl || mc_HLT_DoubleEl_DZ))
+            return true;
+        else if (abs(lepprod02) == 143 && mc_HLT_MuEG)
+            return true;
+        else if (abs(lepprod02) == 169 && mc_HLT_DoubleMu)
+            return true;
+
+        int lepprod12 = lep_pdgId->at(0)*lep_pdgId->at(2);
+        if (abs(lepprod12) == 121 && (mc_HLT_DoubleEl || mc_HLT_DoubleEl_DZ))
+            return true;
+        else if (abs(lepprod12) == 143 && mc_HLT_MuEG)
+            return true;
+        else if (abs(lepprod12) == 169 && mc_HLT_DoubleMu)
+            return true;
+
+        return false;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 //______________________________________________________________________________________________
@@ -205,6 +278,11 @@ double TQWWWVariables::getValue() const
 //            std::cout <<  " lep_p4->size(): " << lep_p4->size() <<  " dilep.Pt(): " << dilep.Pt() <<  " dilep.Phi(): " << dilep.Phi() <<  " met_pt: " << met_pt <<  " met_phi: " << met_phi <<  std::endl;
 //            std::cout <<  " retval: " << retval <<  std::endl;
             break;
+        case kVarTrigger:
+            retval = Trigger();
+//            std::cout <<  " lep_p4->size(): " << lep_p4->size() <<  " dilep.Pt(): " << dilep.Pt() <<  " dilep.Phi(): " << dilep.Phi() <<  " met_pt: " << met_pt <<  " met_phi: " << met_phi <<  std::endl;
+//            std::cout <<  " retval: " << retval <<  std::endl;
+            break;
     }
 
     DEBUGclass("returning");
@@ -246,6 +324,10 @@ bool TQWWWVariables::initializeSelf()
     else if (this->fExpression.EqualTo("MTlvlv"))
     {
         vartype = kVarMTlvlv;
+    }
+    else if (this->fExpression.EqualTo("Trigger"))
+    {
+        vartype = kVarTrigger;
     }
     else
     {

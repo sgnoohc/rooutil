@@ -7,6 +7,8 @@ import errno
 import sys
 from QFramework import TQSampleFolder, TQXSecParser, TQCut, TQAnalysisSampleVisitor, TQSampleInitializer, TQCutflowAnalysisJob, TQCutflowPrinter, TQHistoMakerAnalysisJob, TQNFCalculator, TQCounter
 from syncfiles.pyfiles.errors import E
+from syncfiles.pyfiles.tqdm import tqdm
+import multiprocessing
 
 ########################################################################################
 def addWeightSystematics(cut, systvars, cutdict):
@@ -14,7 +16,7 @@ def addWeightSystematics(cut, systvars, cutdict):
         newname = str(cut.GetName()) + systvar
         newtitle = str(cut.GetTitle()) + systvar
         wgtdef = systvars[systvar]
-        print wgtdef
+        #print wgtdef
         newcut = TQCut(newname, newtitle, "1", wgtdef)
         cutdict[str(newcut.GetName())] = newcut
         cut.addCut(newcut)
@@ -173,7 +175,7 @@ def printCutflow(samples, regionname):
     table.writePlain("cutflows/{}.txt".format(regionname))
 
 ########################################################################################
-def getSampleLists(samples):
+def getSampleListsDeprecated(samples):
     # Get all sample lists
     sample_names = []
     sample_full_names = {}
@@ -186,6 +188,21 @@ def getSampleLists(samples):
 #    for sample_name in sample_names:
 #        print sample_name
     return sample_names, sample_full_names
+
+########################################################################################
+def getSampleLists(samples):
+    # Get all sample lists
+    sample_names = []
+    sample_full_names = {}
+    for i in samples.getListOfSamples():
+        if i.getNSamples(True) == 0:
+            sample_name = i.GetName()
+            nice_name = sample_name.replace(".root", "")
+            sample_names.append(nice_name)
+            sample_full_names[nice_name] = sample_name
+#    for sample_name in sample_names:
+#        print sample_name
+    return sample_full_names
 
 ########################################################################################
 def connectNtuples(samples, config, path, priority="<2", excludepriority=""):
@@ -212,9 +229,8 @@ def connectNtuples(samples, config, path, priority="<2", excludepriority=""):
     #samples.printContents("rtd")
 
 ########################################################################################
-def addNtuples(samples, configstr, path, priority="<2", excludepriority=""):
+def addNtuples(samples, configstr, path, config_filename, priority="<2", excludepriority=""):
     parser = TQXSecParser(samples);
-    config_filename = ".temp.samples.cfg"
     f = open(config_filename, "w")
     f.write(configstr)
     f.close()
@@ -238,3 +254,13 @@ def addNtuples(samples, configstr, path, priority="<2", excludepriority=""):
     samples.visitMe(init)
     # Print the content for debugging purpose
     #samples.printContents("rtd")
+
+########################################################################################
+def runParallel(njobs, func, samples, extra_args):
+    pool = multiprocessing.Pool(processes=njobs)
+    for sample in samples.getListOfSamples():
+        path = str(sample.getPath())
+        job = pool.apply_async(func, args=(samples, path, extra_args,))
+        #job.get()
+    pool.close()
+    pool.join()
