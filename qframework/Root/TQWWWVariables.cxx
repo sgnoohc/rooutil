@@ -160,7 +160,7 @@ float TQWWWVariables::Trigger() const
         else if (abs(lepprod02) == 169 && mc_HLT_DoubleMu)
             return true;
 
-        int lepprod12 = lep_pdgId->at(0)*lep_pdgId->at(2);
+        int lepprod12 = lep_pdgId->at(1)*lep_pdgId->at(2);
         if (abs(lepprod12) == 121 && (mc_HLT_DoubleEl || mc_HLT_DoubleEl_DZ))
             return true;
         else if (abs(lepprod12) == 143 && mc_HLT_MuEG)
