@@ -259,9 +259,10 @@ def addNtuples(samples, configstr, path, config_filename, priority="<2", exclude
 def runParallel(njobs, func, samples, extra_args):
     pool = multiprocessing.Pool(processes=njobs)
     for sample in samples.getListOfSamples():
-        path = str(sample.getPath())
-        job = pool.apply_async(func, args=(samples, path, extra_args,))
-        #job.get()
+        if sample.getNSamples(True) == 0:
+            path = str(sample.getPath())
+            job = pool.apply_async(func, args=(samples, path, extra_args,))
+            #job.get()
     pool.close()
     pool.join()
 
@@ -273,4 +274,14 @@ def pathToUniqStr(sample_to_run):
     sample_to_run_prefix = sample_to_run_prefix.replace("]","_")
     sample_to_run_prefix = sample_to_run_prefix.replace("+","-")
     return sample_to_run_prefix
+
+########################################################################################
+def makedir(dirpath):
+    try:
+        os.makedirs(dirpath)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(dirpath):
+            pass
+        else:
+            raise
 
