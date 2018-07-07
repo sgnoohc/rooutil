@@ -9,6 +9,8 @@ from QFramework import *
 from syncfiles.pyfiles.errors import E
 from syncfiles.pyfiles.tqdm import tqdm
 import multiprocessing
+import plottery_wrapper as p
+
 
 ########################################################################################
 def addWeightSystematics(cut, systvars, cutdict):
@@ -433,3 +435,117 @@ def loop(user_options):
     if options["do_merge"]:
         merge_output(samples, options)
 
+########################################################################################
+def output_plotname(histname):
+    nicename = str(histname).replace("/","-")
+    nicename = nicename.replace("{","Bin_")
+    nicename = nicename.replace("}","")
+    nicename = nicename.replace(",","_")
+    nicename = nicename.replace(" ","")
+    return nicename
+
+########################################################################################
+def plot(samples, histname, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+    output_dir = "plots"
+    if "output_dir" in options:
+        output_dir = options["output_dir"]
+        del options["output_dir"]
+    # Options
+    alloptions= {
+                "ratio_range":[0.0,2.0],
+                "nbins": 30,
+                "autobin": False,
+                "legend_scalex": 1.4,
+                "legend_scaley": 1.1,
+                "output_name": "{}/{}.pdf".format(output_dir, output_plotname(histname))
+                }
+    alloptions.update(options)
+    bkgs = []
+    sigs = []
+    for bkg in bkg_path: bkgs.append(samples.getHistogram(bkg_path[bkg], histname).Clone(bkg))
+    for sig in sig_path: sigs.append(samples.getHistogram(sig_path[sig], histname).Clone(sig))
+    if data_path:
+        data = samples.getHistogram(data_path, histname).Clone("Data")
+    else:
+        data = None
+    if len(clrs) == 0: colors = [ 2005, 2001, 2012, 2003, 920, 2007 ]
+    else: colors = clrs
+    plotfunc(
+            sigs = sigs,
+            bgs  = bkgs,
+            data = data,
+            colors = colors,
+            syst = systs,
+            options=alloptions)
+
+########################################################################################
+def autoplot(samples, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+    import multiprocessing
+    jobs = []
+    for histname in samples.getListOfHistogramNames():
+        proc = multiprocessing.Process(target=plot, args=[samples, str(histname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
+        jobs.append(proc)
+        proc.start()
+    for job in jobs:
+        job.join()
+
+########################################################################################
+def autotable(samples, tablename, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+    printer = TQCutflowPrinter(samples)
+
+    # Defining which columns. e.g. Backgrounds, total background, signal, data, ratio etc.
+    printer.addCutflowProcess("|", "|")
+    for bkg in bkg_path:
+        printer.addCutflowProcess(bkg_path[bkg], bkg)
+    printer.addCutflowProcess("|", "|")
+    totalbkgpath = '+'.join([ bkg_path[bkg][1:] for bkg in bkg_path ])
+    printer.addCutflowProcess(totalbkgpath, "Total Bkg.")
+    printer.addCutflowProcess("|", "|")
+    if len(sig_path) > 0:
+        for sig in sig_path:
+            printer.addCutflowProcess(sig_path[sig], sig)
+        printer.addCutflowProcess("|", "|")
+    if data_path:
+        printer.addCutflowProcess(data_path, "Data")
+        printer.addCutflowProcess("$ratio({}, {})".format(data_path, totalbkgpath), "Data / Total Bkg.")
+        printer.addCutflowProcess("|", "|")
+
+    # Defining which rows. e.g. which cuts
+    # If cut configuration file is not provided by "cuts": cuts.cfg argument
+    # then we use getListOfCounterNames()
+    # If provided, then we use it to build up a nice table
+    # TODO Cut filter
+    if "cuts" in options:
+        tqcuts = loadTQCutsFromTextFile(options["cuts"])
+
+        # Recursive function
+        def addCutflowCuts(printer, cuts, indent=0):
+            printer.addCutflowCut(cuts.GetName(), "&emsp;"*indent + '&#x21B3;' * (indent > 0) + str(cuts.GetTitle()))
+            nextindent = indent + 1
+            for cut in cuts.getCuts():
+                addCutflowCuts(printer, cut, nextindent)
+
+        # Add all cuts
+        addCutflowCuts(printer, tqcuts)
+
+    else:
+        print "ERROR - Please provide options[\"cuts\"] = \"cuts.cfg\"!"
+
+    # Write out to html, tex, txt, csv
+    table = printer.createTable("style.firstColumnAlign=l")
+    output_dir = "cutflows"
+    if "output_dir" in options:
+        output_dir = options["output_dir"]
+    makedir(output_dir)
+    table.writeCSV  ("{}/{}.csv" .format(output_dir, tablename))
+    table.writeHTML ("{}/{}.html".format(output_dir, tablename))
+    table.writeLaTeX("{}/{}.tex" .format(output_dir, tablename))
+    table.writePlain("{}/{}.txt" .format(output_dir, tablename))
+
+    # Stupid hack :( to fix the missing hashtag from qframework writeHTML function
+    FileName = "{}/{}.html".format(output_dir, tablename)
+    with open(FileName) as f:
+        newText=f.read().replace('&21B3', '&#x21B3')
+
+    with open(FileName, "w") as f:
+        f.write(newText)

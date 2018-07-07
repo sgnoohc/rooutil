@@ -837,6 +837,14 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                 options["yaxis_label"] = "Events / Bin Width"
         del options["divide_by_bin_width"]
 
+    if "remove_underflow" in options:
+        if options["remove_underflow"]:
+            remove_underflow(sigs)
+            remove_underflow(bgs)
+            if data:
+                remove_underflow([data])
+        del options["remove_underflow"]
+
     # If data is none clone one hist and fill with 0
     didnothaveanydata = False
     if not data:
