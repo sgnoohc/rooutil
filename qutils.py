@@ -5,7 +5,7 @@ import re
 import os
 import errno    
 import sys
-from QFramework import TQSampleFolder, TQXSecParser, TQCut, TQAnalysisSampleVisitor, TQSampleInitializer, TQCutflowAnalysisJob, TQCutflowPrinter, TQHistoMakerAnalysisJob, TQNFCalculator, TQCounter
+from QFramework import *
 from syncfiles.pyfiles.errors import E
 from syncfiles.pyfiles.tqdm import tqdm
 import multiprocessing
@@ -285,3 +285,25 @@ def makedir(dirpath):
         else:
             raise
 
+########################################################################################
+def exportTQCutsToTextFile(cuts, filename):
+
+    # Dump to TQFolder
+    folder = TQFolder("cuts")
+    cuts.dumpToFolder(folder)
+
+    # Export to text files
+    folder.exportToTextFile(filename)
+
+########################################################################################
+def loadTQCutsFromTextFile(filename):
+    # Load from cuts.cfg
+    cut_definitions = TQFolder("cuts")
+    cut_definitions.importFromTextFile(filename)
+    tqcut = None
+    for f in cut_definitions.getListOfFolders():
+        if not tqcut:
+            tqcut = TQCut.importFromFolder(cut_definitions.getFolder(f.GetName()))
+        else:
+            tqcut.importFromFolderInternal(cut_definitions.getFolder(f.GetName()))
+    return tqcut
