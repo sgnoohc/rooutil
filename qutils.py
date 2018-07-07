@@ -307,3 +307,129 @@ def loadTQCutsFromTextFile(filename):
         else:
             tqcut.importFromFolderInternal(cut_definitions.getFolder(f.GetName()))
     return tqcut
+
+########################################################################################
+def runSingle(samples, sample_to_run, options):
+
+    # Perhaps you run all in serial
+    isparallel = (sample_to_run == "")
+
+    # Load the cuts from the config file
+    cuts = loadTQCutsFromTextFile(options["cuts"])
+
+    #
+    # Book Analysis Jobs (Histogramming, Cutflow, Event lists, etc.)
+    #
+
+    # Cutflow is always booked
+    cutflowjob = TQCutflowAnalysisJob("cutflow")
+    cuts.addAnalysisJob(cutflowjob, "*")
+
+    # If the histogram configuration file is provided
+    if "histo" in options and options["histo"] != "":
+        histojob = TQHistoMakerAnalysisJob()
+        histojob.importJobsFromTextFiles(options["histo"], cuts, "*", True if not isparallel else False)
+
+    # Eventlist jobs (use this if we want to print out some event information in a text format e.g. run, lumi, evt or other variables.)
+    if "eventlist" in options and options["eventlist"] != "":
+        eventlistjob = TQEventlistAnalysisJob("eventlist")
+        eventlistjob.importJobsFromTextFiles(options["eventlist"], cuts, "*", True if not isparallel else False)
+
+    # Declare custom observables
+    if "customobservables" in options and len(options["customobservables"]) != 0:
+        for observable in options["customobservables"]:
+            TQObservable.addObservable(options["customobservables"][observable], observable)
+
+    # Print cuts and numebr of booked analysis jobs for debugging purpose
+    if not isparallel:
+        cuts.printCut("trd")
+
+    #
+    # Loop over the samples
+    #
+
+    # setup a visitor to actually loop over ROOT files
+    vis = TQAnalysisSampleVisitor(cuts, True)
+
+    # Run the job!
+    if sample_to_run:
+        samples.visitSampleFolders(vis, "{}".format(sample_to_run))
+    else:
+        samples.visitSampleFolders(vis)
+
+    # Write the output histograms and cutflow cut values and etc.
+    if sample_to_run == "":
+        sample_to_run = "output"
+    samples.writeToFile(os.path.join(options["output_dir"], pathToUniqStr(sample_to_run) + ".root"))
+
+########################################################################################
+def merge_output(samples, options):
+    individual_files = []
+    for sample in samples.getListOfSamples():
+        if sample.getNSamples(True) == 0:
+            path = str(sample.getPath())
+            individual_files.append(os.path.join(options["output_dir"], pathToUniqStr(path) + ".root"))
+    os.system("python rooutil/qframework/share/tqmerge -o {}/output.root -t analysis {}".format(options["output_dir"], " ".join(individual_files)))
+
+########################################################################################
+def loop(user_options):
+
+    options = {
+
+        # The main root TQSampleFolder name
+        "master_sample_name" : "samples",
+
+        # Where the ntuples are located
+        "ntuple_path" : "/nfs-7/userdata/phchang/WWW_babies/WWW_v1.2.3/skim/",
+
+        # Path to the config file that defines how the samples should be organized
+        "sample_config_path" : "samples.cfg",
+
+        # The samples with "priority" (defined in sample_config_pat) values satisfying the following condition is looped over
+        "priority_value" : ">0",
+
+        # The samples with "priority" (defined in sample_config_pat) values satisfying the following condition is NOT looped over
+        "exclude_priority_value" : "<-1",
+
+        # N-cores
+        "ncore" : 16,
+
+        # TQCuts config file
+        "cuts" : "cuts.cfg",
+
+        # Histogram config file
+        "histo" : "histo.cfg",
+
+        # Eventlist histogram
+        "eventlist" : "eventlist.cfg",
+
+        # Custom observables (dictionary)
+        "customobservables" : {},
+
+        # Custom observables (dictionary)
+        "output_dir" : "outputs/",
+
+        # Do merge
+        "do_merge" : True
+
+    }
+
+    # Update options with the user provided values
+    options.update(user_options)
+
+    # Create output dir
+    makedir(options["output_dir"])
+
+    # Create the master TQSampleFolder
+    samples = TQSampleFolder(options["master_sample_name"])
+
+    # Connect input baby ntuple
+    connectNtuples(samples, options["sample_config_path"], options["ntuple_path"], options["priority_value"], options["exclude_priority_value"])
+
+    # Run parallel jobs
+    runParallel(options["ncore"], runSingle, samples, options)
+
+    # Merge output
+    if options["do_merge"]:
+        merge_output(samples, options)
+

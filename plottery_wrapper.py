@@ -747,22 +747,27 @@ def autobin(data, bgs):
         if intg > 0.98 and idx95 < 0:
             idx95 = i
     minbin = -1
-    for i in xrange(idx5, idx95):
-        bc = data.GetBinContent(i)
-        if bc < minbin or minbin < 0:
-            minbin = bc
+    if data:
+        for i in xrange(idx5, idx95):
+            bc = data.GetBinContent(i)
+            if bc < minbin or minbin < 0:
+                minbin = bc
     ndata = int(totalbkg.Integral(idx5, idx95))
     if ndata > 0:
         nbin = int(1 + 3.322 * math.log10(ndata))
     else:
         nbin = 4
     width = idx95 - idx5 + 1
-    frac = float(width) / float(data.GetNbinsX())
+    if data:
+        frac = float(width) / float(data.GetNbinsX())
+    else:
+        frac = 1
     final_nbin = int(nbin / frac)
-    while data.GetNbinsX() % final_nbin != 0:
-        if data.GetNbinsX() < final_nbin:
-            return 4
-        final_nbin += 1
+    if data:
+        while data.GetNbinsX() % final_nbin != 0:
+            if data.GetNbinsX() < final_nbin:
+                return 4
+            final_nbin += 1
     return final_nbin
 
 # ====================
