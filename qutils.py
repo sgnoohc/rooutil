@@ -550,6 +550,8 @@ def autotable(samples, tablename, bkg_path=[], sig_path=[], data_path=None, syst
     table.writeLaTeX("{}/{}.tex" .format(output_dir, tablename))
     table.writePlain("{}/{}.txt" .format(output_dir, tablename))
 
+    print ">>> Saving {}/{}.html".format(output_dir, tablename)
+
     # Stupid hack :( to fix the missing hashtag from qframework writeHTML function
     FileName = "{}/{}.html".format(output_dir, tablename)
     with open(FileName) as f:
