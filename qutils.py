@@ -52,7 +52,8 @@ def copyEditCuts(cut, name_edits, cut_edits, cutdict, parentcut=None):
         newtitle = reduce(lambda x, y: x.replace(y, name_edits[y]), name_edits, title)
         newcut = TQCut(newname, newtitle, cutdef, wgtdef)
 
-    cutdict[str(newcut.GetName())] = newcut
+    if str(newcut.GetName()) not in cutdict:
+        cutdict[str(newcut.GetName())] = newcut
 
     if not parentcut:
         parentcut = newcut
@@ -447,7 +448,7 @@ def output_plotname(histname):
     return nicename
 
 ########################################################################################
-def plot(samples, histname, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+def plot(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
     output_dir = "plots"
     if "output_dir" in options:
         output_dir = options["output_dir"]
@@ -457,20 +458,21 @@ def plot(samples, histname, bkg_path={}, sig_path={}, data_path=None, systs=None
                 "ratio_range":[0.0,2.0],
                 "nbins": 30,
                 "autobin": False,
-                "legend_scalex": 1.4,
+                "legend_scalex": 1.8,
                 "legend_scaley": 1.1,
-                "output_name": "{}/{}.pdf".format(output_dir, output_plotname(histname))
+                "output_name": "{}/{}.pdf".format(output_dir, output_plotname(histname)),
+                "bkg_sort_method": "unsorted"
                 }
     alloptions.update(options)
     bkgs = []
     sigs = []
-    for bkg in bkg_path: bkgs.append(samples.getHistogram(bkg_path[bkg], histname).Clone(bkg))
-    for sig in sig_path: sigs.append(samples.getHistogram(sig_path[sig], histname).Clone(sig))
+    for bkg, path in bkg_path: bkgs.append(samples.getHistogram(path, histname).Clone(bkg))
+    for sig, path in sig_path: sigs.append(samples.getHistogram(path, histname).Clone(sig))
     if data_path:
         data = samples.getHistogram(data_path, histname).Clone("Data")
     else:
         data = None
-    if len(clrs) == 0: colors = [ 2005, 2001, 2012, 2003, 920, 2007 ]
+    if len(clrs) == 0: colors = [ 920, 2007, 2005, 2003, 2001, 2 ]
     else: colors = clrs
     plotfunc(
             sigs = sigs,
@@ -481,7 +483,7 @@ def plot(samples, histname, bkg_path={}, sig_path={}, data_path=None, systs=None
             options=alloptions)
 
 ########################################################################################
-def autoplot(samples, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+def autoplot(samples, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
     import multiprocessing
     jobs = []
     for histname in samples.getListOfHistogramNames():
@@ -492,20 +494,20 @@ def autoplot(samples, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs
         job.join()
 
 ########################################################################################
-def autotable(samples, tablename, bkg_path={}, sig_path={}, data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+def autotable(samples, tablename, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
     printer = TQCutflowPrinter(samples)
 
     # Defining which columns. e.g. Backgrounds, total background, signal, data, ratio etc.
     printer.addCutflowProcess("|", "|")
-    for bkg in bkg_path:
-        printer.addCutflowProcess(bkg_path[bkg], bkg)
+    for bkg, path in bkg_path:
+        printer.addCutflowProcess(path, bkg)
     printer.addCutflowProcess("|", "|")
-    totalbkgpath = '+'.join([ bkg_path[bkg][1:] for bkg in bkg_path ])
+    totalbkgpath = '+'.join([ path[1:] for bkg, path in bkg_path ])
     printer.addCutflowProcess(totalbkgpath, "Total Bkg.")
     printer.addCutflowProcess("|", "|")
     if len(sig_path) > 0:
-        for sig in sig_path:
-            printer.addCutflowProcess(sig_path[sig], sig)
+        for sig, path in sig_path:
+            printer.addCutflowProcess(path, sig)
         printer.addCutflowProcess("|", "|")
     if data_path:
         printer.addCutflowProcess(data_path, "Data")
@@ -527,8 +529,12 @@ def autotable(samples, tablename, bkg_path={}, sig_path={}, data_path=None, syst
             for cut in cuts.getCuts():
                 addCutflowCuts(printer, cut, nextindent)
 
-        # Add all cuts
-        addCutflowCuts(printer, tqcuts)
+        if "from_cut" in options:
+            # Otherwise, add all cuts
+            addCutflowCuts(printer, tqcuts.getCut(options["from_cut"]))
+        else:
+            # Otherwise, add all cuts
+            addCutflowCuts(printer, tqcuts)
 
     else:
         print "ERROR - Please provide options[\"cuts\"] = \"cuts.cfg\"!"
