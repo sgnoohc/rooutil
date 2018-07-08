@@ -330,21 +330,23 @@ def runSingle(samples, sample_to_run, options):
     # If the histogram configuration file is provided
     if "histo" in options and options["histo"] != "":
         histojob = TQHistoMakerAnalysisJob()
-        histojob.importJobsFromTextFiles(options["histo"], cuts, "*", True if not isparallel else False)
+        #histojob.importJobsFromTextFiles(options["histo"], cuts, "*", True if not isparallel else False)
+        histojob.importJobsFromTextFiles(options["histo"], cuts, "*", False)
 
     # Eventlist jobs (use this if we want to print out some event information in a text format e.g. run, lumi, evt or other variables.)
     if "eventlist" in options and options["eventlist"] != "":
         eventlistjob = TQEventlistAnalysisJob("eventlist")
-        eventlistjob.importJobsFromTextFiles(options["eventlist"], cuts, "*", True if not isparallel else False)
+        #eventlistjob.importJobsFromTextFiles(options["eventlist"], cuts, "*", True if not isparallel else False)
+        eventlistjob.importJobsFromTextFiles(options["eventlist"], cuts, "*", False)
 
     # Declare custom observables
     if "customobservables" in options and len(options["customobservables"]) != 0:
         for observable in options["customobservables"]:
             TQObservable.addObservable(options["customobservables"][observable], observable)
 
-    # Print cuts and numebr of booked analysis jobs for debugging purpose
-    if not isparallel:
-        cuts.printCut("trd")
+    ## Print cuts and numebr of booked analysis jobs for debugging purpose
+    #if not isparallel:
+    #    cuts.printCut("trd")
 
     #
     # Loop over the samples
