@@ -806,7 +806,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         if options["signal_scale"] == "auto":
             integral = get_total_hist(bgs).Integral()
             for sig in sigs:
-                sig.Scale(integral/sig.Integral())
+                if sig.Integral() != 0:
+                    sig.Scale(integral/sig.Integral())
             del options["signal_scale"]
         else:
             for sig in sigs:
