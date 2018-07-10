@@ -38,7 +38,7 @@ def addWeightSystematics(cut, systvars, cutdict):
 #   tqcuts["Presel"].addCuts(tqcuts["ARDilep"])
 #
 #
-def copyEditCuts(cut, name_edits, cut_edits, cutdict, parentcut=None):
+def copyEditCuts(cut, name_edits, cut_edits, cutdict, terminate=[], parentcut=None):
 
     # Create a new cut
     if cut.GetName() in cut_edits:
@@ -60,12 +60,15 @@ def copyEditCuts(cut, name_edits, cut_edits, cutdict, parentcut=None):
     else:
         parentcut.addCut(newcut)
 
+    if cut.GetName() in terminate:
+        return
+
     if len(cut.getCuts()) == 0:
         return
 
     # if this cut is to be modded based on what was passed to cut_edits, then replace or add
     for c in cut.getCuts():
-        copyEditCuts(c, name_edits, cut_edits, cutdict, newcut)
+        copyEditCuts(c, name_edits, cut_edits, cutdict, terminate, newcut)
 
 
 ########################################################################################
@@ -374,7 +377,7 @@ def merge_output(samples, options):
         if sample.getNSamples(True) == 0:
             path = str(sample.getPath())
             individual_files.append(os.path.join(options["output_dir"], pathToUniqStr(path) + ".root"))
-    os.system("python rooutil/qframework/share/tqmerge -o {}/output.root -t analysis {}".format(options["output_dir"], " ".join(individual_files)))
+    os.system("python rooutil/qframework/share/tqmerge -o {}/output{}.root -t analysis {}".format(options["output_dir"], options["output_suffix"], " ".join(individual_files)))
 
 ########################################################################################
 def loop(user_options):
@@ -414,8 +417,14 @@ def loop(user_options):
         # Custom observables (dictionary)
         "output_dir" : "outputs/",
 
+        # specific path defined
+        "output_suffix" : "",
+
         # Do merge
-        "do_merge" : True
+        "do_merge" : True,
+
+        # specific path defined
+        "path" : ""
 
     }
 
@@ -431,8 +440,13 @@ def loop(user_options):
     # Connect input baby ntuple
     connectNtuples(samples, options["sample_config_path"], options["ntuple_path"], options["priority_value"], options["exclude_priority_value"])
 
-    # Run parallel jobs
-    runParallel(options["ncore"], runSingle, samples, options)
+    # If a specific path is specified run one job
+    if "path" in options and options["path"] != "":
+        runSingle(samples, options["path"], options)
+
+    # Otherwise, run parallel jobs
+    else:
+        runParallel(options["ncore"], runSingle, samples, options)
 
     # Merge output
     if options["do_merge"]:
@@ -468,6 +482,14 @@ def plot(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None
     sigs = []
     for bkg, path in bkg_path: bkgs.append(samples.getHistogram(path, histname).Clone(bkg))
     for sig, path in sig_path: sigs.append(samples.getHistogram(path, histname).Clone(sig))
+    # Check for blinding condition
+    blind = False
+    if "blind" in options:
+        for keyword in options["blind"]:
+            print keyword, histname
+            if histname.find(keyword) != -1:
+                blind = True
+        alloptions["blind"] = blind
     if data_path:
         data = samples.getHistogram(data_path, histname).Clone("Data")
     else:
@@ -483,10 +505,12 @@ def plot(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None
             options=alloptions)
 
 ########################################################################################
-def autoplot(samples, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+def autoplot(samples, histnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
     import multiprocessing
     jobs = []
-    for histname in samples.getListOfHistogramNames():
+    if len(histnames) == 0:
+        histnames = samples.getListOfHistogramNames()
+    for histname in histnames:
         proc = multiprocessing.Process(target=plot, args=[samples, str(histname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
         jobs.append(proc)
         proc.start()
@@ -494,7 +518,7 @@ def autoplot(samples, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs
         job.join()
 
 ########################################################################################
-def autotable(samples, tablename, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+def table(samples, from_cut, bkg_path=[], sig_path=[], data_path=None, systs=None, options={}):
     printer = TQCutflowPrinter(samples)
 
     # Defining which columns. e.g. Backgrounds, total background, signal, data, ratio etc.
@@ -514,6 +538,12 @@ def autotable(samples, tablename, bkg_path=[], sig_path=[], data_path=None, syst
         printer.addCutflowProcess("$ratio({}, {})".format(data_path, totalbkgpath), "Data / Total Bkg.")
         printer.addCutflowProcess("|", "|")
 
+    if "show_detail" in options and options["show_detail"]:
+        for sample in samples.getListOfSamples():
+            if sample.getNSamples(True) == 0:
+                path = str(sample.getPath())
+                printer.addCutflowProcess(path, path)
+
     # Defining which rows. e.g. which cuts
     # If cut configuration file is not provided by "cuts": cuts.cfg argument
     # then we use getListOfCounterNames()
@@ -529,12 +559,8 @@ def autotable(samples, tablename, bkg_path=[], sig_path=[], data_path=None, syst
             for cut in cuts.getCuts():
                 addCutflowCuts(printer, cut, nextindent)
 
-        if "from_cut" in options:
-            # Otherwise, add all cuts
-            addCutflowCuts(printer, tqcuts.getCut(options["from_cut"]))
-        else:
-            # Otherwise, add all cuts
-            addCutflowCuts(printer, tqcuts)
+        # Otherwise, add all cuts
+        addCutflowCuts(printer, tqcuts.getCut(from_cut))
 
     else:
         print "ERROR - Please provide options[\"cuts\"] = \"cuts.cfg\"!"
@@ -545,17 +571,203 @@ def autotable(samples, tablename, bkg_path=[], sig_path=[], data_path=None, syst
     if "output_dir" in options:
         output_dir = options["output_dir"]
     makedir(output_dir)
-    table.writeCSV  ("{}/{}.csv" .format(output_dir, tablename))
-    table.writeHTML ("{}/{}.html".format(output_dir, tablename))
-    table.writeLaTeX("{}/{}.tex" .format(output_dir, tablename))
-    table.writePlain("{}/{}.txt" .format(output_dir, tablename))
+    table.writeCSV  ("{}/{}.csv" .format(output_dir, from_cut))
+    table.writeHTML ("{}/{}.html".format(output_dir, from_cut))
+    table.writeLaTeX("{}/{}.tex" .format(output_dir, from_cut))
+    table.writePlain("{}/{}.txt" .format(output_dir, from_cut))
 
-    print ">>> Saving {}/{}.html".format(output_dir, tablename)
+    print ">>> Saving {}/{}.html".format(output_dir, from_cut)
 
     # Stupid hack :( to fix the missing hashtag from qframework writeHTML function
-    FileName = "{}/{}.html".format(output_dir, tablename)
+    FileName = "{}/{}.html".format(output_dir, from_cut)
     with open(FileName) as f:
         newText=f.read().replace('&21B3', '&#x21B3')
 
     with open(FileName, "w") as f:
         f.write(newText)
+
+########################################################################################
+def autotable(samples, cutnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, options={}):
+    import multiprocessing
+    jobs = []
+    if len(cutnames) == 0:
+        print "ERROR - provided no cut names to create table from"
+    for cutname in cutnames:
+        proc = multiprocessing.Process(target=table, args=[samples, str(cutname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "options":options})
+        jobs.append(proc)
+        proc.start()
+    for job in jobs:
+        job.join()
+
+########################################################################################
+def get_cr_normalized_rate(options, key):
+    # This is parsing an example like this:
+    #     ("SRSSeeFull", "/typebkg/lostlep/[ttZ+WZ+Other]") : { "CR" : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"), "systs" : ["LepSF", "TrigSF", "BTagLF", "BTagHF", "PileUp", "JEC"] },
+    sr = options["nominal_sample"].getCounter(key[1], key[0])
+    crdatapath = options["control_regions"][key][1]
+    crprocpath = key[1]
+    crname = options["control_regions"][key][0]
+    nf = options["nominal_sample"].getCounter(crdatapath, crname)
+    pr = options["nominal_sample"].getCounter(crprocpath, crname)
+    nf.divide(pr)
+    #print sr.getCounter()
+    sr.multiply(nf)
+    #print nf.getCounter(), sr.getCounter()
+    return sr.getCounter()
+
+########################################################################################
+def get_sr_rate(samples, path, r, suffix, options):
+    if (r, path) not in options["control_regions"]:
+        return samples.getCounter(path, r+suffix).getCounter()
+    else:
+        # The TF calculation
+        cr = options["control_regions"][(r, path)][0]
+        # nominal sr
+        sr_nom = options["nominal_sample"].getCounter(path,  r)
+        cr_nom = options["nominal_sample"].getCounter(path, cr)
+        # syst
+        sr_sys = samples.getCounter(path,  r+suffix)
+        cr_sys = samples.getCounter(path, cr+suffix)
+        sr_nom.divide(cr_nom)
+        sr_sys.divide(cr_sys)
+        sr_sys.divide(sr_nom)
+        return get_cr_normalized_rate(options, (r, path)) * sr_sys.getCounter()
+
+########################################################################################
+def make_counting_experiment_statistics_data_card(options):
+
+    column_width = 10
+    for b in options["bins"]:
+        if len(b) + 1> column_width:
+            column_width = len(b) + 1
+
+    def form(s): return ("{:<"+str(column_width)+"s}").format(s)
+    def flts(f): return ("{:<"+str(column_width)+"s}").format("{:<6.3f}".format(f)) if f > 0 else form("1e-9")
+
+    # Channels (e.g. SR1, SR2, SR3, ...)
+    nchannel = len(options["bins"])
+    channels = [ form(x) for x in options["bins"]]
+
+    # Processes (e.g. Higgs, ttbar, WW, W, Z, etc.)
+    nprocess = len(options["bkgs"]) + 1
+    processes = [ form(x) for x, path in ([options["sig"]] + options["bkgs"])]
+    process_indices = [ form(str(index)) for index, x in enumerate([options["sig"]] + options["bkgs"])]
+    bins_list = [ x * nprocess for x in channels ]
+    processes_list = processes * nchannel
+
+    # Creating list to access contents
+    cuts_list = [ x for x in options["bins"] for i in range(nprocess) ]
+    paths = [ path for x, path in ([options["sig"]] + options["bkgs"])]
+    paths_list = paths * nchannel
+
+    # nobservation to be printed
+    nobs = [ form(str(int(options["nominal_sample"].getCounter(options["data"], r).getCounter()))) for r in options["bins"] ]
+
+    # rates
+    rates_val = []
+    for r, path in zip(cuts_list, paths_list):
+        key = (r, path)
+        if key in options["control_regions"]:
+            rates_val.append(get_cr_normalized_rate(options, key))
+        else:
+            rates_val.append(options["nominal_sample"].getCounter(path, r).getCounter())
+
+    #rates_val = [ c.getCounter() for c in [ options["nominal_sample"].getCounter(path, r) if (r, proc.strip()) not in options["control_regions"] else get_cr_normalized_rate(options, options["control_regions"][(r, proc.strip())]) for r, path, proc in zip(cuts_list, paths_list, processes_list) ] ]
+    rates_str = [ flts(cnt) for cnt in rates_val ]
+            
+    # items to be printed
+    nchannel_formatted = nchannel
+    channels_formatted = "".join(channels)
+    bins_formatted = "".join(bins_list)
+    processes_formatted = "".join(processes_list)
+    process_indices_formatted = "".join(process_indices * nchannel)
+    nobs_formatted = "".join(nobs)
+    rates_formatted = "".join(rates_str)
+
+    datacard = """# Counting experiment with multiple channels
+imax {nchannel}  number of channels
+jmax *   number of backgrounds ('*' = automatic)
+kmax *   number of nuisance parameters (sources of systematical uncertainties)
+------------
+# three channels, each with it's number of observed events
+bin          {channels}
+observation  {nobs}
+------------
+# now we list the expected events for signal and all backgrounds in those three bins
+# the second 'process' line must have a positive number for backgrounds, and 0 for signal
+# then we list the independent sources of uncertainties, and give their effect (syst. error)
+# on each process and bin
+bin                                           {bins}
+process                                       {processes}
+process                                       {process_indices}
+rate                                          {rates}
+------------
+""".format(
+        nchannel=nchannel_formatted,
+        channels=channels_formatted,
+        nobs=nobs_formatted,
+        bins=bins_formatted,
+        processes=processes_formatted,
+        process_indices=process_indices_formatted,
+        rates=rates_formatted,
+        )
+
+    ## Weight variation systematics that are saved in the "nominal_sample" TQSampleFolder
+    ## The nomenclature of the coutner names must be <BIN_COUNTER><SYSTS>Up and <BIN_COUNTER><SYSTS>Down
+    ## Or if the "syst_samples" are provided in the dictionary use that instead
+    ## The keyword are the systematics and then the items list the processes to apply the systematics
+    #
+    # For example they will have the following format
+    # "systematics" : [
+    #     ("LepSF"         , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("TrigSF"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("BTagLF"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("BTagHF"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("Pileup"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("FakeRateEl"    , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("FakeRateMu"    , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("FakeClosureEl" , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("FakeClosureMu" , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("PDF"           , { "procs_to_apply" : ["www"]                                                                                                                }),
+    #     ("AlphaS"        , { "procs_to_apply" : ["www"]                                                                                                                }),
+    #     ("Qsq"           , { "procs_to_apply" : ["www"]                                                                                                                }),
+    #     ("JEC"           , { "procs_to_apply" : ["www", "vbsww", "ttw", "photon", "qflip", "prompt"], "syst_samples" : {"Up" : samples_jec_up, "Down": samples_jec_dn} }),
+    #     ("MCStat"        , { "procs_to_apply" : ["www", "vbsww", "ttw", "photon", "qflip", "prompt"], "individual": True                                               }),
+    #     ],
+    for syst, systinfo in options["systematics"]:
+        # If "syst_samples" are provided in the systinfo dictionary then use nominal cut counter of the provided sample to get the variations
+        # If not provided, then attach a suffix to the counter name (these would be the weight variations)
+        # If "syst_samples" not provided than it is a weight variational type so create a suffix to attach to the counter name
+        syst_up_name_suffix = syst + "Up"   if "syst_samples" not in systinfo else ""
+        syst_dn_name_suffix = syst + "Down" if "syst_samples" not in systinfo else ""
+        samples_up = options["nominal_sample"] if "syst_samples" not in systinfo else systinfo["syst_samples"]["Up"]
+        samples_dn = options["nominal_sample"] if "syst_samples" not in systinfo else systinfo["syst_samples"]["Down"]
+        syst_up_rates_val = [ c for c in [ get_sr_rate(samples_up, path, r, syst_up_name_suffix, options) if process.strip() in systinfo["procs_to_apply"] else 0 for r, process, path in zip(cuts_list, processes * nchannel, paths_list) ] ]
+        syst_dn_rates_val = [ c for c in [ get_sr_rate(samples_dn, path, r, syst_dn_name_suffix, options) if process.strip() in systinfo["procs_to_apply"] else 0 for r, process, path in zip(cuts_list, processes * nchannel, paths_list) ] ]
+        syst_val_str = [ form("{:.3f}/{:<.3f}".format(max(dn, 0.001), up)) if (up > 0 or dn > 0) else form("-")  for up, dn in [ ((u / n, d / n) if n > 0 else (1, 1)) if p.strip() in systinfo["procs_to_apply"] else (-999, -999) for u, d, n, p in zip(syst_up_rates_val, syst_dn_rates_val, rates_val, processes * nchannel) ] ]
+        syst_item = """{:<35s}lnN        {}\n""".format(syst, "".join(syst_val_str))
+        datacard += syst_item
+
+    # Statistical error per bin per channel add a statistical error from the MC
+    for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
+        if process.strip() not in options["statistical"]:
+            continue
+        cnt = options["nominal_sample"].getCounter(path, r).getCounter()
+        err = options["nominal_sample"].getCounter(path, r).getError()
+        errors = [(0, 0)] * nprocess * nchannel
+        errors[index] = ((cnt + err) / cnt, (cnt - err) / cnt) if cnt > 0 else (1, 1)
+        syst_val_str = [ form("{:.3f}/{:<.3f}".format(max(dn, 0.001), up)) if (up > 0 or dn > 0) else form("-") for up, dn in errors ]
+        systname = process.strip() + "_MCstat" + "_" + r
+        syst_item = """{:<35s}lnN        {}\n""".format(systname, "".join(syst_val_str))
+        datacard += syst_item
+
+    ## For example I get
+    ## "control_regions" : {
+    ##     ("SRSSeeFull"  , "/typebkg/lostlep/[ttZ+WZ+Other]") : {"CR" : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"), "systs" : ["LepSF", "TrigSF", "BTagLF", "BTagHF", "PileUp", "JEC"]},
+    ##     ("SideSSeeFull", "/typebkg/lostlep/[ttZ+WZ+Other]") : {"CR" : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"), "systs" : ["LepSF", "TrigSF", "BTagLF", "BTagHF", "PileUp", "JEC"]},
+    ##     },
+    ## WZCRSSeeFull CR region -> [ (bin, process, TF,
+    #for key in options["control_regions"]:
+    #    syst_item = """{:<34s}gmN {:<6d} {}\n""".format(syst, "".join(syst_val_str))
+
+    return datacard
