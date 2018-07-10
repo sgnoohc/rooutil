@@ -634,7 +634,20 @@ def get_sr_rate(samples, path, r, suffix, options):
         return get_cr_normalized_rate(options, (r, path)) * sr_sys.getCounter()
 
 ########################################################################################
+def get_tf_rate(r, path, options):
+    # The TF calculation
+    cr = options["control_regions"][(r, path)][0]
+    sr_nom = options["nominal_sample"].getCounter(path,  r)
+    cr_nom = options["nominal_sample"].getCounter(path, cr)
+    sr_nom.divide(cr_nom)
+    return sr_nom.getCounter()
+
+########################################################################################
 def make_counting_experiment_statistics_data_card(options):
+
+    #
+    # The goal is to create a data card for https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit
+    #
 
     column_width = 10
     for b in options["bins"]:
@@ -761,13 +774,41 @@ rate                                          {rates}
         syst_item = """{:<35s}lnN        {}\n""".format(systname, "".join(syst_val_str))
         datacard += syst_item
 
-    ## For example I get
-    ## "control_regions" : {
-    ##     ("SRSSeeFull"  , "/typebkg/lostlep/[ttZ+WZ+Other]") : {"CR" : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"), "systs" : ["LepSF", "TrigSF", "BTagLF", "BTagHF", "PileUp", "JEC"]},
-    ##     ("SideSSeeFull", "/typebkg/lostlep/[ttZ+WZ+Other]") : {"CR" : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"), "systs" : ["LepSF", "TrigSF", "BTagLF", "BTagHF", "PileUp", "JEC"]},
-    ##     },
-    ## WZCRSSeeFull CR region -> [ (bin, process, TF,
-    #for key in options["control_regions"]:
-    #    syst_item = """{:<34s}gmN {:<6d} {}\n""".format(syst, "".join(syst_val_str))
+    # Control region statistical error
+    # CR data stat error can be controlled via "gmN" error
+    # In the options the control regions are provided in a following format
+    #
+    # "control_regions" : {
+    #     ("SRSSeeFull"  , "/typebkg/lostlep/[ttZ+WZ+Other]") : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"),
+    #     ("SideSSeeFull", "/typebkg/lostlep/[ttZ+WZ+Other]") : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"),
+    #     },
+    #
+    # We first invert the regions such that we have a mapping per "CR" -> "SR's"
+    crmap = {}
+    for k, v in options["control_regions"].iteritems():
+        crmap[v] = crmap.get(v, [])
+        crmap[v].append(k)
+
+    for key in crmap:
+        syst_val_str = []
+        for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
+            if (r, path) not in crmap[key]:
+                syst_val_str.append(form("-"))
+            else:
+                syst_val_str.append(form("{:.3f}".format(get_tf_rate(r, path, options))))
+        systname = key[0] + "_CRstat"
+        data = int(options["nominal_sample"].getCounter(options["data"], key[0]).getCounter())
+        syst_item = """{:<35s}gmN {:<6d} {}\n""".format(systname, data, "".join(syst_val_str))
+        datacard += syst_item
+
+    for syst_name, proc, syst_val in options["flat_systematics"]:
+        syst_val_str = []
+        for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
+            if process.strip() == proc:
+                syst_val_str.append(form(syst_val))
+            else:
+                syst_val_str.append(form("-"))
+        syst_item = """{:<35s}lnN        {}\n""".format(syst_name, "".join(syst_val_str))
+        datacard += syst_item
 
     return datacard
