@@ -10,6 +10,7 @@ from syncfiles.pyfiles.errors import E
 from syncfiles.pyfiles.tqdm import tqdm
 import multiprocessing
 import plottery_wrapper as p
+import time
 
 
 ########################################################################################
@@ -553,14 +554,21 @@ def table(samples, from_cut, bkg_path=[], sig_path=[], data_path=None, systs=Non
         tqcuts = loadTQCutsFromTextFile(options["cuts"])
 
         # Recursive function
-        def addCutflowCuts(printer, cuts, indent=0):
-            printer.addCutflowCut(cuts.GetName(), "&emsp;"*indent + '&#x21B3;' * (indent > 0) + str(cuts.GetTitle()))
-            nextindent = indent + 1
-            for cut in cuts.getCuts():
-                addCutflowCuts(printer, cut, nextindent)
+        def addCutflowCuts(printer, cuts, cutlist=[], indent=0):
+            if len(cutlist) != 0:
+                for cut in cutlist:
+                    if cut == "|":
+                        printer.addCutflowCut("|", "|")
+                    else:
+                        c = cuts.getCut(cut)
+                        printer.addCutflowCut(c.GetName(), str(c.GetTitle()))
+            else:
+                printer.addCutflowCut(cuts.GetName(), "&emsp;"*indent + '&#x21B3;' * (indent > 0) + str(cuts.GetTitle()))
+                nextindent = indent + 1
+                for cut in cuts.getCuts():
+                    addCutflowCuts(printer, cut, cutlist, nextindent)
 
-        # Otherwise, add all cuts
-        addCutflowCuts(printer, tqcuts.getCut(from_cut))
+        addCutflowCuts(printer, tqcuts.getCut(from_cut), options["cuts_list"] if "cuts_list" in options else [])
 
     else:
         print "ERROR - Please provide options[\"cuts\"] = \"cuts.cfg\"!"
@@ -571,20 +579,35 @@ def table(samples, from_cut, bkg_path=[], sig_path=[], data_path=None, systs=Non
     if "output_dir" in options:
         output_dir = options["output_dir"]
     makedir(output_dir)
-    table.writeCSV  ("{}/{}.csv" .format(output_dir, from_cut))
-    table.writeHTML ("{}/{}.html".format(output_dir, from_cut))
-    table.writeLaTeX("{}/{}.tex" .format(output_dir, from_cut))
-    table.writePlain("{}/{}.txt" .format(output_dir, from_cut))
+    if "output_name" not in options or options["output_name"] == "":
+        output_name = from_cut
+    else:
+        output_name = options["output_name"]
+    table.writeCSV  ("{}/{}.csv" .format(output_dir, output_name))
+    table.writeHTML ("{}/{}.html".format(output_dir, output_name))
+    table.writeLaTeX("{}/{}.tex" .format(output_dir, output_name))
+    table.writePlain("{}/{}.txt" .format(output_dir, output_name))
 
-    print ">>> Saving {}/{}.html".format(output_dir, from_cut)
+    print ">>> Saving {}/{}.html".format(output_dir, output_name)
 
     # Stupid hack :( to fix the missing hashtag from qframework writeHTML function
-    FileName = "{}/{}.html".format(output_dir, from_cut)
+    FileName = "{}/{}.html".format(output_dir, output_name)
     with open(FileName) as f:
         newText=f.read().replace('&21B3', '&#x21B3')
 
     with open(FileName, "w") as f:
         f.write(newText)
+
+    # To place tabs in between texts for easy copy paste
+    fname = "{}/{}.txt".format(output_dir, output_name)
+    f = open(fname)
+    g = open(fname+".tabbed", "w")
+    lines = f.readlines()
+    for line in lines:
+        if line.find("|") != -1:
+            g.write("\t".join(line.split()) + "\n")
+        else:
+            g.write(line)
 
 ########################################################################################
 def autotable(samples, cutnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, options={}):
@@ -602,7 +625,7 @@ def autotable(samples, cutnames=[], bkg_path=[], sig_path=[], data_path=None, sy
 ########################################################################################
 def get_cr_normalized_rate(options, key):
     # This is parsing an example like this:
-    #     ("SRSSeeFull", "/typebkg/lostlep/[ttZ+WZ+Other]") : { "CR" : ("WZCRSSeeFull", "/data-typebkg/[qflip+photon+prompt+fakes]-sig"), "systs" : ["LepSF", "TrigSF", "BTagLF", "BTagHF", "PileUp", "JEC"] },
+    # ("SideSSmmFull" , "/typebkg/lostlep/[ttZ+WZ+Other]") : ("WZCRSSmmFull"    , "/data-typebkg/qflip-typebkg/photon-typebkg/prompt-typebkg/fakes-typebkg/lostlep/VBSWW-typebkg/lostlep/ttW-sig"),
     sr = options["nominal_sample"].getCounter(key[1], key[0])
     crdatapath = options["control_regions"][key][1]
     crprocpath = key[1]
@@ -613,6 +636,7 @@ def get_cr_normalized_rate(options, key):
     #print sr.getCounter()
     sr.multiply(nf)
     #print nf.getCounter(), sr.getCounter()
+    #print "get_cr", key, sr.getCounter()
     return sr.getCounter()
 
 ########################################################################################
@@ -634,13 +658,13 @@ def get_sr_rate(samples, path, r, suffix, options):
         return get_cr_normalized_rate(options, (r, path)) * sr_sys.getCounter()
 
 ########################################################################################
-def get_tf_rate(r, path, options):
+def get_tf(r, path, options):
     # The TF calculation
     cr = options["control_regions"][(r, path)][0]
-    sr_nom = options["nominal_sample"].getCounter(path,  r)
-    cr_nom = options["nominal_sample"].getCounter(path, cr)
-    sr_nom.divide(cr_nom)
-    return sr_nom.getCounter()
+    cr_data = options["nominal_sample"].getCounter(options["data"], cr)
+    rate = get_cr_normalized_rate(options, (r, path))
+    #print "get_tf", (r, path), rate / cr_data.getCounter()
+    return rate / cr_data.getCounter()
 
 ########################################################################################
 def make_counting_experiment_statistics_data_card(options):
@@ -651,11 +675,11 @@ def make_counting_experiment_statistics_data_card(options):
 
     column_width = 10
     for b in options["bins"]:
-        if len(b) + 1> column_width:
-            column_width = len(b) + 1
+        if len(b) + 5 > column_width:
+            column_width = len(b) + 5
 
     def form(s): return ("{:<"+str(column_width)+"s}").format(s)
-    def flts(f): return ("{:<"+str(column_width)+"s}").format("{:<6.3f}".format(f)) if f > 0 else form("1e-9")
+    def flts(f): return ("{:<"+str(column_width)+"s}").format("{:<6.5f}".format(f)) if f > 0 else form("1e-9")
 
     # Channels (e.g. SR1, SR2, SR3, ...)
     nchannel = len(options["bins"])
@@ -697,7 +721,10 @@ def make_counting_experiment_statistics_data_card(options):
     nobs_formatted = "".join(nobs)
     rates_formatted = "".join(rates_str)
 
-    datacard = """# Counting experiment with multiple channels
+    datacard  = "# Created {}\n".format(time.strftime("%Y-%m-%d %H:%M"))
+    datacard += "# options = {}\n".format(options)
+
+    datacard += """# Counting experiment with multiple channels
 imax {nchannel}  number of channels
 jmax *   number of backgrounds ('*' = automatic)
 kmax *   number of nuisance parameters (sources of systematical uncertainties)
@@ -757,7 +784,7 @@ rate                                          {rates}
         samples_dn = options["nominal_sample"] if "syst_samples" not in systinfo else systinfo["syst_samples"]["Down"]
         syst_up_rates_val = [ c for c in [ get_sr_rate(samples_up, path, r, syst_up_name_suffix, options) if process.strip() in systinfo["procs_to_apply"] else 0 for r, process, path in zip(cuts_list, processes * nchannel, paths_list) ] ]
         syst_dn_rates_val = [ c for c in [ get_sr_rate(samples_dn, path, r, syst_dn_name_suffix, options) if process.strip() in systinfo["procs_to_apply"] else 0 for r, process, path in zip(cuts_list, processes * nchannel, paths_list) ] ]
-        syst_val_str = [ form("{:.3f}/{:<.3f}".format(max(dn, 0.001), up)) if (up > 0 or dn > 0) else form("-")  for up, dn in [ ((u / n, d / n) if n > 0 else (1, 1)) if p.strip() in systinfo["procs_to_apply"] else (-999, -999) for u, d, n, p in zip(syst_up_rates_val, syst_dn_rates_val, rates_val, processes * nchannel) ] ]
+        syst_val_str = [ form("{:.5f}/{:<.5f}".format(max(dn, 0.001), up)) if (up > 0 or dn > 0) else form("-")  for up, dn in [ ((u / n, d / n) if n > 0 else (1, 1)) if p.strip() in systinfo["procs_to_apply"] else (-999, -999) for u, d, n, p in zip(syst_up_rates_val, syst_dn_rates_val, rates_val, processes * nchannel) ] ]
         syst_item = """{:<35s}lnN        {}\n""".format(syst, "".join(syst_val_str))
         datacard += syst_item
 
@@ -769,7 +796,7 @@ rate                                          {rates}
         err = options["nominal_sample"].getCounter(path, r).getError()
         errors = [(0, 0)] * nprocess * nchannel
         errors[index] = ((cnt + err) / cnt, (cnt - err) / cnt) if cnt > 0 else (1, 1)
-        syst_val_str = [ form("{:.3f}/{:<.3f}".format(max(dn, 0.001), up)) if (up > 0 or dn > 0) else form("-") for up, dn in errors ]
+        syst_val_str = [ form("{:.5f}/{:<.5f}".format(max(dn, 0.001), up)) if (up > 0 or dn > 0) else form("-") for up, dn in errors ]
         systname = process.strip() + "_MCstat" + "_" + r
         syst_item = """{:<35s}lnN        {}\n""".format(systname, "".join(syst_val_str))
         datacard += syst_item
@@ -789,22 +816,22 @@ rate                                          {rates}
         crmap[v] = crmap.get(v, [])
         crmap[v].append(k)
 
-    for key in crmap:
+    for key in sorted(crmap):
         syst_val_str = []
         for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
             if (r, path) not in crmap[key]:
                 syst_val_str.append(form("-"))
             else:
-                syst_val_str.append(form("{:.3f}".format(get_tf_rate(r, path, options))))
+                syst_val_str.append(form("{:.5f}".format(get_tf(r, path, options))))
         systname = key[0] + "_CRstat"
         data = int(options["nominal_sample"].getCounter(options["data"], key[0]).getCounter())
         syst_item = """{:<35s}gmN {:<6d} {}\n""".format(systname, data, "".join(syst_val_str))
         datacard += syst_item
 
-    for syst_name, proc, syst_val in options["flat_systematics"]:
+    for syst_name, proc, syst_val, filt_pattern in options["flat_systematics"]:
         syst_val_str = []
         for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
-            if process.strip() == proc:
+            if process.strip() in proc and r.find(filt_pattern) != -1:
                 syst_val_str.append(form(syst_val))
             else:
                 syst_val_str.append(form("-"))
@@ -812,3 +839,310 @@ rate                                          {rates}
         datacard += syst_item
 
     return datacard
+
+
+########################################################################################
+def make_shape_experiment_statistics_data_card(options):
+
+    #
+    # The goal is to create a data card for https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit
+    #
+
+    column_width = 10
+    for b, hp in options["hists"]:
+        if len(b) + 5 > column_width:
+            column_width = len(b) + 5
+
+    # helper function
+    def form(s): return ("{:<"+str(column_width)+"s}").format(s)
+    def flts(f): return ("{:<"+str(column_width)+"s}").format("{:<6.5f}".format(f)) if f > 0 else form("1e-9")
+
+    # hists : ("Name", "HistPath")
+    nhist    = len(options["hists"])
+    hist_names    = [ form(x) for x, path in options["hists"]]
+    hist_paths    = [ path    for x, path in options["hists"]]
+
+    # processes : ("Name", "SamplePath")
+    nprocess = len(options["bkgs"]) + 1
+    process_names = [ form(x) for x, path in ([options["sig"]] + options["bkgs"])]
+    process_paths = [ path    for x, path in ([options["sig"]] + options["bkgs"])]
+    process_indices = [ form(str(index)) for index, x in enumerate([options["sig"]] + options["bkgs"])]
+
+    # helper function
+    def abcabc(l, n): return l * n
+    def aabbcc(l, n): return [ x for x in l for i in range(n) ]
+
+    # Creating list to access contents in a nice single loop over a zipped list
+    grand_list = zip(
+            aabbcc(hist_names, nprocess),
+            aabbcc(hist_paths, nprocess),
+            abcabc(process_names, nhist),
+            abcabc(process_paths, nhist),
+            abcabc(process_indices, nhist)
+            )
+
+    #for h, hp, p, pp, i in grand_list:
+    #    print h, hp, p, pp, i
+
+    # Output histogram file
+    f = ROOT.TFile(options["hist_output_file"], "recreate")
+
+    # Get proc name
+    def proc(pp):
+        if options["sig"][1] == pp:
+            return options["sig"][0]
+        for i in options["bkgs"]:
+            if i[1] == pp:
+                return i[0]
+        if options["data"] == pp:
+            return "data_obs"
+        print "ERROR - histogram path didn't match ", pp
+
+    # Hists
+    hist_dict = {}
+    def Key(h, p): return (h.strip(), p.strip())
+    def Hist(key): return hist_dict[key]
+    def formsyst(hp, suffix):
+        # There are two types of histogram names
+        # Cut/hist+Cut/hist
+        # or
+        # {Cut,Cut,Cut}
+        if suffix != "":
+            if hp.find("{") != -1:
+                hp = hp.replace("{","")
+                hp = hp.replace("}","")
+                return "{" + ",".join([ i + suffix for i in hp.split(",") ]) + "}"
+            else:
+                return "/".join([ i + suffix for i in hp.split("/") ])
+        else:
+            return hp
+    def getHist(s, key, p, n, suffix=""):
+        h = s.getHistogram(p, formsyst(n, suffix)).Clone("{}_{}".format(key[0], proc(key[1]))) # if suffix == "" else "{}_{}".format(key[0], proc(key[1]), suffix))
+        h.SetCanExtend(False)
+        for i in xrange(0, h.GetNbinsX()+2):
+            bc = h.GetBinContent(i)
+            h.SetBinContent(i, bc if bc > 0 else 1e-9)
+        h.SetTitle("{}_{}".format(formsyst(n, suffix), p))
+        return h
+    def addHist(s, key, p, n, suffix=""):
+        if key in hist_dict:
+            print "ERROR - histogram already accessed and exists!", key
+        else:
+            hist_dict[key] = getHist(s, key, p, n, suffix)
+    def get_cr_normalized_hist(options, key, pp, hp):
+        # This is parsing an example like this:
+        # ("SRSSeeFull"   , "lostlep") : ("{WZCRSSeeFull}"    , "/data-typebkg/qflip-typebkg/photon-typebkg/prompt-typebkg/fakes-typebkg/lostlep/VBSWW-typebkg/lostlep/ttW-sig"),
+        addHist(options["nominal_sample"], key, pp, hp)
+        crdatapath = options["control_regions"][key][1]
+        crprocpath = key[1]
+        crname = options["control_regions"][key][0]
+        dd = options["nominal_sample"].getHistogram(crdatapath, crname).Clone("dd")
+        pr = options["nominal_sample"].getHistogram(crprocpath, crname).Clone("pr")
+        CR_data_error = []
+        for i in xrange(0,dd.GetNbinsX()+2):
+            CR_data_error.append(dd.GetBinError(i) / dd.GetBinContent(i) if dd.GetBinContent(i) > 0 else 0) # 0.5 * ROOT.TMath.ChisquareQuantile(1 - 0.3173 / 2, 2 * (0 + 1)) - 0
+        nf = dd.Integral() / pr.Integral()
+        Hist(key).Scale(nf)
+        for i in xrange(1, Hist(key).GetNbinsX()+1):
+            Hist(key).SetBinError(i, Hist(key).GetBinContent(i) * CR_data_error[i])
+    def addTFSystHist(s, key, p, n, suffix="", nominal_histname=""):
+        cr = options["control_regions"][(nominal_histname.strip(),key[1])][0]
+        sr_nom = getHist(options["nominal_sample"], key, p, n, "")
+        cr_nom = getHist(options["nominal_sample"], key, p,cr, "")
+        sr_sys = getHist(s, key, p, n, suffix)
+        cr_sys = getHist(s, key, p,cr, suffix)
+        sr_nom.Divide(cr_nom)
+        sr_sys.Divide(cr_sys)
+        sr_sys.Divide(sr_nom)
+        nom = Hist((nominal_histname.strip(),key[1])).Clone("{}_{}".format(key[0], proc(key[1])))
+        nom.Multiply(sr_sys)
+        if key in hist_dict:
+            print "ERROR - histogram already accessed and exists!", key
+        else:
+            hist_dict[key] = nom
+    def writeHists():
+        keylist = hist_dict.keys()
+        keylist.sort()
+        for key in keylist:
+            hist_dict[key].Write()
+
+    # nobservation to be printed
+    nobs = []
+    for h, hp in options["hists"]:
+        key = Key(h, options["data"])
+        addHist(options["nominal_sample"], key, options["data"], hp)
+        nobs.append(form(str(int(Hist(key).Integral()))))
+
+
+    # rates for each bin and process
+    rates_val = []
+    for h, hp, p, pp, i in grand_list:
+        key = Key(h, pp)
+        if key in options["control_regions"]:
+            get_cr_normalized_hist(options, key, pp, hp)
+            rates_val.append(Hist(key).Integral())
+        else:
+            addHist(options["nominal_sample"], key, pp, hp)
+            rates_val.append(Hist(key).Integral())
+    rates_str = [ flts(cnt) for cnt in rates_val ]
+
+    nhist_formatted = nhist
+    channels_formatted = "".join(hist_names)
+    bins_formatted = "".join(aabbcc(hist_names, nprocess))
+    processes_formatted = "".join(abcabc(process_names, nhist))
+    process_indices_formatted = "".join(abcabc(process_indices, nhist))
+    nobs_formatted = "".join(nobs)
+    rates_formatted = "".join(rates_str)
+
+    datacard  = "# Created {}\n".format(time.strftime("%Y-%m-%d %H:%M"))
+    datacard += "# options = {}\n".format(options)
+
+    datacard += """# Counting experiment with multiple channels
+imax {nhist}  number of channels
+jmax *   number of backgrounds ('*' = automatic)
+kmax *   number of nuisance parameters (sources of systematical uncertainties)
+------------
+shapes * * {hist_output_file} $CHANNEL_$PROCESS $CHANNEL$SYSTEMATIC_$PROCESS
+------------
+# three channels, each with it's number of observed events
+bin          {channels}
+observation  {nobs}
+------------
+# now we list the expected events for signal and all backgrounds in those three bins
+# the second 'process' line must have a positive number for backgrounds, and 0 for signal
+# then we list the independent sources of uncertainties, and give their effect (syst. error)
+# on each process and bin
+bin                                           {bins}
+process                                       {process_indices}
+process                                       {processes}
+rate                                          {rates}
+------------
+""".format(
+        hist_output_file=options["hist_output_file"],
+        nhist=nhist_formatted,
+        channels=channels_formatted,
+        nobs=nobs_formatted,
+        bins=bins_formatted,
+        processes=processes_formatted,
+        process_indices=process_indices_formatted,
+        rates=rates_formatted,
+        )
+
+    ## Weight variation systematics that are saved in the "nominal_sample" TQSampleFolder
+    ## The nomenclature of the coutner names must be <BIN_COUNTER><SYSTS>Up and <BIN_COUNTER><SYSTS>Down
+    ## Or if the "syst_samples" are provided in the dictionary use that instead
+    ## The keyword are the systematics and then the items list the processes to apply the systematics
+    #
+    # For example they will have the following format
+    # "systematics" : [
+    #     ("LepSF"         , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("TrigSF"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("BTagLF"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("BTagHF"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("Pileup"        , { "procs_to_apply" : ["vbsww", "ttw", "photon", "qflip", "prompt"]                                                                          }),
+    #     ("FakeRateEl"    , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("FakeRateMu"    , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("FakeClosureEl" , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("FakeClosureMu" , { "procs_to_apply" : ["fake"]                                                                                                               }),
+    #     ("PDF"           , { "procs_to_apply" : ["www"]                                                                                                                }),
+    #     ("AlphaS"        , { "procs_to_apply" : ["www"]                                                                                                                }),
+    #     ("Qsq"           , { "procs_to_apply" : ["www"]                                                                                                                }),
+    #     ("JEC"           , { "procs_to_apply" : ["www", "vbsww", "ttw", "photon", "qflip", "prompt"], "syst_samples" : {"Up" : samples_jec_up, "Down": samples_jec_dn} }),
+    #     ("MCStat"        , { "procs_to_apply" : ["www", "vbsww", "ttw", "photon", "qflip", "prompt"], "individual": True                                               }),
+    #     ],
+    for syst, systinfo in options["systematics"]:
+        # If "syst_samples" are provided in the systinfo dictionary then use nominal cut counter of the provided sample to get the variations
+        # If not provided, then attach a suffix to the counter name (these would be the weight variations)
+        # If "syst_samples" not provided than it is a weight variational type so create a suffix to attach to the counter name
+        syst_up_name_suffix = syst + "Up"   if "syst_samples" not in systinfo else ""
+        syst_dn_name_suffix = syst + "Down" if "syst_samples" not in systinfo else ""
+        samples_up = options["nominal_sample"] if "syst_samples" not in systinfo else systinfo["syst_samples"]["Up"]
+        samples_dn = options["nominal_sample"] if "syst_samples" not in systinfo else systinfo["syst_samples"]["Down"]
+        syst_up_rates_val = []
+        syst_dn_rates_val = []
+        syst_val_str = []
+        for h, hp, p, pp, i in grand_list:
+            if p.strip() in systinfo["procs_to_apply"]:
+                nomkey = Key(h, pp)
+                if Key(h, pp) not in options["control_regions"]:
+                    key = Key(h.strip()+syst+"Up", pp)
+                    addHist(samples_up, key, pp, hp, syst_up_name_suffix)
+                    key = Key(h.strip()+syst+"Down", pp)
+                    addHist(samples_dn, key, pp, hp, syst_dn_name_suffix)
+                    syst_val_str.append(form("1"))
+                else:
+                    key = Key(h.strip()+syst+"Up", pp)
+                    addTFSystHist(samples_up, key, pp, hp, syst_up_name_suffix, h)
+                    key = Key(h.strip()+syst+"Down", pp)
+                    addTFSystHist(samples_dn, key, pp, hp, syst_dn_name_suffix, h)
+                    syst_val_str.append(form("1"))
+            else:
+                syst_val_str.append(form("-"))
+        syst_item = """{:<35s}shape      {}\n""".format(syst, "".join(syst_val_str))
+        datacard += syst_item
+
+    for index, (h, hp, p, pp, i) in enumerate(grand_list):
+        key = Key(h, pp)
+        if p.strip() not in options["statistical"]:
+            continue
+        h_hist = Hist(key)
+        for ibin in xrange(1, h_hist.GetNbinsX()+1):
+            cnt = h_hist.GetBinContent(ibin)
+            err = h_hist.GetBinError(ibin)
+            histname = "{}".format(h.strip())
+            systname = histname+p.strip()+"_"+"MCstat" + str(ibin)
+            systkey_up = Key(histname+systname+"Up"  , pp)
+            systkey_dn = Key(histname+systname+"Down", pp)
+            hsys_up = h_hist.Clone("{}_{}".format(histname+systname+"Up"  , p))
+            hsys_dn = h_hist.Clone("{}_{}".format(histname+systname+"Down", p))
+            hsys_up.SetBinContent(ibin, cnt+cnt*min(err/cnt, 1))
+            hsys_dn.SetBinContent(ibin, max(cnt-err, 1e-9))
+            hist_dict[systkey_up] = hsys_up
+            hist_dict[systkey_dn] = hsys_dn
+            syst_val_str = [ form("-") ] * nprocess * nhist
+            syst_val_str[index] = form("1")
+            syst_item = """{:<35s}shape      {}\n""".format(systname, "".join(syst_val_str))
+            datacard += syst_item
+
+#    # Control region statistical error
+#    # CR data stat error can be controlled via "gmN" error
+#    # In the options the control regions are provided in a following format
+#    #
+#    # "control_regions" : {
+#    #     ("SRSSeeFull"   , "/typebkg/lostlep/[ttZ+WZ+Other]") : ("{WZCRSSeeFull}"    , "/data-typebkg/qflip-typebkg/photon-typebkg/prompt-typebkg/fakes-typebkg/lostlep/VBSWW-typebkg/lostlep/ttW-sig"),
+#    #     ("SRSSemFull"   , "/typebkg/lostlep/[ttZ+WZ+Other]") : ("{WZCRSSemFull}"    , "/data-typebkg/qflip-typebkg/photon-typebkg/prompt-typebkg/fakes-typebkg/lostlep/VBSWW-typebkg/lostlep/ttW-sig"),
+#    #     },
+#    #
+#    # We first invert the regions such that we have a mapping per "CR" -> "SR's"
+#    crmap = {}
+#    for k, v in options["control_regions"].iteritems():
+#        crmap[v] = crmap.get(v, [])
+#        crmap[v].append(k)
+#
+#    for key in sorted(crmap):
+#        syst_val_str = []
+#        for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
+#            if (r, path) not in crmap[key]:
+#                syst_val_str.append(form("-"))
+#            else:
+#                syst_val_str.append(form("{:.5f}".format(get_tf(r, path, options))))
+#        systname = key[0] + "_CRstat"
+#        data = int(options["nominal_sample"].getCounter(options["data"], key[0]).getCounter())
+#        syst_item = """{:<35s}gmN {:<6d} {}\n""".format(systname, data, "".join(syst_val_str))
+#        datacard += syst_item
+#
+#    for syst_name, proc, syst_val, filt_pattern in options["flat_systematics"]:
+#        syst_val_str = []
+#        for index, (r, process, path) in enumerate(zip(cuts_list, processes * nchannel, paths_list)):
+#            if process.strip() in proc and r.find(filt_pattern) != -1:
+#                syst_val_str.append(form(syst_val))
+#            else:
+#                syst_val_str.append(form("-"))
+#        syst_item = """{:<35s}lnN        {}\n""".format(syst_name, "".join(syst_val_str))
+#        datacard += syst_item
+
+    # Write all histogram to output
+    writeHists()
+
+    return datacard
+
