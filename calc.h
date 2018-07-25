@@ -25,6 +25,9 @@ namespace RooUtil
         TVector3 boostVector(const LV& a);
         LV getBoosted(const LV& a, const TVector3& b);
         void boost(LV& a, const TVector3& b);
+        float DeltaR(const LV& a, const LV& b);
+        float DeltaEta(const LV& a, const LV& b);
+        float DeltaPhi(const LV& a, const LV& b);
     }
 }
 

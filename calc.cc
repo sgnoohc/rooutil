@@ -43,4 +43,22 @@ void RooUtil::Calc::boost(LV& a, const TVector3& b)
     a = getLV(tlv_r);
 }
 
+//_________________________________________________________________________________________________
+float RooUtil::Calc::DeltaR(const LV& a, const LV& b)
+{
+    return ROOT::Math::VectorUtil::DeltaR(a, b);
+}
+
+//_________________________________________________________________________________________________
+float RooUtil::Calc::DeltaEta(const LV& a, const LV& b)
+{
+    return a.eta() - b.eta();
+}
+
+//_________________________________________________________________________________________________
+float RooUtil::Calc::DeltaPhi(const LV& a, const LV& b)
+{
+    return ROOT::Math::VectorUtil::DeltaPhi(a, b);
+}
+
 //eof
