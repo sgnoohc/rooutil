@@ -5,6 +5,7 @@
 #define looper_cc
 
 // C/C++
+#include <unistd.h>
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -171,8 +172,8 @@ RooUtil::Looper<TREECLASS>::Looper() :
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
-    use_treeclass_progress( false ),
-    use_tqdm_progress_bar( true ),
+    use_treeclass_progress( isatty(1) ),
+    use_tqdm_progress_bar( !isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -207,8 +208,8 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
-    use_treeclass_progress( false ),
-    use_tqdm_progress_bar( true ),
+    use_treeclass_progress( isatty(1) ),
+    use_tqdm_progress_bar( !isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
