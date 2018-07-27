@@ -172,7 +172,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
-    use_treeclass_progress( !isatty(1) ),
+    use_treeclass_progress( false ),
     use_tqdm_progress_bar( isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
@@ -208,7 +208,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
-    use_treeclass_progress( !isatty(1) ),
+    use_treeclass_progress( false ),
     use_tqdm_progress_bar( isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
@@ -573,7 +573,6 @@ void RooUtil::Looper<TREECLASS>::initProgressBar()
 template <class TREECLASS>
 void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
 {
-
 
     if (silent)
         return;
