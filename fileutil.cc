@@ -5,11 +5,33 @@
 
 TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
 {
+    using namespace std;
+
+    // hadoopmap
+    ifstream infile("hadoopmap.txt");
+    std::map<TString, TString> _map;
+    if (infile.good())
+    {
+        ifstream mapfile;
+        mapfile.open( "hadoopmap.txt" );
+        std::string line, oldpath, newpath;
+        while ( std::getline( mapfile, line ) ) 
+        {
+            mapfile >> oldpath >> newpath;
+            TString oldpath_tstr = oldpath.c_str();
+            TString newpath_tstr = newpath.c_str();
+            _map[oldpath_tstr] = newpath_tstr;
+        }
+    }
+
     TChain* chain = new TChain(name);
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
     {
         RooUtil::print(Form("Adding %s", ff.Data()));
-        chain->Add(ff);
+        TString filepath = ff;
+        if ( _map.find( ff ) != _map.end() )
+            filepath = _map[ff];
+        chain->Add(filepath);
     }
     return chain;
 }

@@ -115,7 +115,7 @@ namespace RooUtil
         template <class T>
         void setBranch(TString, T);
         template <class T>
-        const T& getBranch(TString, bool=false);
+        const T& getBranch(TString, bool=true);
         template <class T>
         void createBranch(T&);
         template <class T>

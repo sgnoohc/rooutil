@@ -88,6 +88,7 @@ namespace RooUtil
         unsigned int nskipped;
         unsigned int nbatch_skip_threshold;
         unsigned int nbatch_to_skip;
+        unsigned int ncounter;
         tqdm bar;
         public:
         // Functions
@@ -124,6 +125,8 @@ namespace RooUtil
         void printStatus();
         void printSkippedBadEventStatus();
         void setFastMode( bool f=true ) { fastmode = f; }
+        void addCount() { ncounter++; }
+        void resetCounter() { ncounter = 0; }
         private:
         void setFileList();
         void setNEventsToProcess();
@@ -177,7 +180,8 @@ RooUtil::Looper<TREECLASS>::Looper() :
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
-    nbatch_to_skip( 5000 )
+    nbatch_to_skip( 5000 ),
+    ncounter( 0 )
 {
     bmark = new TBenchmark();
     bar.disable_colors();
@@ -213,7 +217,8 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
-    nbatch_to_skip( 5000 )
+    nbatch_to_skip( 5000 ),
+    ncounter( 0 )
 {
     bmark = new TBenchmark();
     if ( c && t )
