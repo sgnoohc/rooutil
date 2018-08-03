@@ -1263,3 +1263,9 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
     return c1
 
 
+#______________________________________________________________________________________________________________________
+def plot_hist_2d(hist,options={}):
+    p.plot_hist_2d(hist, options)
+    options["output_name"] = options["output_name"].replace("pdf","png")
+    p.plot_hist_2d(hist, options)
+
