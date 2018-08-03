@@ -264,14 +264,23 @@ def addNtuples(samples, configstr, path, config_filename, priority="<2", exclude
 
 ########################################################################################
 def runParallel(njobs, func, samples, extra_args):
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
     pool = multiprocessing.Pool(processes=njobs)
     for sample in samples.getListOfSamples():
         if sample.getNSamples(True) == 0:
             path = str(sample.getPath())
-            job = pool.apply_async(func, args=(samples, path, extra_args,))
+            job = pool.apply_async(func, args=(samples, path, extra_args, return_dict))
             #job.get()
     pool.close()
     pool.join()
+    failed_jobs_exist = False
+    return_dict = dict(return_dict)
+    for sample_to_run in return_dict:
+        if return_dict[sample_to_run] != "SUCCESS":
+            print sample_to_run, "failed to finish properly"
+            failed_jobs_exist = True
+    return not failed_jobs_exist
 
 ########################################################################################
 def pathToUniqStr(sample_to_run):
@@ -316,13 +325,16 @@ def loadTQCutsFromTextFile(filename):
     return tqcut
 
 ########################################################################################
-def runSingle(samples, sample_to_run, options):
+def runSingle(samples, sample_to_run, options, return_dict={}):
 
     # Perhaps you run all in serial
-    isparallel = (sample_to_run == "")
+    isparallel = (sample_to_run != "")
 
     # Load the cuts from the config file
     cuts = loadTQCutsFromTextFile(options["cuts"])
+
+    # Set the return_dict before failure to check the status
+    if isparallel: return_dict[sample_to_run] = "INIT"
 
     #
     # Book Analysis Jobs (Histogramming, Cutflow, Event lists, etc.)
@@ -371,13 +383,21 @@ def runSingle(samples, sample_to_run, options):
         sample_to_run = "output"
     samples.writeToFile(os.path.join(options["output_dir"], pathToUniqStr(sample_to_run) + ".root"))
 
+    if isparallel: return_dict[sample_to_run] = "SUCCESS"
+
+    return True
+
 ########################################################################################
 def merge_output(samples, options):
     individual_files = []
+    print "Aggregating files to merge"
     for sample in samples.getListOfSamples():
         if sample.getNSamples(True) == 0:
             path = str(sample.getPath())
             individual_files.append(os.path.join(options["output_dir"], pathToUniqStr(path) + ".root"))
+    print "Issuing tqmerge command"
+    cmd = "python rooutil/qframework/share/tqmerge -o {}/output{}.root -t analysis {}".format(options["output_dir"], options["output_suffix"], " ".join(individual_files))
+    print cmd
     os.system("python rooutil/qframework/share/tqmerge -o {}/output{}.root -t analysis {}".format(options["output_dir"], options["output_suffix"], " ".join(individual_files)))
 
 ########################################################################################
@@ -442,16 +462,25 @@ def loop(user_options):
     connectNtuples(samples, options["sample_config_path"], options["ntuple_path"], options["priority_value"], options["exclude_priority_value"])
 
     # If a specific path is specified run one job
+    looper_success = False
     if "path" in options and options["path"] != "":
-        runSingle(samples, options["path"], options)
+        looper_success = runSingle(samples, options["path"], options)
 
     # Otherwise, run parallel jobs
     else:
-        runParallel(options["ncore"], runSingle, samples, options)
+        looper_success = runParallel(options["ncore"], runSingle, samples, options)
 
-    # Merge output
-    if options["do_merge"]:
-        merge_output(samples, options)
+    print ">>>"
+
+    if looper_success:
+        print ">>> Successfully ran qutils.loop()"
+        # Merge output
+        if options["do_merge"]:
+            merge_output(samples, options)
+        return True
+    else:
+        print ">>> qutils.loop() FAILED!!! Check your configurations"
+        return False
 
 ########################################################################################
 def output_plotname(histname):
@@ -638,6 +667,23 @@ def get_cr_normalized_rate(options, key):
     #print nf.getCounter(), sr.getCounter()
     #print "get_cr", key, sr.getCounter()
     return sr.getCounter()
+
+########################################################################################
+def make_thNmap(filepath, histpath, varx, vary="", varz=""):
+    f = ROOT.TFile(filepath)
+    h = f.Get(histpath)
+    if not h:
+        print filepath, histpath, "not found!"
+        sys.exit()
+    if vary == "":
+        mapstr = "[TH1Map:{}:{}([{}])]".format(filepath, histpath, varx)
+    elif varz == "":
+        mapstr = "[TH2Map:{}:{}([{}],[{}])]".format(filepath, histpath, varx, vary)
+    else:
+        mapstr = "[TH3Map:{}:{}([{}],[{}],[{}])]".format(filepath, histpath, varx, vary, varz)
+    print mapstr
+    return mapstr
+
 
 ########################################################################################
 def get_sr_rate(samples, path, r, suffix, options):
