@@ -512,11 +512,22 @@ def plot(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None
     sigs = []
     for bkg, path in bkg_path: bkgs.append(samples.getHistogram(path, histname).Clone(bkg))
     for sig, path in sig_path: sigs.append(samples.getHistogram(path, histname).Clone(sig))
+    # Check if the type is TH2F
+    for bkg in bkgs:
+        if bkg.GetDimension() > 1:
+            # Skip because this is not TH1
+            print ">>> Skipping hist = ", histname, " as it is TH2"
+            return;
+    for sig in sigs:
+        if sig.GetDimension() > 1:
+            # Skip because this is not TH1
+            print ">>> Skipping hist = ", histname, " as it is TH2"
+            return;
     # Check for blinding condition
     blind = False
     if "blind" in options:
         for keyword in options["blind"]:
-            print keyword, histname
+            #print keyword, histname
             if histname.find(keyword) != -1:
                 blind = True
         alloptions["blind"] = blind
@@ -540,8 +551,91 @@ def autoplot(samples, histnames=[], bkg_path=[], sig_path=[], data_path=None, sy
     jobs = []
     if len(histnames) == 0:
         histnames = samples.getListOfHistogramNames()
-    for histname in histnames:
+        if histnames:
+            pass
+        else:
+            histnames =[]
+    for index, histname in enumerate(histnames):
         proc = multiprocessing.Process(target=plot, args=[samples, str(histname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
+        jobs.append(proc)
+        proc.start()
+    for job in jobs:
+        job.join()
+
+########################################################################################
+def plot2d(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+    output_dir = "plots"
+    if "output_dir" in options:
+        output_dir = options["output_dir"]
+        del options["output_dir"]
+    # Options
+    alloptions= {
+                "palette_name": "rainbow",
+                #"draw_option_2d": "cont4",
+                "output_name": "{}/{{}}_{}.pdf".format(output_dir, output_plotname(histname)),
+                }
+    alloptions.update(options)
+    bkgs = []
+    sigs = []
+    for bkg, path in bkg_path: bkgs.append(samples.getHistogram(path, histname).Clone(bkg))
+    for sig, path in sig_path: sigs.append(samples.getHistogram(path, histname).Clone(sig))
+    # Check if the type is TH2F
+    for bkg in bkgs:
+        if bkg.GetDimension() != 2:
+            # Skip because this is not TH1
+            print ">>> Skipping hist = ", histname, " as it is TH2"
+            return;
+    for sig in sigs:
+        if sig.GetDimension() != 2:
+            # Skip because this is not TH1
+            print ">>> Skipping hist = ", histname, " as it is TH2"
+            return;
+    # Check for blinding condition
+    blind = False
+    if "blind" in options:
+        for keyword in options["blind"]:
+            #print keyword, histname
+            if histname.find(keyword) != -1:
+                blind = True
+        alloptions["blind"] = blind
+    if data_path:
+        data = samples.getHistogram(data_path, histname).Clone("Data")
+    else:
+        data = None
+    if len(clrs) == 0: colors = [ 920, 2007, 2005, 2003, 2001, 2 ]
+    else: colors = clrs
+
+    allhist = []
+    allhist.extend(bkgs)
+    allhist.extend(sigs)
+
+    allhistname = []
+    for bkg, path in bkg_path:
+        allhistname.append(path[1:].replace("/","-"))
+    for sig, path in sig_path:
+        allhistname.append(path[1:].replace("/","-"))
+    if data:
+        allhistname.append("Data")
+    raw_path = alloptions["output_name"]
+    for h, name in zip(allhist, allhistname):
+        #h.Smooth()
+        #h.Smooth()
+        #h.Smooth()
+        alloptions["output_name"] = raw_path.format(name)
+        p.plot_hist_2d(h, options=alloptions)
+
+########################################################################################
+def autoplot2d(samples, histnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
+    import multiprocessing
+    jobs = []
+    if len(histnames) == 0:
+        histnames = samples.getListOfHistogramNames()
+        if histnames:
+            pass
+        else:
+            histnames =[]
+    for index, histname in enumerate(histnames):
+        proc = multiprocessing.Process(target=plot2d, args=[samples, str(histname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
         jobs.append(proc)
         proc.start()
     for job in jobs:
