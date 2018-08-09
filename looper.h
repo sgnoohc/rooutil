@@ -88,6 +88,7 @@ namespace RooUtil
         unsigned int nskipped;
         unsigned int nbatch_skip_threshold;
         unsigned int nbatch_to_skip;
+        unsigned int nskipped_threshold;
         unsigned int ncounter;
         tqdm bar;
         public:
@@ -120,7 +121,8 @@ namespace RooUtil
         TString getListOfFileNames();
         TString getCurrentFileTitle() { return TString(tfile->GetTitle()); }
         void setNbatchToSkip(unsigned int n) { nbatch_to_skip = n; }
-        void setNbadEventThreshold(unsigned int n) { nbatch_skip_threshold = n; }
+        void setNbadEventThreshold(unsigned int n) { nskipped_threshold = n; }
+        void setNbadEventThresholdToTriggerBatchSkip(unsigned int n) { nbatch_skip_threshold = n; }
         bool handleBadEvent();
         void printStatus();
         void printSkippedBadEventStatus();
@@ -181,6 +183,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
     nbatch_to_skip( 5000 ),
+    nskipped_threshold( 100000 ),
     ncounter( 0 )
 {
     bmark = new TBenchmark();
@@ -218,6 +221,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
     nbatch_to_skip( 5000 ),
+    nskipped_threshold( 100000 ),
     ncounter( 0 )
 {
     bmark = new TBenchmark();
@@ -787,12 +791,20 @@ void RooUtil::Looper<TREECLASS>::saveSkim()
 template <class TREECLASS>
 bool RooUtil::Looper<TREECLASS>::handleBadEvent()
 {
+
     using namespace std;
     cout << endl;
     cout << "RooUtil::Looper [CheckCorrupt] Caught an I/O failure in the ROOT file." << endl;
     cout << "RooUtil::Looper [CheckCorrupt] Possibly corrupted hadoop file." << endl;
     cout << "RooUtil::Looper [CheckCorrupt] event index = " << getCurrentEventIndex() << " out of " << tchain->GetEntries() << endl;
     cout << endl;
+
+    // If the total nskip reaches a threshold just fail the whole thing...
+    if (nskipped >= nskipped_threshold)
+    {
+        nskipped += tchain->GetEntries() - getCurrentEventIndex() - 1;
+        return false;
+    }
 
     nskipped_batch++;
 
@@ -826,13 +838,18 @@ TString RooUtil::Looper<TREECLASS>::getListOfFileNames()
 {
     TString rtnstring = "";
     TObjArray* filepaths = tchain->GetListOfFiles();
+    TObjArrayIter* iter = new TObjArrayIter( listOfFiles );
     for (Int_t ifile = 0; ifile < filepaths->GetEntries(); ++ifile)
     {
-        TString filepath = ((TObjString*)filepaths->At(ifile))->GetString();
-        if (rtnstring.IsNull())
-            rtnstring = filepath;
-        else
-            rtnstring += "," + filepath;
+        TChainElement* chainelement = ( TChainElement* ) iter->Next();
+        if ( chainelement )
+        {
+            TString filepath = chainelement->GetTitle();
+            if (rtnstring.IsNull())
+                rtnstring = filepath;
+            else
+                rtnstring += "," + filepath;
+        }
     }
     return rtnstring;
 }
