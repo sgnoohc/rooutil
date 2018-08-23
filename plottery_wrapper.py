@@ -884,7 +884,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
 
     if "yaxis_log" in options:
         if options["yaxis_log"] and "yaxis_range" not in options:
-            options["yaxis_range"] = [yaxismin, 2*(yaxismax-yaxismin)+yaxismax]
+            options["yaxis_range"] = [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
@@ -959,10 +959,12 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "yaxis_range"                    in options: options["yaxis_range"]                    = [0., yaxismax]
     if not "legend_ncolumns"                in options: options["legend_ncolumns"]                = 2 if len(bgs) >= 4 else 1
     if not "legend_alignment"               in options: options["legend_alignment"]               = "topright"
-    if not "legend_smart"                   in options: options["legend_smart"]                   = True if not options["yaxis_log"] else False
+    #if not "legend_smart"                   in options: options["legend_smart"]                   = True if not options["yaxis_log"] else False
+    if not "legend_smart"                   in options: options["legend_smart"]                   = True
     if not "legend_scalex"                  in options: options["legend_scalex"]                  = 0.8
     if not "legend_scaley"                  in options: options["legend_scaley"]                  = 0.8
     if not "legend_border"                  in options: options["legend_border"]                  = False
+    if not "legend_rounded"                 in options: options["legend_rounded"]                 = False
     if not "legend_percentageinbox"         in options: options["legend_percentageinbox"]         = False
     if not "hist_line_none"                 in options: options["hist_line_none"]                 = True
     if not "show_bkg_errors"                in options: options["show_bkg_errors"]                = False

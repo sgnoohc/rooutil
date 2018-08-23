@@ -454,67 +454,74 @@ def loop(user_options):
         merge_output(samples, options)
 
 ########################################################################################
-def output_plotname(histname):
+def output_plotname(histname, options={}):
     nicename = str(histname).replace("/","-")
     nicename = nicename.replace("{","Bin_")
     nicename = nicename.replace("}","")
     nicename = nicename.replace(",","_")
     nicename = nicename.replace(" ","")
+    if "yaxis_log" in options and options["yaxis_log"] == True:
+        nicename += "_logy"
+    else:
+        nicename += "_liny"
     return nicename
 
 ########################################################################################
 def plot(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
-    output_dir = "plots"
-    if "output_dir" in options:
-        output_dir = options["output_dir"]
-        del options["output_dir"]
-    # Options
-    alloptions= {
-                "ratio_range":[0.0,2.0],
-                "nbins": 30,
-                "autobin": False,
-                "legend_scalex": 1.8,
-                "legend_scaley": 1.1,
-                "output_name": "{}/{}.pdf".format(output_dir, output_plotname(histname)),
-                "bkg_sort_method": "unsorted"
-                }
-    alloptions.update(options)
-    bkgs = []
-    sigs = []
-    for bkg, path in bkg_path: bkgs.append(samples.getHistogram(path, histname).Clone(bkg))
-    for sig, path in sig_path: sigs.append(samples.getHistogram(path, histname).Clone(sig))
-    # Check if the type is TH2F
-    for bkg in bkgs:
-        if bkg.GetDimension() > 1:
-            # Skip because this is not TH1
-            print ">>> Skipping hist = ", histname, " as it is TH2"
-            return;
-    for sig in sigs:
-        if sig.GetDimension() > 1:
-            # Skip because this is not TH1
-            print ">>> Skipping hist = ", histname, " as it is TH2"
-            return;
-    # Check for blinding condition
-    blind = False
-    if "blind" in options:
-        for keyword in options["blind"]:
-            #print keyword, histname
-            if histname.find(keyword) != -1:
-                blind = True
-        alloptions["blind"] = blind
-    if data_path:
-        data = samples.getHistogram(data_path, histname).Clone("Data")
-    else:
-        data = None
-    if len(clrs) == 0: colors = [ 920, 2007, 2005, 2003, 2001, 2 ]
-    else: colors = clrs
-    plotfunc(
-            sigs = sigs,
-            bgs  = bkgs,
-            data = data,
-            colors = colors,
-            syst = systs,
-            options=alloptions)
+    try:
+        output_dir = "plots"
+        if "output_dir" in options:
+            output_dir = options["output_dir"]
+            del options["output_dir"]
+        # Options
+        alloptions= {
+                    "ratio_range":[0.0,2.0],
+                    "nbins": 30,
+                    "autobin": False,
+                    "legend_scalex": 1.8,
+                    "legend_scaley": 1.1,
+                    "output_name": "{}/{}.pdf".format(output_dir, output_plotname(histname, options)),
+                    "bkg_sort_method": "unsorted"
+                    }
+        alloptions.update(options)
+        bkgs = []
+        sigs = []
+        for bkg, path in bkg_path: bkgs.append(samples.getHistogram(path, histname).Clone(bkg))
+        for sig, path in sig_path: sigs.append(samples.getHistogram(path, histname).Clone(sig))
+        # Check if the type is TH2F
+        for bkg in bkgs:
+            if bkg.GetDimension() > 1:
+                # Skip because this is not TH1
+                print ">>> Skipping hist = ", histname, " as it is TH2"
+                return;
+        for sig in sigs:
+            if sig.GetDimension() > 1:
+                # Skip because this is not TH1
+                print ">>> Skipping hist = ", histname, " as it is TH2"
+                return;
+        # Check for blinding condition
+        blind = False
+        if "blind" in options:
+            for keyword in options["blind"]:
+                #print keyword, histname
+                if histname.find(keyword) != -1:
+                    blind = True
+            alloptions["blind"] = blind
+        if data_path:
+            data = samples.getHistogram(data_path, histname).Clone("Data")
+        else:
+            data = None
+        if len(clrs) == 0: colors = [ 920, 2007, 2005, 2003, 2001, 2 ]
+        else: colors = clrs
+        plotfunc(
+                sigs = sigs,
+                bgs  = bkgs,
+                data = data,
+                colors = colors,
+                syst = systs,
+                options=alloptions)
+    except:
+        print (samples, histname, bkg_path, sig_path, data_path, systs, clrs, options, plotfunc)
 
 ########################################################################################
 def autoplot(samples, histnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
@@ -554,12 +561,12 @@ def plot2d(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=No
     for bkg in bkgs:
         if bkg.GetDimension() != 2:
             # Skip because this is not TH1
-            print ">>> Skipping hist = ", histname, " as it is TH2"
+            print ">>> Skipping hist = ", histname, " as it is not TH2"
             return;
     for sig in sigs:
         if sig.GetDimension() != 2:
             # Skip because this is not TH1
-            print ">>> Skipping hist = ", histname, " as it is TH2"
+            print ">>> Skipping hist = ", histname, " as it is not TH2"
             return;
     # Check for blinding condition
     blind = False
@@ -1239,4 +1246,71 @@ rate                                          {rates}
     writeHists()
 
     return datacard
+
+########################################################################################
+def draw_eff(samples, numerator, denominator, mc, data, variable, options):
+
+    mc_numerator   = samples.getHistogram(mc  , "{}/{}".format(numerator, variable))
+    dt_numerator   = samples.getHistogram(data, "{}/{}".format(numerator, variable))
+    mc_denominator = samples.getHistogram(mc  , "{}/{}".format(denominator, variable))
+    dt_denominator = samples.getHistogram(data, "{}/{}".format(denominator, variable))
+
+    if "nbins" in options:
+        if mc_numerator.GetNbinsX() == 180:
+            nbin = int(180 / options["nbins"])
+            mc_numerator.Rebin(nbin)
+            dt_numerator.Rebin(nbin)
+            mc_denominator.Rebin(nbin)
+            dt_denominator.Rebin(nbin)
+
+    mc_eff = mc_numerator.Clone()
+    dt_eff = dt_numerator.Clone()
+
+    mc_eff.Divide(mc_numerator, mc_denominator, 1, 1, "B")
+    dt_eff.Divide(dt_numerator, dt_denominator, 1, 1, "B")
+
+    p.plot_hist(
+            sigs = [],
+            bgs  = [mc_eff],
+            data = dt_eff,
+            colors = [],
+            syst = None,
+            options=options
+            )
+
+    return mc_eff
+
+########################################################################################
+def draw_eff_num1_num2(samples, numerator1, numerator2, denominator, mc, variable, options):
+
+    mc_numerator   = samples.getHistogram(mc, "{}/{}".format(numerator1, variable)).Clone(numerator1)
+    dt_numerator   = samples.getHistogram(mc, "{}/{}".format(numerator2, variable)).Clone(numerator2)
+    mc_denominator = samples.getHistogram(mc, "{}/{}".format(denominator, variable))
+    dt_denominator = samples.getHistogram(mc, "{}/{}".format(denominator, variable))
+
+
+    if "nbins" in options:
+        if mc_numerator.GetNbinsX() == 180:
+            nbin = int(180 / options["nbins"])
+            mc_numerator.Rebin(nbin)
+            dt_numerator.Rebin(nbin)
+            mc_denominator.Rebin(nbin)
+            dt_denominator.Rebin(nbin)
+
+    mc_eff = mc_numerator.Clone()
+    dt_eff = dt_numerator.Clone()
+
+    mc_eff.Divide(mc_numerator, mc_denominator, 1, 1, "B")
+    dt_eff.Divide(dt_numerator, dt_denominator, 1, 1, "B")
+
+    p.plot_hist(
+            sigs = [],
+            bgs  = [mc_eff],
+            data = dt_eff,
+            colors = [],
+            syst = None,
+            options=options
+            )
+
+    return mc_eff
 
