@@ -7,3 +7,5 @@
 #include "looper.cc"
 #include "calc.cc"
 #include "ttreex.cc"
+#include "commandutil.cc"
+#include "cutflowutil.cc"

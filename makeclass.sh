@@ -143,47 +143,99 @@ if [ "$GENERATEEXTRACODE" == true ]; then
             exit
         fi
     fi
+
+    #
+    # Add "rooutil" to the class
+    #
+    echo "#include \"rooutil/rooutil.cc\"" >> ${MAKECLASSNAME}.cc
+
     #
     # Create process.cc
     #
-    echo "#include \"looper.h\""                                                                   >  process.cc
-    echo "#include \"ttreex.h\""                                                                   >> process.cc
-    echo "#include \"${MAKECLASSNAME}.h\""                                                         >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                     >> process.cc
-    echo "int main(int argc, char** argv)"                                                         >> process.cc
-    echo "{"                                                                                       >> process.cc
-    echo "    // Argument checking"                                                                >> process.cc
-    echo "    if (argc < 3)"                                                                       >> process.cc
-    echo "    {"                                                                                   >> process.cc
-    echo "        std::cout << \"Usage:\" << std::endl;"                                           >> process.cc
-    echo "        std::cout << \"  $ ./process INPUTFILEFILE OUTPUTFILE [NEVENTS]\" << std::endl;" >> process.cc
-    echo "        return 1;"                                                                       >> process.cc
-    echo "    }"                                                                                   >> process.cc
-    echo "    TChain* ch = new TChain(\"${TTREENAME}\");"                                          >> process.cc
-    echo "    ch->Add(argv[1]);"                                                                   >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "    // Creating output file"                                                             >> process.cc
-    echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                    >> process.cc
-    echo "    TTree* t = new TTree(\"t\", \"t\");"                                                 >> process.cc
-    echo "    RooUtil::TTreeX tx(t);"                                                              >> process.cc
-    echo "    //tx.createBranch<LV>(\"p0\");"                                                      >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "    // Looping input file"                                                               >> process.cc
-    echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                        >> process.cc
-    echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"        >> process.cc
-    echo "    while (looper.nextEvent())"                                                          >> process.cc
-    echo "    {"                                                                                   >> process.cc
-    echo "        //Do what you need to do in for each event here"                                 >> process.cc
-    echo "        //To save use the following function"                                            >> process.cc
-    echo "        //tx.fill();"                                                                    >> process.cc
-    echo "    }"                                                                                   >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "    // Writing output file"                                                              >> process.cc
-    echo "    tx.save(ofile);"                                                                     >> process.cc
-    echo "}"                                                                                       >> process.cc
+    echo "#include \"${MAKECLASSNAME}.h\""                                                          >  process.cc
+    echo "#include \"rooutil/rooutil.h\""                                                           >> process.cc
+    echo ""                                                                                         >> process.cc
+    echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                      >> process.cc
+    echo "int main(int argc, char** argv)"                                                          >> process.cc
+    echo "{"                                                                                        >> process.cc
+    echo "    // Argument checking"                                                                 >> process.cc
+    echo "    if (argc < 3)"                                                                        >> process.cc
+    echo "    {"                                                                                    >> process.cc
+    echo "        std::cout << \"Usage:\" << std::endl;"                                            >> process.cc
+    echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"     >> process.cc
+    echo "        std::cout << std::endl;"                                                          >> process.cc
+    echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"       >> process.cc
+    echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                >> process.cc
+    echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"         >> process.cc
+    echo "        std::cout << std::endl;"                                                          >> process.cc
+    echo "        return 1;"                                                                        >> process.cc
+    echo "    }"                                                                                    >> process.cc
+    echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"             >> process.cc
+    echo ""                                                                                         >> process.cc
+    echo "    // Creating output file"                                                              >> process.cc
+    echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                     >> process.cc
+    echo "    TTree* t = new TTree(\"t\", \"t\");"                                                  >> process.cc
+    echo "    RooUtil::TTreeX tx(t);"                                                               >> process.cc
+    echo "    //tx.createBranch<LV>(\"p0\");"                                                       >> process.cc
+    echo ""                                                                                         >> process.cc
+    echo "    // Looping input file"                                                                >> process.cc
+    echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                         >> process.cc
+    echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"         >> process.cc
+    echo "    while (looper.nextEvent())"                                                           >> process.cc
+    echo "    {"                                                                                    >> process.cc
+    echo "        try"                                                                              >> process.cc
+    echo "        {"                                                                                >> process.cc
+    echo "            //Do what you need to do in for each event here"                              >> process.cc
+    echo "            //To save use the following function"                                         >> process.cc
+    echo "            //tx.fill();"                                                                 >> process.cc
+    echo "        }"                                                                                >> process.cc
+    echo "        catch (const std::ios_base::failure& e)"                                          >> process.cc
+    echo "        {"                                                                                >> process.cc
+    echo "            //Handle error here"                                                          >> process.cc
+    echo "        }"                                                                                >> process.cc
+    echo "    }"                                                                                    >> process.cc
+    echo ""                                                                                         >> process.cc
+    echo "    // Writing output file"                                                               >> process.cc
+    echo "    tx.save(ofile);"                                                                      >> process.cc
+    echo "}"                                                                                        >> process.cc
 
-    cat $DIR/TemplateMakefile | sed -e "s/MAKECLASSNAME/${MAKECLASSNAME}/" > Makefile
+    #
+    # Create Makefile
+    #
+    echo '# Simple makefile'                                                                                                          >  Makefile
+    echo ''                                                                                                                           >> Makefile
+    echo 'EXE=a.out'                                                                                                                  >> Makefile
+    echo ''                                                                                                                           >> Makefile
+    echo 'SOURCES=$(wildcard *.cc)'                                                                                                   >> Makefile
+    echo 'OBJECTS=$(SOURCES:.cc=.o)'                                                                                                  >> Makefile
+    echo 'HEADERS=$(SOURCES:.cc=.h)'                                                                                                  >> Makefile
+    echo ''                                                                                                                           >> Makefile
+    echo 'CC         = g++'                                                                                                           >> Makefile
+    echo 'CXX        = g++'                                                                                                           >> Makefile
+    echo 'CXXFLAGS   = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                              >> Makefile
+    echo 'LD         = g++'                                                                                                           >> Makefile
+    echo 'LDFLAGS    = -g -O2'                                                                                                        >> Makefile
+    echo 'SOFLAGS    = -g -shared'                                                                                                    >> Makefile
+    echo 'CXXFLAGS   = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                              >> Makefile
+    echo 'LDFLAGS    = -g -O2'                                                                                                        >> Makefile
+    echo 'ROOTLIBS   = $(shell root-config --libs)'                                                                                   >> Makefile
+    echo 'ROOTCFLAGS = $(shell root-config --cflags)'                                                                                 >> Makefile
+    echo 'CXXFLAGS  += $(ROOTCFLAGS)'                                                                                                 >> Makefile
+    echo 'CFLAGS     = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                       >> Makefile
+    echo 'EXTRAFLAGS = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer'             >> Makefile
+    echo ''                                                                                                                           >> Makefile
+    echo '%.o: %.cc'                                                                                                                  >> Makefile
+    echo '	$(CC) $(CFLAGS) $< -c'                                                                                                >> Makefile
+    echo ''                                                                                                                           >> Makefile
+    echo '$(EXE): $(OBJECTS)'                                                                                                         >> Makefile
+    echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                              >> Makefile
+    echo ''                                                                                                                           >> Makefile
+    echo 'clean:'                                                                                                                     >> Makefile
+    echo '	rm -f *.o $(EXE)'                                                                                                     >> Makefile
+
+    e_arrow "RooUtil:: Compiling"
+
+    make
 
     e_arrow "RooUtil:: "
     e_arrow "RooUtil:: Contact Philip Chang <philip@ucsd.edu> for any questions."
@@ -212,3 +264,4 @@ else
 
 fi
 #eof
+
