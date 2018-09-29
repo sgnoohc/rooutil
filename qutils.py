@@ -556,16 +556,33 @@ def plot(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=None
 def autoplot(samples, histnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
     import multiprocessing
     jobs = []
-    if len(histnames) == 0:
-        histnames = samples.getListOfHistogramNames()
-        if histnames:
-            pass
+    #if len(histnames) == 0:
+    #    histnames = samples.getListOfHistogramNames()
+    #    if histnames:
+    #        pass
+    #    else:
+    #        histnames =[]
+    histnames_from_tqsample = samples.getListOfHistogramNames()
+    print histnames_from_tqsample
+    #for index, histname in enumerate(histnames):
+    for index, hn_from_tq in enumerate(histnames_from_tqsample):
+        isin = False
+        if len(histnames) > 0:
+            for histname in histnames:
+                if str(hn_from_tq).find(histname) != -1:
+                    isin = True
         else:
-            histnames =[]
-    for index, histname in enumerate(histnames):
-        proc = multiprocessing.Process(target=plot, args=[samples, str(histname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
-        jobs.append(proc)
-        proc.start()
+            isin = True
+        if isin:
+            proc = multiprocessing.Process(target=plot, args=[samples, str(hn_from_tq)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
+            jobs.append(proc)
+            proc.start()
+    for histname in histnames:
+        if histname.find("{") != -1:
+            proc = multiprocessing.Process(target=plot, args=[samples, histname], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
+            jobs.append(proc)
+            proc.start()
+
     for job in jobs:
         job.join()
 
@@ -635,16 +652,26 @@ def plot2d(samples, histname, bkg_path=[], sig_path=[], data_path=None, systs=No
 def autoplot2d(samples, histnames=[], bkg_path=[], sig_path=[], data_path=None, systs=None, clrs=[], options={}, plotfunc=p.plot_hist):
     import multiprocessing
     jobs = []
-    if len(histnames) == 0:
-        histnames = samples.getListOfHistogramNames()
-        if histnames:
-            pass
+    #if len(histnames) == 0:
+    #    histnames = samples.getListOfHistogramNames()
+    #    if histnames:
+    #        pass
+    #    else:
+    #        histnames =[]
+    histnames_from_tqsample = samples.getListOfHistogramNames()
+    #for index, histname in enumerate(histnames):
+    for index, hn_from_tq in enumerate(histnames_from_tqsample):
+        isin = False
+        if len(histnames) > 0:
+            for histname in histnames:
+                if str(hn_from_tq).find(histname) != -1:
+                    isin = True
         else:
-            histnames =[]
-    for index, histname in enumerate(histnames):
-        proc = multiprocessing.Process(target=plot2d, args=[samples, str(histname)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
-        jobs.append(proc)
-        proc.start()
+            isin = True
+        if isin:
+            proc = multiprocessing.Process(target=plot2d, args=[samples, str(hn_from_tq)], kwargs={"bkg_path":bkg_path, "sig_path":sig_path, "data_path":data_path, "systs":systs, "clrs":clrs, "options":options, "plotfunc":plotfunc})
+            jobs.append(proc)
+            proc.start()
     for job in jobs:
         job.join()
 
