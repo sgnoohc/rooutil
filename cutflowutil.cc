@@ -15,6 +15,16 @@ std::vector<float> RooUtil::CutflowUtil::getCutflow(std::vector<TString> cutlist
 }
 
 //_______________________________________________________________________________________________________
+bool RooUtil::CutflowUtil::passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
+{
+    std::vector<float> cutflow = getCutflow(cutlist, tx);
+    float passwgtall = 1;
+    for (auto& passwgt : cutflow)
+        passwgtall *= passwgt;
+    return (passwgtall != 0);
+}
+
+//_______________________________________________________________________________________________________
 void RooUtil::CutflowUtil::fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h)
 {
     std::vector<float> cutflow = getCutflow(cutlist, tx);
