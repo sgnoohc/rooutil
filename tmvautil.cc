@@ -1,6 +1,8 @@
 #include "tmvautil.h"
 #include "stringutil.h"
 
+using namespace std;
+
 //_________________________________________________________________________________________________
 TMVA::Reader* RooUtil::TMVAUtil::createReader(TString methodType, TString xmlpath, RooUtil::TTreeX& tx)
 {
