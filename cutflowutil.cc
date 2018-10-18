@@ -43,16 +43,30 @@ void RooUtil::CutflowUtil::fillRawCutflow(std::vector<TString> cutlist, RooUtil:
 }
 
 //_______________________________________________________________________________________________________
+std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> RooUtil::CutflowUtil::createCutflowHistograms(RooUtil::CutflowUtil::CutNameListMap& cutlists)
+{
+    std::map<TString, std::vector<TString>> obj = cutlists.getStdVersion();
+    return createCutflowHistograms(obj);
+}
+
+//_______________________________________________________________________________________________________
 std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> RooUtil::CutflowUtil::createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists)
 {
     std::map<TString, TH1F*> cutflows;
     std::map<TString, TH1F*> rawcutflows;
     for (auto& cutlist : cutlists)
     {
-        cutflows[cutlist.first] = new TH1F(cutlist.first, "", cutlist.second.size(), 0, cutlist.second.size());
-        rawcutflows[cutlist.first] = new TH1F(cutlist.first, "", cutlist.second.size(), 0, cutlist.second.size());
+        cutflows[cutlist.first] = new TH1F(cutlist.first + "_cutflow", "", cutlist.second.size(), 0, cutlist.second.size());
+        rawcutflows[cutlist.first] = new TH1F(cutlist.first + "_rawcutflow", "", cutlist.second.size(), 0, cutlist.second.size());
     }
     return std::make_tuple(cutflows, rawcutflows);
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::CutflowUtil::fillCutflowHistograms(RooUtil::CutflowUtil::CutNameListMap& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows)
+{
+    std::map<TString, std::vector<TString>> obj = cutlists.getStdVersion();
+    fillCutflowHistograms(obj, tx, cutflows, rawcutflows);
 }
 
 //_______________________________________________________________________________________________________
