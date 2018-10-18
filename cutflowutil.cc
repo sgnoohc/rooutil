@@ -75,7 +75,7 @@ void RooUtil::CutflowUtil::fillCutflowHistograms(std::map<TString, std::vector<T
     for (auto& cutlist : cutlists)
     {
         RooUtil::CutflowUtil::fillCutflow(cutlist.second, tx, cutflows[cutlist.first]);
-        RooUtil::CutflowUtil::fillRawCutflow(cutlist.second, tx, cutflows[cutlist.first]);
+        RooUtil::CutflowUtil::fillRawCutflow(cutlist.second, tx, rawcutflows[cutlist.first]);
     }
 }
 
