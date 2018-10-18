@@ -61,4 +61,16 @@ float RooUtil::Calc::DeltaPhi(const LV& a, const LV& b)
     return ROOT::Math::VectorUtil::DeltaPhi(a, b);
 }
 
+//_________________________________________________________________________________________________
+void RooUtil::Calc::printTLV(const TLorentzVector& a)
+{
+    std::cout <<  " a.Pt(): " << a.Pt() <<  " a.Eta(): " << a.Eta() <<  " a.Phi(): " << a.Phi() <<  " a.M(): " << a.M() <<  " a.E(): " << a.E() <<  std::endl;
+}
+
+//_________________________________________________________________________________________________
+void RooUtil::Calc::printLV(const LV& a)
+{
+    std::cout <<  " a.pt(): " << a.pt() <<  " a.eta(): " << a.eta() <<  " a.phi(): " << a.phi() <<  " a.mass(): " << a.mass() <<  " a.energy(): " << a.energy() <<  std::endl;
+}
+
 //eof

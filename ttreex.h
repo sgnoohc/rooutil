@@ -117,6 +117,8 @@ namespace RooUtil
         template <class T>
         const T& getBranch(TString, bool=true);
         template <class T>
+        T* getBranchAddress(TString);
+        template <class T>
         void createBranch(T&);
         template <class T>
         void setBranch(T&);
@@ -170,6 +172,11 @@ namespace RooUtil
     template <> const std::vector<Float_t>& TTreeX::getBranch<std::vector<Float_t>>(TString bn, bool check);
     template <> const std::vector<TString>& TTreeX::getBranch<std::vector<TString>>(TString bn, bool check);
     template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn, bool check);
+
+    //_________________________________________________________________________________________________
+    template <> Int_t*   TTreeX::getBranchAddress<Int_t  >(TString bn);
+    template <> Bool_t*  TTreeX::getBranchAddress<Bool_t >(TString bn);
+    template <> Float_t* TTreeX::getBranchAddress<Float_t>(TString bn);
 
     //_________________________________________________________________________________________________
     template <> void TTreeX::createBranch<Int_t               >(TString bn);

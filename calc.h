@@ -28,6 +28,8 @@ namespace RooUtil
         float DeltaR(const LV& a, const LV& b);
         float DeltaEta(const LV& a, const LV& b);
         float DeltaPhi(const LV& a, const LV& b);
+        void printTLV(const TLorentzVector& a);
+        void printLV(const LV& a);
     }
 }
 
