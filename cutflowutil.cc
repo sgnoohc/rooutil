@@ -1,6 +1,20 @@
 #include "cutflowutil.h"
 
 //_______________________________________________________________________________________________________
+void RooUtil::CutflowUtil::createCutflowBranches(CutNameListMap& cutlists, RooUtil::TTreeX& tx)
+{
+    std::map<TString, std::vector<TString>> obj = cutlists.getStdVersion();
+    for (auto& cutlist : obj)
+    {
+        for (auto& cutname : cutlist.second)
+        {
+            if (!tx.hasBranch<float>(cutname))
+                tx.createBranch<float>(cutname);
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________
 std::vector<float> RooUtil::CutflowUtil::getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
 {
     std::vector<float> rtn;

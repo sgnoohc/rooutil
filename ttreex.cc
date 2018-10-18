@@ -156,6 +156,20 @@ template <> void TTreeX::createBranch<std::vector<TString>>(TString bn) { if (ma
 template <> void TTreeX::createBranch<std::vector<LV     >>(TString bn) { if (mapVecLV     .find(bn) == mapVecLV     .end()) ttree->Branch(bn, &(mapVecLV      [bn])); else error(TString::Format("branch already exists bn = %s", bn.Data()));}
 
 //_________________________________________________________________________________________________
+template <> bool TTreeX::hasBranch<Int_t               >(TString bn) { if (mapInt_t     .find(bn) == mapInt_t     .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<Bool_t              >(TString bn) { if (mapBool_t    .find(bn) == mapBool_t    .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<Float_t             >(TString bn) { if (mapFloat_t   .find(bn) == mapFloat_t   .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<TString             >(TString bn) { if (mapTString   .find(bn) == mapTString   .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<LV                  >(TString bn) { if (mapLV        .find(bn) == mapLV        .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<TBits               >(TString bn) { if (mapTBits     .find(bn) == mapTBits     .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<unsigned long long  >(TString bn) { if (mapULL       .find(bn) == mapULL       .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<std::vector<Int_t  >>(TString bn) { if (mapVecInt_t  .find(bn) == mapVecInt_t  .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<std::vector<Bool_t >>(TString bn) { if (mapVecBool_t .find(bn) == mapVecBool_t .end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<std::vector<Float_t>>(TString bn) { if (mapVecFloat_t.find(bn) == mapVecFloat_t.end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<std::vector<TString>>(TString bn) { if (mapVecTString.find(bn) == mapVecTString.end()) return false; else return true;}
+template <> bool TTreeX::hasBranch<std::vector<LV     >>(TString bn) { if (mapVecLV     .find(bn) == mapVecLV     .end()) return false; else return true;}
+
+//_________________________________________________________________________________________________
 template <> void TTreeX::setBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx)
 {
     for (auto& pair : objidx)

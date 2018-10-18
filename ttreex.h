@@ -121,6 +121,8 @@ namespace RooUtil
         template <class T>
         void createBranch(T&);
         template <class T>
+        bool hasBranch(TString);
+        template <class T>
         void setBranch(T&);
         template <class T>
         void pushbackToBranch(TString, T);
@@ -191,6 +193,20 @@ namespace RooUtil
     template <> void TTreeX::createBranch<std::vector<Float_t>>(TString bn);
     template <> void TTreeX::createBranch<std::vector<TString>>(TString bn);
     template <> void TTreeX::createBranch<std::vector<LV     >>(TString bn);
+
+    //_________________________________________________________________________________________________
+    template <> bool TTreeX::hasBranch<Int_t               >(TString bn);
+    template <> bool TTreeX::hasBranch<Bool_t              >(TString bn);
+    template <> bool TTreeX::hasBranch<Float_t             >(TString bn);
+    template <> bool TTreeX::hasBranch<TString             >(TString bn);
+    template <> bool TTreeX::hasBranch<LV                  >(TString bn);
+    template <> bool TTreeX::hasBranch<TBits               >(TString bn);
+    template <> bool TTreeX::hasBranch<unsigned long long  >(TString bn);
+    template <> bool TTreeX::hasBranch<std::vector<Int_t  >>(TString bn);
+    template <> bool TTreeX::hasBranch<std::vector<Bool_t >>(TString bn);
+    template <> bool TTreeX::hasBranch<std::vector<Float_t>>(TString bn);
+    template <> bool TTreeX::hasBranch<std::vector<TString>>(TString bn);
+    template <> bool TTreeX::hasBranch<std::vector<LV     >>(TString bn);
 
     //_________________________________________________________________________________________________
     template <> void TTreeX::setBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx);
