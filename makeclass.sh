@@ -148,6 +148,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
     # Add "rooutil" to the class
     #
     echo "#include \"rooutil/rooutil.cc\"" >> ${MAKECLASSNAME}.cc
+    echo "#include \"rooutil/rooutil.h\"" >> ${MAKECLASSNAME}.h
 
     #
     # Create process.cc
