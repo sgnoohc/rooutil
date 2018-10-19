@@ -12,3 +12,4 @@
 #include "tmvautil.cc"
 #include "scripts.cc"
 #include "dorky.cc"
+#include "eventlist.cc"

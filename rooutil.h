@@ -12,3 +12,4 @@
 #include "tmvautil.h"
 #include "scripts.h"
 #include "dorky.h"
+#include "eventlist.h"
