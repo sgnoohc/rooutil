@@ -25,6 +25,8 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     }
 
     TChain* chain = new TChain(name);
+    inputs = inputs.ReplaceAll("\"",""); // In case some rogue " or ' is left over
+    inputs = inputs.ReplaceAll("\'",""); // In case some rogue " or ' is left over
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
     {
         RooUtil::print(Form("Adding %s", ff.Data()));

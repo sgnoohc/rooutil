@@ -6,6 +6,9 @@ include Makefile.arch
 SOURCES=$(wildcard *.cc)
 OBJECTS=$(SOURCES:.cc=.o)
 HEADERS=$(SOURCES:.cc=.h)
+SOURCES=rooutil.cc
+HEADERS=rooutil.h
+OBJECTS=rooutil.o
 LIB=rooutil.so
 
 #
