@@ -41,6 +41,8 @@ namespace RooUtil
             }
         };
 
+        void createCutflowBranches(CutNameListMap& cutlists, RooUtil::TTreeX& tx);
+
         std::vector<float> getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
         bool passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
         void fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);

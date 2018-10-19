@@ -1,6 +1,20 @@
 #include "cutflowutil.h"
 
 //_______________________________________________________________________________________________________
+void RooUtil::CutflowUtil::createCutflowBranches(CutNameListMap& cutlists, RooUtil::TTreeX& tx)
+{
+    std::map<TString, std::vector<TString>> obj = cutlists.getStdVersion();
+    for (auto& cutlist : obj)
+    {
+        for (auto& cutname : cutlist.second)
+        {
+            if (!tx.hasBranch<float>(cutname))
+                tx.createBranch<float>(cutname);
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________
 std::vector<float> RooUtil::CutflowUtil::getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
 {
     std::vector<float> rtn;
@@ -30,7 +44,7 @@ void RooUtil::CutflowUtil::fillCutflow(std::vector<TString> cutlist, RooUtil::TT
     std::vector<float> cutflow = getCutflow(cutlist, tx);
     for (unsigned int i = 0; i < cutflow.size(); ++i)
         if (cutflow[i] > 0)
-            h->Fill(i + 1, cutflow[i]);
+            h->Fill(i, cutflow[i]);
 }
 
 //_______________________________________________________________________________________________________
@@ -39,7 +53,7 @@ void RooUtil::CutflowUtil::fillRawCutflow(std::vector<TString> cutlist, RooUtil:
     std::vector<float> cutflow = getCutflow(cutlist, tx);
     for (unsigned int i = 0; i < cutflow.size(); ++i)
         if (cutflow[i] > 0)
-            h->Fill(i + 1);
+            h->Fill(i);
 }
 
 //_______________________________________________________________________________________________________
@@ -75,7 +89,7 @@ void RooUtil::CutflowUtil::fillCutflowHistograms(std::map<TString, std::vector<T
     for (auto& cutlist : cutlists)
     {
         RooUtil::CutflowUtil::fillCutflow(cutlist.second, tx, cutflows[cutlist.first]);
-        RooUtil::CutflowUtil::fillRawCutflow(cutlist.second, tx, cutflows[cutlist.first]);
+        RooUtil::CutflowUtil::fillRawCutflow(cutlist.second, tx, rawcutflows[cutlist.first]);
     }
 }
 
