@@ -10,5 +10,5 @@
       argument 3 : name of the namespace defined in make class .cc/.h
       argument 4 : name of the global instance defined in make class .cc/.h
 
-    > make
+    > make # First time compilation should compile "wwwtree".cc along with any rooutil related stuff. Next time will be faster if only process.cc is touched
     > ./doAnalysis /path/to/your/baby.root output.root [NEVENTS=-1]
