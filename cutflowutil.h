@@ -56,9 +56,11 @@ namespace RooUtil
         void fillCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
         void saveCutflowHistograms(std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
 
-        class CutTree
-        {
-            public:
+    }
+
+    class CutTree
+    {
+        public:
             TString name; 
             CutTree* parent;
             std::vector<CutTree*> children;
@@ -156,11 +158,11 @@ namespace RooUtil
                     endcuts = child->getEndCuts(endcuts);
                 return endcuts;
             }
-        };
+    };
 
-        class Cutflow
-        {
-            public:
+    class Cutflow
+    {
+        public:
             CutTree cuttree;
             CutTree* last_active_cut; // when getCut is called this is set
             std::map<TString, TH1F*> cutflow_histograms;
@@ -205,7 +207,7 @@ namespace RooUtil
             void bookCutflowHistograms(std::vector<TString> regions)
             {
                 ofile->cd();
-                std::tie(cutflow_histograms, rawcutflow_histograms) = createCutflowHistograms(cutlists);
+                std::tie(cutflow_histograms, rawcutflow_histograms) = RooUtil::CutflowUtil::createCutflowHistograms(cutlists);
                 for (auto& cutflow_histogram : cutflow_histograms)
                 {
                     std::cout << "Booked cutflow histogram for cut = " << cutflow_histogram.first << std::endl;
@@ -249,9 +251,7 @@ namespace RooUtil
                 tx->fill();
                 tx->clear();
             }
-        };
-
-    }
+    };
 }
 
 #endif
