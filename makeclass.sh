@@ -146,52 +146,57 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         #
         # Create process.cc
         #
-        echo "#include \"${MAKECLASSNAME}.h\""                                                          >  process.cc
-        echo "#include \"rooutil/rooutil.h\""                                                           >> process.cc
-        echo ""                                                                                         >> process.cc
-        echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                      >> process.cc
-        echo "int main(int argc, char** argv)"                                                          >> process.cc
-        echo "{"                                                                                        >> process.cc
-        echo "    // Argument checking"                                                                 >> process.cc
-        echo "    if (argc < 3)"                                                                        >> process.cc
-        echo "    {"                                                                                    >> process.cc
-        echo "        std::cout << \"Usage:\" << std::endl;"                                            >> process.cc
-        echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"     >> process.cc
-        echo "        std::cout << std::endl;"                                                          >> process.cc
-        echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"       >> process.cc
-        echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                >> process.cc
-        echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"         >> process.cc
-        echo "        std::cout << std::endl;"                                                          >> process.cc
-        echo "        return 1;"                                                                        >> process.cc
-        echo "    }"                                                                                    >> process.cc
-        echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"             >> process.cc
-        echo ""                                                                                         >> process.cc
-        echo "    // Creating output file"                                                              >> process.cc
-        echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                     >> process.cc
-        echo "    TTree* t = new TTree(\"t\", \"t\");"                                                  >> process.cc
-        echo "    RooUtil::TTreeX tx(t);"                                                               >> process.cc
-        echo "    //tx.createBranch<LV>(\"p0\");"                                                       >> process.cc
-        echo ""                                                                                         >> process.cc
-        echo "    // Looping input file"                                                                >> process.cc
-        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                         >> process.cc
-        echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"         >> process.cc
-        echo "    while (looper.nextEvent())"                                                           >> process.cc
-        echo "    {"                                                                                    >> process.cc
-        echo "        try"                                                                              >> process.cc
-        echo "        {"                                                                                >> process.cc
-        echo "            //Do what you need to do in for each event here"                              >> process.cc
-        echo "            //To save use the following function"                                         >> process.cc
-        echo "            //tx.fill();"                                                                 >> process.cc
-        echo "        }"                                                                                >> process.cc
-        echo "        catch (const std::ios_base::failure& e)"                                          >> process.cc
-        echo "        {"                                                                                >> process.cc
-        echo "            //Handle error here"                                                          >> process.cc
-        echo "        }"                                                                                >> process.cc
-        echo "    }"                                                                                    >> process.cc
-        echo ""                                                                                         >> process.cc
-        echo "    // Writing output file"                                                               >> process.cc
-        echo "    tx.save(ofile);"                                                                      >> process.cc
-        echo "}"                                                                                        >> process.cc
+        echo "#include \"${MAKECLASSNAME}.h\""                                                                        >  process.cc
+        echo "#include \"rooutil/rooutil.h\""                                                                         >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                                    >> process.cc
+        echo "int main(int argc, char** argv)"                                                                        >> process.cc
+        echo "{"                                                                                                      >> process.cc
+        echo "    // Argument checking"                                                                               >> process.cc
+        echo "    if (argc < 3)"                                                                                      >> process.cc
+        echo "    {"                                                                                                  >> process.cc
+        echo "        std::cout << \"Usage:\" << std::endl;"                                                          >> process.cc
+        echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"                   >> process.cc
+        echo "        std::cout << std::endl;"                                                                        >> process.cc
+        echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"                     >> process.cc
+        echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                              >> process.cc
+        echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"                       >> process.cc
+        echo "        std::cout << std::endl;"                                                                        >> process.cc
+        echo "        return 1;"                                                                                      >> process.cc
+        echo "    }"                                                                                                  >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "    // Creating output file where we will put the outputs of the processing"                            >> process.cc
+        echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                                   >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "    // Create a TChain of the input files"                                                              >> process.cc
+        echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\")"                         >> process.cc
+        echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"                           >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "    // Number of events to loop over"                                                                   >> process.cc
+        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                                       >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "    // Create a Looper object to loop over input files"                                                 >> process.cc
+        echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"                       >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "    // Looping input file"                                                                              >> process.cc
+        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                                       >> process.cc
+        echo "    while (looper.nextEvent())"                                                                         >> process.cc
+        echo "    {"                                                                                                  >> process.cc
+        echo "        try"                                                                                            >> process.cc
+        echo "        {"                                                                                              >> process.cc
+        echo "            //Do what you need to do in for each event here"                                            >> process.cc
+        echo "            //To save use the following function"                                                       >> process.cc
+        echo "            //tx.fill();"                                                                               >> process.cc
+        echo "        }"                                                                                              >> process.cc
+        echo "        catch (const std::ios_base::failure& e)"                                                        >> process.cc
+        echo "        {"                                                                                              >> process.cc
+        echo "            //Handle error here"                                                                        >> process.cc
+        echo "        }"                                                                                              >> process.cc
+        echo "    }"                                                                                                  >> process.cc
+        echo ""                                                                                                       >> process.cc
+        echo "    // Writing output file"                                                                             >> process.cc
+        echo "    tx.save(ofile);"                                                                                    >> process.cc
+        echo "}"                                                                                                      >> process.cc
 
     fi
 
