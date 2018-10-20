@@ -47,7 +47,7 @@ namespace RooUtil
         void createCutflowBranches(CutNameListMap& cutlists, RooUtil::TTreeX& tx);
         void createCutflowBranches(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx);
         std::tuple<std::vector<bool>, std::vector<float>> getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
-        bool passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
+        std::pair<bool, float> passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
         void fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
         void fillRawCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
         std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(CutNameListMap& cutlists);

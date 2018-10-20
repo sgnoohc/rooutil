@@ -43,15 +43,15 @@ std::tuple<std::vector<bool>, std::vector<float>> RooUtil::CutflowUtil::getCutfl
 }
 
 //_______________________________________________________________________________________________________
-bool RooUtil::CutflowUtil::passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
+std::pair<bool, float> RooUtil::CutflowUtil::passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
 {
     std::vector<bool> cutflow;
     std::vector<float> cutflow_weight;
     std::tie(cutflow, cutflow_weight) = getCutflow(cutlist, tx);
-    bool passall = true;
-    for (unsigned int i = 0; i < cutflow.size(); ++i)
-        passall &= cutflow[i];
-    return (passall != 0);
+    // Just need to check the last one
+    bool passall = cutflow.back();
+    float wgtall = cutflow_weight.back();
+    return std::make_pair(passall, wgtall);
 }
 
 //_______________________________________________________________________________________________________
