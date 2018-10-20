@@ -63,6 +63,8 @@ void RooUtil::CutflowUtil::fillCutflow(std::vector<TString> cutlist, RooUtil::TT
     for (unsigned int i = 0; i < cutflow.size(); ++i)
         if (cutflow[i] > 0)
             h->Fill(i, cutflow[i] * cutflow_weight[i]);
+        else
+            return;
 }
 
 //_______________________________________________________________________________________________________
@@ -74,6 +76,8 @@ void RooUtil::CutflowUtil::fillRawCutflow(std::vector<TString> cutlist, RooUtil:
     for (unsigned int i = 0; i < cutflow.size(); ++i)
         if (cutflow[i] > 0)
             h->Fill(i);
+        else
+            return;
 }
 
 //_______________________________________________________________________________________________________

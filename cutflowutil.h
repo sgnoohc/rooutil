@@ -141,6 +141,7 @@ namespace RooUtil
                 }
                 else
                 {
+                    std::reverse(cut_list.begin(), cut_list.end());
                     return cut_list;
                 }
             }
@@ -169,6 +170,9 @@ namespace RooUtil
                 for (auto& region : regions)
                 {
                     cutlists[region] = cuttree.getCutList(region);
+                    std::cout << region << std::endl;
+                    for (auto& cutname : cutlists[region])
+                        std::cout << cutname << std::endl;
                 }
             }
             void bookCutflowTree(std::vector<TString> regions)
