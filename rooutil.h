@@ -13,3 +13,4 @@
 #include "scripts.h"
 #include "dorky.h"
 #include "eventlist.h"
+#include "anautil.h"

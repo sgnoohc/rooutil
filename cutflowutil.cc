@@ -7,7 +7,7 @@ void RooUtil::CutflowUtil::createCutflowBranches(std::map<TString, std::vector<T
     {
         for (auto& cutname : cutlist.second)
         {
-            std::cout <<  " cutname: " << cutname <<  std::endl;
+//            std::cout <<  " cutname: " << cutname <<  std::endl;
             if (!tx.hasBranch<bool>(cutname))
                 tx.createBranch<bool>(cutname);
             if (!tx.hasBranch<float>(cutname+"_weight"))

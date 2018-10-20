@@ -74,8 +74,10 @@ namespace RooUtil
             }
             void printCuts(int indent=0)
             {
-                for (int i = 0; i < indent; ++i) std::cout << " ";
-                std::cout << name << std::endl;
+                TString msg = "";
+                for (int i = 0; i < indent; ++i) msg += " ";
+                msg += name;
+                print(msg);
                 for (auto& child : children)
                     (*child).printCuts(indent+1);
             }
@@ -158,98 +160,32 @@ namespace RooUtil
                     endcuts = child->getEndCuts(endcuts);
                 return endcuts;
             }
-    };
-
-    class Cutflow
-    {
-        public:
-            CutTree cuttree;
-            CutTree* last_active_cut; // when getCut is called this is set
-            std::map<TString, TH1F*> cutflow_histograms;
-            std::map<TString, TH1F*> rawcutflow_histograms;
-            TFile* ofile;
-            TTree* t;
-            TTreeX* tx;
-            std::map<TString, std::vector<TString>> cutlists;
-            Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0) {}
-            ~Cutflow() { delete t; delete tx; }
-            void setLastActiveCut(TString n) { last_active_cut = cuttree.getCutPointer(n); }
-            void addCut(TString n) { cuttree.addCut(n); setLastActiveCut(n); }
-            void addCutToLastActiveCut(TString n) { last_active_cut->addCut(n); setLastActiveCut(n); }
-            void printCuts() { cuttree.printCuts(); }
-            CutTree& getCut(TString n) { CutTree& c = cuttree.getCut(n); setLastActiveCut(n); return c; }
-            void setCutLists(std::vector<TString> regions)
+            std::vector<TString> getCutListBelow(TString n, std::vector<TString> cut_list=std::vector<TString>())
             {
-                for (auto& region : regions)
+                // Main idea: start from the node provided by the first argument "n", and work your way down to the ends.
+                CutTree* c = 0;
+                if (cut_list.size() == 0)
                 {
-                    cutlists[region] = cuttree.getCutList(region);
-                    std::cout << region << std::endl;
-                    for (auto& cutname : cutlists[region])
-                        std::cout << cutname << std::endl;
+                    c = &getCut(n);
+                    cut_list.push_back(c->name);
                 }
-            }
-            void bookCutflowTree(std::vector<TString> regions)
-            {
-                if (!t)
+                else
                 {
-                    ofile->cd();
-                    t = new TTree("cut_tree", "cut_tree");
-                    t->SetDirectory(0);
+                    c = this;
+                    cut_list.push_back(n);
                 }
-                if (!tx)
+                if (children.size() > 0)
                 {
-                    ofile->cd();
-                    tx = new TTreeX(t);
+                    for (auto& child : c->children)
+                    {
+                        cut_list = child->getCutListBelow(child->name, cut_list);
+                    }
+                    return cut_list;
                 }
-                RooUtil::CutflowUtil::createCutflowBranches(cutlists, *tx);
-                t->Print();
-            }
-            void bookCutflowHistograms(std::vector<TString> regions)
-            {
-                ofile->cd();
-                std::tie(cutflow_histograms, rawcutflow_histograms) = RooUtil::CutflowUtil::createCutflowHistograms(cutlists);
-                for (auto& cutflow_histogram : cutflow_histograms)
+                else
                 {
-                    std::cout << "Booked cutflow histogram for cut = " << cutflow_histogram.first << std::endl;
-                    cutflow_histogram.second->Print("all");
+                    return cut_list;
                 }
-                for (auto& rawcutflow_histogram : rawcutflow_histograms)
-                {
-                    std::cout << "Booked rawcutflow histogram for cut = " << rawcutflow_histogram.first << std::endl;
-                    rawcutflow_histogram.second->Print("all");
-                }
-            }
-            void bookCutflowsForRegions(std::vector<TString> regions)
-            {
-                setCutLists(regions);
-                bookCutflowTree(regions);
-                bookCutflowHistograms(regions);
-            }
-            void bookCutflows()
-            {
-                std::vector<TString> regions = cuttree.getEndCuts();
-                setCutLists(regions);
-                bookCutflowTree(regions);
-                bookCutflowHistograms(regions);
-            }
-            void saveOutput()
-            {
-                // Save cutflow histograms
-                ofile->cd();
-                RooUtil::CutflowUtil::saveCutflowHistograms(cutflow_histograms, rawcutflow_histograms);
-            }
-            void setCut(TString cutname, bool pass, float weight)
-            {
-                tx->setBranch<bool>(cutname, pass);
-                tx->setBranch<float>(cutname+"_weight", weight);
-            }
-            void fillCutflows()
-            {
-                tx->setBranch<bool>("Root", 1); // Root is internally set
-                tx->setBranch<float>("Root_weight", 1); // Root is internally set
-                RooUtil::CutflowUtil::fillCutflowHistograms(cutlists, *tx, cutflow_histograms, rawcutflow_histograms);
-                tx->fill();
-                tx->clear();
             }
     };
 }
