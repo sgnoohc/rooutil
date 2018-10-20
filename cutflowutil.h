@@ -145,6 +145,17 @@ namespace RooUtil
                     return cut_list;
                 }
             }
+            std::vector<TString> getEndCuts(std::vector<TString> endcuts=std::vector<TString>())
+            {
+                if (children.size() == 0)
+                {
+                    endcuts.push_back(name);
+                    return endcuts;
+                }
+                for (auto& child : children)
+                    endcuts = child->getEndCuts(endcuts);
+                return endcuts;
+            }
         };
 
         class Cutflow
@@ -208,6 +219,13 @@ namespace RooUtil
             }
             void bookCutflowsForRegions(std::vector<TString> regions)
             {
+                setCutLists(regions);
+                bookCutflowTree(regions);
+                bookCutflowHistograms(regions);
+            }
+            void bookCutflows()
+            {
+                std::vector<TString> regions = cuttree.getEndCuts();
                 setCutLists(regions);
                 bookCutflowTree(regions);
                 bookCutflowHistograms(regions);
