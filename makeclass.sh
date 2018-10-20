@@ -169,7 +169,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                                                            >> process.cc
         echo ""                                                                                                                                >> process.cc
         echo "    // Create a TChain of the input files"                                                                                       >> process.cc
-        echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\")"                                                  >> process.cc
+        echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\") or with wildcard (n.b. be sure to escape)"        >> process.cc
         echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"                                                    >> process.cc
         echo ""                                                                                                                                >> process.cc
         echo "    // Number of events to loop over"                                                                                            >> process.cc
