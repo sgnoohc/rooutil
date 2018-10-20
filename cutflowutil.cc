@@ -1,56 +1,76 @@
 #include "cutflowutil.h"
 
 //_______________________________________________________________________________________________________
-void RooUtil::CutflowUtil::createCutflowBranches(CutNameListMap& cutlists, RooUtil::TTreeX& tx)
+void RooUtil::CutflowUtil::createCutflowBranches(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx)
 {
-    std::map<TString, std::vector<TString>> obj = cutlists.getStdVersion();
-    for (auto& cutlist : obj)
+    for (auto& cutlist : cutlists)
     {
         for (auto& cutname : cutlist.second)
         {
-            if (!tx.hasBranch<float>(cutname))
-                tx.createBranch<float>(cutname);
+            std::cout <<  " cutname: " << cutname <<  std::endl;
+            if (!tx.hasBranch<bool>(cutname))
+                tx.createBranch<bool>(cutname);
+            if (!tx.hasBranch<float>(cutname+"_weight"))
+                tx.createBranch<float>(cutname+"_weight");
         }
     }
 }
 
 //_______________________________________________________________________________________________________
-std::vector<float> RooUtil::CutflowUtil::getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
+void RooUtil::CutflowUtil::createCutflowBranches(CutNameListMap& cutlists, RooUtil::TTreeX& tx)
 {
-    std::vector<float> rtn;
+    std::map<TString, std::vector<TString>> obj = cutlists.getStdVersion();
+    createCutflowBranches(obj, tx);
+}
+
+//_______________________________________________________________________________________________________
+std::tuple<std::vector<bool>, std::vector<float>> RooUtil::CutflowUtil::getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
+{
+    std::vector<float> rtnwgt;
+    std::vector<bool> rtn;
     float wgtall = 1;
+    bool passall = true;
     for (auto& cutname : cutlist)
     {
-        float wgt = tx.getBranch<float>(cutname);
+        bool pass = tx.getBranch<bool>(cutname);
+        float wgt = tx.getBranch<float>(cutname+"_weight");
         wgtall *= wgt;
-        rtn.push_back(wgtall);
+        passall &= pass;
+        rtnwgt.push_back(wgtall);
+        rtn.push_back(passall);
     }
-    return rtn;
+    return std::make_tuple(rtn, rtnwgt);
 }
 
 //_______________________________________________________________________________________________________
 bool RooUtil::CutflowUtil::passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx)
 {
-    std::vector<float> cutflow = getCutflow(cutlist, tx);
-    float passwgtall = 1;
-    for (auto& passwgt : cutflow)
-        passwgtall *= passwgt;
-    return (passwgtall != 0);
+    std::vector<bool> cutflow;
+    std::vector<float> cutflow_weight;
+    std::tie(cutflow, cutflow_weight) = getCutflow(cutlist, tx);
+    bool passall = true;
+    for (unsigned int i = 0; i < cutflow.size(); ++i)
+        passall &= cutflow[i];
+    return (passall != 0);
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::CutflowUtil::fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h)
 {
-    std::vector<float> cutflow = getCutflow(cutlist, tx);
+    std::vector<bool> cutflow;
+    std::vector<float> cutflow_weight;
+    std::tie(cutflow, cutflow_weight) = getCutflow(cutlist, tx);
     for (unsigned int i = 0; i < cutflow.size(); ++i)
         if (cutflow[i] > 0)
-            h->Fill(i, cutflow[i]);
+            h->Fill(i, cutflow[i] * cutflow_weight[i]);
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::CutflowUtil::fillRawCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h)
 {
-    std::vector<float> cutflow = getCutflow(cutlist, tx);
+    std::vector<bool> cutflow;
+    std::vector<float> cutflow_weight;
+    std::tie(cutflow, cutflow_weight) = getCutflow(cutlist, tx);
     for (unsigned int i = 0; i < cutflow.size(); ++i)
         if (cutflow[i] > 0)
             h->Fill(i);
@@ -72,6 +92,8 @@ std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> RooUtil::CutflowU
     {
         cutflows[cutlist.first] = new TH1F(cutlist.first + "_cutflow", "", cutlist.second.size(), 0, cutlist.second.size());
         rawcutflows[cutlist.first] = new TH1F(cutlist.first + "_rawcutflow", "", cutlist.second.size(), 0, cutlist.second.size());
+        cutflows[cutlist.first]->SetDirectory(0);
+        rawcutflows[cutlist.first]->SetDirectory(0);
     }
     return std::make_tuple(cutflows, rawcutflows);
 }

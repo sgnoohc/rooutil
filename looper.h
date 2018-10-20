@@ -39,7 +39,7 @@
 
 #include "printutil.h"
 
-#include "cpptqdm/tqdm.h"
+//#include "cpptqdm/tqdm.h"
 
 namespace RooUtil
 {
@@ -83,14 +83,14 @@ namespace RooUtil
         bool silent;
         bool isinit;
         bool use_treeclass_progress;
-        bool use_tqdm_progress_bar;
+//        bool use_tqdm_progress_bar;
         unsigned int nskipped_batch;
         unsigned int nskipped;
         unsigned int nbatch_skip_threshold;
         unsigned int nbatch_to_skip;
         unsigned int nskipped_threshold;
         unsigned int ncounter;
-        tqdm bar;
+//        tqdm bar;
         public:
         // Functions
         Looper();
@@ -178,7 +178,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     silent( false ),
     isinit( false ),
     use_treeclass_progress( false ),
-    use_tqdm_progress_bar( isatty(1) ),
+//    use_tqdm_progress_bar( isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -187,7 +187,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     ncounter( 0 )
 {
     bmark = new TBenchmark();
-    bar.disable_colors();
+//    bar.disable_colors();
 }
 
 //_________________________________________________________________________________________________
@@ -216,7 +216,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     silent( false ),
     isinit( false ),
     use_treeclass_progress( false ),
-    use_tqdm_progress_bar( isatty(1) ),
+//    use_tqdm_progress_bar( isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -227,7 +227,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     bmark = new TBenchmark();
     if ( c && t )
         init( c, t, nevtToProc );
-    bar.disable_colors();
+//    bar.disable_colors();
 }
 
 //_________________________________________________________________________________________________
@@ -591,12 +591,12 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
     int entry = nEventsProcessed;
     int totalN = nEventsToProcess;
 
-    if (use_tqdm_progress_bar)
-    {
-        if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
-        bar.progress(nEventsProcessed-1, nEventsToProcess); // tqdm expects 0 to N-1 index not 1 to N
-        return;
-    }
+//    if (use_tqdm_progress_bar)
+//    {
+//        if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
+//        bar.progress(nEventsProcessed-1, nEventsToProcess); // tqdm expects 0 to N-1 index not 1 to N
+//        return;
+//    }
 
     if (use_treeclass_progress)
     {

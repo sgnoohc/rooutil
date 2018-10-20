@@ -18,15 +18,15 @@ TMVA::Reader* RooUtil::TMVAUtil::createReader(TString methodType, TString xmlpat
         xmlfile.open(xmlpath.Data());
 
         std::string line;
-        int nvar = -1;
+//        int nvar = -1;
 
         while ( std::getline( xmlfile, line ) ) 
         {
 
-            if (TString(line.c_str()).Contains("NVar"))
-            {
-                nvar = RooUtil::StringUtil::split(TString(line.c_str()),"\"")[1].Atoi();
-            }
+//            if (TString(line.c_str()).Contains("NVar"))
+//            {
+//                nvar = RooUtil::StringUtil::split(TString(line.c_str()),"\"")[1].Atoi();
+//            }
 
             if (TString(line.c_str()).Contains("Variable VarIndex"))
             {
