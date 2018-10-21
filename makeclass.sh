@@ -146,57 +146,89 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         #
         # Create process.cc
         #
-        echo "#include \"${MAKECLASSNAME}.h\""                                                                        >  process.cc
-        echo "#include \"rooutil/rooutil.h\""                                                                         >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                                    >> process.cc
-        echo "int main(int argc, char** argv)"                                                                        >> process.cc
-        echo "{"                                                                                                      >> process.cc
-        echo "    // Argument checking"                                                                               >> process.cc
-        echo "    if (argc < 3)"                                                                                      >> process.cc
-        echo "    {"                                                                                                  >> process.cc
-        echo "        std::cout << \"Usage:\" << std::endl;"                                                          >> process.cc
-        echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"                   >> process.cc
-        echo "        std::cout << std::endl;"                                                                        >> process.cc
-        echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"                     >> process.cc
-        echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                              >> process.cc
-        echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"                       >> process.cc
-        echo "        std::cout << std::endl;"                                                                        >> process.cc
-        echo "        return 1;"                                                                                      >> process.cc
-        echo "    }"                                                                                                  >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "    // Creating output file where we will put the outputs of the processing"                            >> process.cc
-        echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                                   >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "    // Create a TChain of the input files"                                                              >> process.cc
-        echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\")"                         >> process.cc
-        echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"                           >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "    // Number of events to loop over"                                                                   >> process.cc
-        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                                       >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "    // Create a Looper object to loop over input files"                                                 >> process.cc
-        echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"                       >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "    // Looping input file"                                                                              >> process.cc
-        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                                       >> process.cc
-        echo "    while (looper.nextEvent())"                                                                         >> process.cc
-        echo "    {"                                                                                                  >> process.cc
-        echo "        try"                                                                                            >> process.cc
-        echo "        {"                                                                                              >> process.cc
-        echo "            //Do what you need to do in for each event here"                                            >> process.cc
-        echo "            //To save use the following function"                                                       >> process.cc
-        echo "            //tx.fill();"                                                                               >> process.cc
-        echo "        }"                                                                                              >> process.cc
-        echo "        catch (const std::ios_base::failure& e)"                                                        >> process.cc
-        echo "        {"                                                                                              >> process.cc
-        echo "            //Handle error here"                                                                        >> process.cc
-        echo "        }"                                                                                              >> process.cc
-        echo "    }"                                                                                                  >> process.cc
-        echo ""                                                                                                       >> process.cc
-        echo "    // Writing output file"                                                                             >> process.cc
-        echo "    tx.save(ofile);"                                                                                    >> process.cc
-        echo "}"                                                                                                      >> process.cc
+        echo "#include \"${MAKECLASSNAME}.h\""                                                                                                 >  process.cc
+        echo "#include \"rooutil/rooutil.h\""                                                                                                  >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                                                             >> process.cc
+        echo "int main(int argc, char** argv)"                                                                                                 >> process.cc
+        echo "{"                                                                                                                               >> process.cc
+        echo "    // Argument checking"                                                                                                        >> process.cc
+        echo "    if (argc < 3)"                                                                                                               >> process.cc
+        echo "    {"                                                                                                                           >> process.cc
+        echo "        std::cout << \"Usage:\" << std::endl;"                                                                                   >> process.cc
+        echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"                                            >> process.cc
+        echo "        std::cout << std::endl;"                                                                                                 >> process.cc
+        echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"                                              >> process.cc
+        echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                                                       >> process.cc
+        echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"                                                >> process.cc
+        echo "        std::cout << std::endl;"                                                                                                 >> process.cc
+        echo "        return 1;"                                                                                                               >> process.cc
+        echo "    }"                                                                                                                           >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Creating output file where we will put the outputs of the processing"                                                     >> process.cc
+        echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                                                            >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Create a TChain of the input files"                                                                                       >> process.cc
+        echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\") or with wildcard (n.b. be sure to escape)"        >> process.cc
+        echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"                                                    >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Number of events to loop over"                                                                                            >> process.cc
+        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                                                                >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Create a Looper object to loop over input files"                                                                          >> process.cc
+        echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"                                                >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Cutflow utility object that creates a tree structure of cuts"                                                             >> process.cc
+        echo "    RooUtil::Cutflow cutflow(ofile);"                                                                                            >> process.cc
+        echo "    cutflow.addCut(\"DiElChannel\");"                                                                                            >> process.cc
+        echo "    cutflow.addCut(\"DiMuChannel\");"                                                                                            >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    cutflow.getCut(\"DiElChannel\");"                                                                                            >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiElChannelCutA\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiElChannelCutB\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiElChannelCutC\");"                                                                         >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    cutflow.getCut(\"DiMuChannel\");"                                                                                            >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiMuChannelCutA\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiMuChannelCutB\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiMuChannelCutC\");"                                                                         >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Print cut structure"                                                                                                      >> process.cc
+        echo "    cutflow.printCuts();"                                                                                                        >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Histogram utility object that is used to define the histograms"                                                           >> process.cc
+        echo "    RooUtil::Histograms histograms;"                                                                                             >> process.cc
+        echo "    histograms.addHistogram(\"Mll\", 180, 0, 250);"                                                                              >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Book cutflows"                                                                                                            >> process.cc
+        echo "    cutflow.bookCutflows();"                                                                                                     >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Book Histograms"                                                                                                          >> process.cc
+        echo "    cutflow.bookHistogramsForCutAndBelow(histograms, \"DiElChannel\");"                                                          >> process.cc
+        echo "    cutflow.bookHistogramsForCutAndBelow(histograms, \"DiMuChannel\");"                                                          >> process.cc
+        echo "    // cutflow.bookHistograms(); // if just want to book everywhere"                                                             >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Looping input file"                                                                                                       >> process.cc
+        echo "    while (looper.nextEvent())"                                                                                                  >> process.cc
+        echo "    {"                                                                                                                           >> process.cc
+        echo "        //Do what you need to do in for each event here"                                                                         >> process.cc
+        echo "        //To save use the following function"                                                                                    >> process.cc
+        echo "        cutflow.setCut(\"DiElChannel\"    , 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannel\"    , 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiElChannelCutA\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiElChannelCutB\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiElChannelCutC\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannelCutA\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannelCutB\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannelCutC\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setVariable(\"Mll\", 1/* set your variable here*/);"                                                             >> process.cc
+        echo "        cutflow.fill();"                                                                                                         >> process.cc
+        echo "    }"                                                                                                                           >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Writing output file"                                                                                                      >> process.cc
+        echo "    cutflow.saveOutput();"                                                                                                       >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "}"                                                                                                                               >> process.cc
 
     fi
 
