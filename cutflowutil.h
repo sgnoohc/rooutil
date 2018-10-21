@@ -64,7 +64,9 @@ namespace RooUtil
             TString name; 
             CutTree* parent;
             std::vector<CutTree*> children;
-            CutTree(TString n) : name(n), parent(0) {}
+            bool pass;
+            float weight;
+            CutTree(TString n) : name(n), parent(0), pass(false), weight(0) {}
             ~CutTree()
             {
                 for (auto& child : children)
@@ -77,6 +79,8 @@ namespace RooUtil
                 TString msg = "";
                 for (int i = 0; i < indent; ++i) msg += " ";
                 msg += name;
+                msg += " ";
+                msg += TString::Format("%d %f", pass, weight);
                 print(msg);
                 for (auto& child : children)
                     (*child).printCuts(indent+1);
@@ -186,6 +190,28 @@ namespace RooUtil
                 {
                     return cut_list;
                 }
+            }
+            void clear()
+            {
+                pass = false;
+                weight = 0;
+                for (auto& child : children)
+                    child->clear();
+            }
+            void evaluate(RooUtil::TTreeX& tx, bool aggregated_pass=true, float aggregated_weight=1)
+            {
+                if (!parent)
+                {
+                    pass = tx.getBranch<bool>(name);
+                    weight = tx.getBranch<float>(name+"_weight");
+                }
+                else
+                {
+                    pass = tx.getBranch<bool>(name) && aggregated_pass;
+                    weight = tx.getBranch<float>(name+"_weight") * aggregated_weight;
+                }
+                for (auto& child : children)
+                    child->evaluate(tx, pass, weight);
             }
     };
 }

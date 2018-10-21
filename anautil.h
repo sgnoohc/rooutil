@@ -31,6 +31,7 @@ namespace RooUtil
         public:
             CutTree cuttree;
             CutTree* last_active_cut; // when getCut is called this is set
+            std::map<TString, CutTree*> cuttreemap;
             std::map<TString, TH1F*> cutflow_histograms;
             std::map<TString, TH1F*> rawcutflow_histograms;
             std::map<std::tuple<TString, TString>, TH1F*> booked_histograms; // key is <cutname, varname>
@@ -58,6 +59,7 @@ namespace RooUtil
             void setVariable(TString varname, float);
             void fill();
             void fillCutflows();
+            void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw);
             void fillHistograms();
             void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, int, int>>);
             void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, int, int, unsigned, int, int>>);

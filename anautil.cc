@@ -1,7 +1,7 @@
 #include "anautil.h"
 
 //_______________________________________________________________________________________________________
-RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0) {}
+RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
 RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
@@ -10,10 +10,10 @@ RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
 void RooUtil::Cutflow::setLastActiveCut(TString n) { last_active_cut = cuttree.getCutPointer(n); }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::addCut(TString n) { cuttree.addCut(n); setLastActiveCut(n); }
+void RooUtil::Cutflow::addCut(TString n) { cuttree.addCut(n); cuttreemap[n] = cuttree.getCutPointer(n); setLastActiveCut(n); }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::addCutToLastActiveCut(TString n) { last_active_cut->addCut(n); setLastActiveCut(n); }
+void RooUtil::Cutflow::addCutToLastActiveCut(TString n) { last_active_cut->addCut(n); cuttreemap[n] = cuttree.getCutPointer(n); setLastActiveCut(n); }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::printCuts() { cuttree.printCuts(); }
@@ -129,6 +129,7 @@ void RooUtil::Cutflow::fill()
 {
     tx->setBranch<bool>("Root", 1); // Root is internally set
     tx->setBranch<float>("Root_weight", 1); // Root is internally set
+    cuttree.evaluate(*tx);
     fillCutflows();
     fillHistograms();
     tx->fill();
@@ -138,7 +139,28 @@ void RooUtil::Cutflow::fill()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::fillCutflows()
 {
-    RooUtil::CutflowUtil::fillCutflowHistograms(cutlists, *tx, cutflow_histograms, rawcutflow_histograms);
+//    RooUtil::CutflowUtil::fillCutflowHistograms(cutlists, *tx, cutflow_histograms, rawcutflow_histograms);
+    for (auto& pair : cutlists)
+    {
+        const TString& region_name = pair.first;
+        std::vector<TString>& cutlist = pair.second;
+        fillCutflow(cutlist, cutflow_histograms[region_name], rawcutflow_histograms[region_name]);
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw)
+{
+    for (unsigned int i = 0; i < cutlist.size(); ++i)
+    {
+        bool& pass = cuttreemap[cutlist[i]]->pass;
+        if (pass)
+        {
+            float& weight = cuttreemap[cutlist[i]]->weight;
+            h->Fill(i, weight);
+            hraw->Fill(i, 1);
+        }
+    }
 }
 
 //_______________________________________________________________________________________________________
@@ -151,9 +173,8 @@ void RooUtil::Cutflow::fillHistograms()
         TString cutname = std::get<0>(pair.first);
         TString varname = std::get<1>(pair.first);
         TH1F* h = pair.second;
-        std::pair<bool, float> passcut = RooUtil::CutflowUtil::passCuts(cuttree.getCutList(cutname), *tx);
-        bool& passed = passcut.first;
-        float& weight = passcut.second;
+        bool& passed = cuttreemap[cutname]->pass;
+        float& weight = cuttreemap[cutname]->weight;
         if (passed)
             h->Fill(tx->getBranch<float>(varname), weight);
     }
@@ -164,9 +185,8 @@ void RooUtil::Cutflow::fillHistograms()
         TString varname = std::get<1>(pair.first);
         TString varnamey = std::get<2>(pair.first);
         TH2F* h = pair.second;
-        std::pair<bool, float> passcut = RooUtil::CutflowUtil::passCuts(cuttree.getCutList(cutname), *tx);
-        bool& passed = passcut.first;
-        float& weight = passcut.second;
+        bool& passed = cuttreemap[cutname]->pass;
+        float& weight = cuttreemap[cutname]->weight;
         if (passed)
             h->Fill(tx->getBranch<float>(varname), tx->getBranch<float>(varnamey), weight);
     }
