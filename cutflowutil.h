@@ -10,6 +10,7 @@
 #include "TString.h"
 #include <iostream>
 #include <algorithm>
+#include <sys/ioctl.h>
 
 namespace RooUtil
 {
@@ -66,6 +67,7 @@ namespace RooUtil
             std::vector<CutTree*> children;
             bool pass;
             float weight;
+            std::vector<std::tuple<int, int, unsigned long long>> eventlist;
             CutTree(TString n) : name(n), parent(0), pass(false), weight(0) {}
             ~CutTree()
             {
@@ -74,16 +76,57 @@ namespace RooUtil
                     delete child;
                 }
             }
-            void printCuts(int indent=0)
+            void printCuts(int indent=0, std::vector<int> multichild=std::vector<int>())
             {
+                struct winsize w;
+                ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+                int colsize = w.ws_col - 50;
+                if (indent == 0)
+                {
+                    TString header = "Cut name";
+                    int extra = colsize - header.Length();
+                    for (int i = 0; i < extra; ++i) header += " ";
+                    header += "|pass|weight";
+                    print(header);
+                    TString delimiter = "";
+                    for (int i = 0; i < w.ws_col-10; ++i) delimiter += "=";
+                    print(delimiter);
+                }
                 TString msg = "";
-                for (int i = 0; i < indent; ++i) msg += " ";
+                for (int i = 0; i < indent; ++i)
+                {
+                    if (std::find(multichild.begin(), multichild.end(), i+1) != multichild.end())
+                    {
+                        if (indent == i + 1)
+                            msg += " +";
+                        else
+                            msg += " |";
+                    }
+                    else
+                        msg += "  ";
+                }
                 msg += name;
-                msg += " ";
-                msg += TString::Format("%d %f", pass, weight);
+                int extrapad = colsize - msg.Length() > 0 ? colsize - msg.Length() : 0;
+                for (int i = 0; i < extrapad; ++i)
+                    msg += " ";
+                msg += TString::Format("| %d | %.5f", pass, weight);
                 print(msg);
+                if (children.size() > 1)
+                    multichild.push_back(indent+1);
                 for (auto& child : children)
-                    (*child).printCuts(indent+1);
+                    (*child).printCuts(indent+1,multichild);
+            }
+            void printEventList()
+            {
+                print(TString::Format("Print event list for the cut = %s", name.Data()));
+                for (auto& eventid : eventlist)
+                {
+                    int run = std::get<0>(eventid);
+                    int lumi = std::get<1>(eventid);
+                    unsigned long long evt = std::get<2>(eventid);
+                    TString msg = TString::Format("%d:%d:%llu", run, lumi, evt);
+                    std::cout << msg << std::endl;
+                }
             }
             void addCut(TString n)
             {
@@ -210,8 +253,35 @@ namespace RooUtil
                     pass = tx.getBranch<bool>(name) && aggregated_pass;
                     weight = tx.getBranch<float>(name+"_weight") * aggregated_weight;
                 }
+                if (pass)
+                {
+                    if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
+                    {
+                        eventlist.push_back(std::make_tuple(tx.getBranch<int>("run"), tx.getBranch<int>("lumi"), tx.getBranch<unsigned long long>("evt")));
+                    }
+                }
                 for (auto& child : children)
                     child->evaluate(tx, pass, weight);
+            }
+            void sortEventList()
+            {
+                std::sort(eventlist.begin(), eventlist.end(),
+                        [](const std::tuple<int, int, unsigned long long>& a, const std::tuple<int, int, unsigned long long>& b)
+                        {
+                            if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b);
+                            else if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
+                            else if (std::get<2>(a) != std::get<2>(b)) return std::get<2>(a) < std::get<2>(b);
+                            else return true;
+                        }
+                        );
+            }
+            void clearEventList()
+            {
+                eventlist.clear();
+            }
+            void addEventList(int run, int lumi, unsigned long long evt)
+            {
+                eventlist.push_back(std::make_tuple(run, lumi, evt));
             }
     };
 }
