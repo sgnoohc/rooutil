@@ -257,25 +257,26 @@ if [ "$GENERATEEXTRACODE" == true ]; then
     echo 'CFLAGS     = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                                         >> Makefile
     echo 'EXTRAFLAGS = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer'                               >> Makefile
     echo ''                                                                                                                                             >> Makefile
-    echo '.PHONY: check-env'                                                                                                                            >> Makefile
-    echo ''                                                                                                                                             >> Makefile
-    echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o check-env'                                                                                            >> Makefile
+#    echo '.PHONY: check-env'                                                                                                                            >> Makefile
+#    echo ''                                                                                                                                             >> Makefile
+#    echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o check-env'                                                                                            >> Makefile
+    echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o'                                                                                                      >> Makefile
     echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                >> Makefile
     echo ''                                                                                                                                             >> Makefile
     echo '%.o: %.cc'                                                                                                                                    >> Makefile
     echo '	$(CC) $(CFLAGS) $< -c'                                                                                                                  >> Makefile
     echo ''                                                                                                                                             >> Makefile
-    echo "${MAKECLASSNAME}.cc:"                                                                                                                         >> Makefile
-    echo "	echo remaking tree class"                                                                                                               >> Makefile
-    echo "	sh rooutil/makeclass.sh -f -x $(TEMPLATE_TREE_PATH) ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}"                 >> Makefile
-    echo ''                                                                                                                                             >> Makefile
+#    echo "${MAKECLASSNAME}.cc:"                                                                                                                         >> Makefile
+#    echo "	echo remaking tree class"                                                                                                               >> Makefile
+#    echo "	sh rooutil/makeclass.sh -f -x $(TEMPLATE_TREE_PATH) ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}"                 >> Makefile
+#    echo ''                                                                                                                                             >> Makefile
     echo 'clean:'                                                                                                                                       >> Makefile
     echo '	rm -f *.o $(EXE)'                                                                                                                       >> Makefile
-    echo ''                                                                                                                                             >> Makefile
-    echo 'check-env:'                                                                                                                                   >> Makefile
-    echo 'ifndef TEMPLATE_TREE_PATH'                                                                                                                    >> Makefile
-    echo "  \$(error TEMPLATE_TREE_PATH is not set. Please set via '>>> export TEMPLATE_TREE_PATH=/path/to/template.root)'"                             >> Makefile
-    echo 'endif'                                                                                                                                        >> Makefile
+#    echo ''                                                                                                                                             >> Makefile
+#    echo 'check-env:'                                                                                                                                   >> Makefile
+#    echo 'ifndef TEMPLATE_TREE_PATH'                                                                                                                    >> Makefile
+#    echo "  \$(error TEMPLATE_TREE_PATH is not set. Please set via '>>> export TEMPLATE_TREE_PATH=/path/to/template.root)'"                             >> Makefile
+#    echo 'endif'                                                                                                                                        >> Makefile
 
     #echo "	sh rooutil/makeclass.sh -f -x TEMPLATE_TREE_PATH ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}  > /dev/null 2>&1"  >> Makefile
 
