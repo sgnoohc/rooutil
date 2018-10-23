@@ -101,7 +101,6 @@ void RooUtil::Cutflow::saveCutflows()
     // Save cutflow histograms
     ofile->cd();
     RooUtil::CutflowUtil::saveCutflowHistograms(cutflow_histograms, rawcutflow_histograms);
-    saveHistograms();
 }
 
 //_______________________________________________________________________________________________________
