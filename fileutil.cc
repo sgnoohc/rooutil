@@ -93,3 +93,25 @@ json RooUtil::FileUtil::getJson(TFile* ofile, TString jsonname)
     json j = json::parse(s);
     return j;
 }
+
+std::vector<TString> RooUtil::FileUtil::getFilePathsInDirectory(TString dirpath)
+{
+    std::vector<TString> rtn;
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir(dirpath.Data())) != NULL)
+    {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL)
+        {
+            if (!TString(ent->d_name).EqualTo(".") && !TString(ent->d_name).EqualTo(".."))
+                rtn.push_back(ent->d_name);
+        }
+        closedir (dir);
+        return rtn;
+    } else {
+        /* could not open directory */
+        error(TString::Format("Could not open directory = %s", dirpath.Data()));
+        return rtn;
+    }
+}

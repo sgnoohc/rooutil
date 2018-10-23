@@ -7,13 +7,16 @@ RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile
 RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::addToCutTreeMap(TString n) { if (cuttreemap.find(n) == cuttreemap.end()) cuttreemap[n] = cuttree.getCutPointer(n); else error(TString::Format("Cut %s already exists! no duplicate cut names allowed!", n.Data())); }
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setLastActiveCut(TString n) { last_active_cut = cuttree.getCutPointer(n); }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::addCut(TString n) { cuttree.addCut(n); cuttreemap[n] = cuttree.getCutPointer(n); setLastActiveCut(n); }
+void RooUtil::Cutflow::addCut(TString n) { cuttree.addCut(n); addToCutTreeMap(n); setLastActiveCut(n); }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::addCutToLastActiveCut(TString n) { last_active_cut->addCut(n); cuttreemap[n] = cuttree.getCutPointer(n); setLastActiveCut(n); }
+void RooUtil::Cutflow::addCutToLastActiveCut(TString n) { last_active_cut->addCut(n); addToCutTreeMap(n); setLastActiveCut(n); }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::printCuts() { cuttree.printCuts(); }
@@ -122,6 +125,25 @@ void RooUtil::Cutflow::setCut(TString cutname, bool pass, float weight)
 void RooUtil::Cutflow::setVariable(TString varname, float val)
 {
     tx->setBranch<float>(varname, val);
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setEventID(int run, int lumi, unsigned long long evt)
+{
+    tx->setBranch<int>("run", run);
+    tx->setBranch<int>("lumi", lumi);
+    tx->setBranch<unsigned long long>("evt", evt);
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookEventLists()
+{
+    if (!tx->hasBranch<int>("run"))
+        tx->createBranch<int>("run");
+    if (!tx->hasBranch<int>("lumi"))
+        tx->createBranch<int>("lumi");
+    if (!tx->hasBranch<unsigned long long>("evt"))
+        tx->createBranch<unsigned long long>("evt");
 }
 
 //_______________________________________________________________________________________________________

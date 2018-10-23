@@ -42,6 +42,7 @@ namespace RooUtil
             std::map<TString, std::vector<TString>> cutlists;
             Cutflow(TFile* o);
             ~Cutflow();
+            void addToCutTreeMap(TString n);
             void setLastActiveCut(TString n);
             void addCut(TString n);
             void addCutToLastActiveCut(TString n);
@@ -57,6 +58,8 @@ namespace RooUtil
             void saveHistograms();
             void setCut(TString cutname, bool pass, float weight);
             void setVariable(TString varname, float);
+            void setEventID(int, int, unsigned long long);
+            void bookEventLists();
             void fill();
             void fillCutflows();
             void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw);
