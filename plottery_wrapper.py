@@ -716,7 +716,10 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         htotal.SetName("Total")
         hists.append(htotal)
     if hdata and len(hbkgs) != 0:
-        hratio = makeRatioHist(hdata, hbkgs)
+        #print hdata
+        #hratio = makeRatioHist(hdata, hbkgs)
+        hratio = hdata.Clone("Ratio")
+        hratio.Divide(htotal)
         #hists.append(htotal)
         hists.append(hdata)
         hists.append(hratio)
