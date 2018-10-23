@@ -128,7 +128,12 @@ if [ -e rooutil/makeCMS3ClassFiles.C ]; then
   root -l -b -q rooutil/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\)  &> /dev/null
 fi
 
-e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
+if [ -e ${MAKECLASSNAME}.cc ]; then
+    e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
+else
+    e_error "RooUtil:: Failed to generate ${MAKECLASSNAME}.cc/h!"
+    exit
+fi
 
 if [ "$GENERATEEXTRACODE" == true ]; then
 
@@ -206,7 +211,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo "    // Book Histograms"                                                                                                          >> process.cc
         echo "    cutflow.bookHistogramsForCutAndBelow(histograms, \"DiElChannel\");"                                                          >> process.cc
         echo "    cutflow.bookHistogramsForCutAndBelow(histograms, \"DiMuChannel\");"                                                          >> process.cc
-        echo "    // cutflow.bookHistograms(); // if just want to book everywhere"                                                             >> process.cc
+        echo "    // cutflow.bookHistograms(histograms); // if just want to book everywhere"                                                   >> process.cc
         echo ""                                                                                                                                >> process.cc
         echo "    // Looping input file"                                                                                                       >> process.cc
         echo "    while (looper.nextEvent())"                                                                                                  >> process.cc
