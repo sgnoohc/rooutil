@@ -233,6 +233,8 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo "    // Writing output file"                                                                                                      >> process.cc
         echo "    cutflow.saveOutput();"                                                                                                       >> process.cc
         echo ""                                                                                                                                >> process.cc
+        echo "    // The below can be sometimes crucial"                                                                                       >> process.cc
+        echo "    delete ofile;"                                                                                                               >> process.cc
         echo "}"                                                                                                                               >> process.cc
 
     fi
