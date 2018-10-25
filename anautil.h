@@ -46,6 +46,7 @@ namespace RooUtil
             void setLastActiveCut(TString n);
             void addCut(TString n);
             void addCutToLastActiveCut(TString n);
+            void copyAndEditCuts(TString, std::map<TString, TString>);
             void printCuts();
             CutTree& getCut(TString n);
             void setCutLists(std::vector<TString> regions);

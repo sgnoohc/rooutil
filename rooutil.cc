@@ -14,3 +14,4 @@
 #include "dorky.cc"
 #include "eventlist.cc"
 #include "anautil.cc"
+#include "histmap.cc"
