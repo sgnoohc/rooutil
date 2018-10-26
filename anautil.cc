@@ -25,6 +25,14 @@ void RooUtil::Cutflow::printCuts() { cuttree.printCuts(); }
 CutTree& RooUtil::Cutflow::getCut(TString n) { CutTree& c = cuttree.getCut(n); setLastActiveCut(n); return c; }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::removeCut(TString n)
+{
+    CutTree* c = cuttree.getCutPointer(n);
+    c->parent->children.erase(std::find(c->parent->children.begin(), c->parent->children.end(), c));
+    cuttreemap.erase(cuttreemap.find(n));
+}
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCutLists(std::vector<TString> regions)
 {
     for (auto& region : regions)
@@ -116,6 +124,8 @@ void RooUtil::Cutflow::saveHistograms()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCut(TString cutname, bool pass, float weight)
 {
+    if (!tx->hasBranch<bool>(cutname))
+        return;
     tx->setBranch<bool>(cutname, pass);
     tx->setBranch<float>(cutname+"_weight", weight);
 }

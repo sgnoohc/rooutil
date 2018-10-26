@@ -49,6 +49,7 @@ namespace RooUtil
             void copyAndEditCuts(TString, std::map<TString, TString>);
             void printCuts();
             CutTree& getCut(TString n);
+            void removeCut(TString n);
             void setCutLists(std::vector<TString> regions);
             void bookCutflowTree(std::vector<TString> regions);
             void bookCutflowHistograms(std::vector<TString> regions);
