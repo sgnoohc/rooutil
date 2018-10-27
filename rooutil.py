@@ -38,3 +38,11 @@ def get_summed_histogram(list_of_file_names, hist_names):
 def get_yield_from_cutflow_histogram(list_of_file_names, reg_name):
     hist = get_summed_histograms(list_of_file_names, reg_name + "_cutflow")
     return hist.GetBinContent(hist.GetNbinsX())
+
+#______________________________________________________________________________
+def get_shape_reweighting_histogram(numerator, denominator):
+    ratio = numerator.Clone("ratio")
+    ratio.Divide(denominator)
+    scale = denominator.Integral() / numerator.Integral() if numerator.Integral() > 0 else raise
+    ratio.Scale(scale)
+    return ratio
