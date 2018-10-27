@@ -25,7 +25,8 @@ def get_summed_histogram(list_of_file_names, hist_names):
         hists = get_histograms(list_of_file_names, hist_names)
         hist_name = hist_names
     if len(hists) == 0:
-        print "error no histograms are found"
+        print "error no histograms are found query=", list_of_file_names, hist_names
+        raise ValueError("No histograms are found with the query")
         sys.exit()
     rtn_hist = hists[0].Clone(hist_name)
     rtn_hist.Reset()
