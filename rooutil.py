@@ -44,6 +44,8 @@ def get_yield_from_cutflow_histogram(list_of_file_names, reg_name):
 def get_shape_reweighting_histogram(numerator, denominator):
     ratio = numerator.Clone("ratio")
     ratio.Divide(denominator)
-    scale = denominator.Integral() / numerator.Integral() if numerator.Integral() > 0 else raise
+    if numerator.Integral() == 0:
+        raise ValueError("numerator histogram has integral of zero")
+    scale = denominator.Integral() / numerator.Integral() 
     ratio.Scale(scale)
     return ratio
