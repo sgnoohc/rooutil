@@ -18,11 +18,13 @@ namespace RooUtil
     class Histograms
     {
         public:
+            std::map<TString, std::vector<float>> th1fs_varbin;
             std::map<TString, std::tuple<unsigned int, float, float>> th1fs;
-            std::map<std::pair<TString, TString>, std::tuple<unsigned int, float, float, int, float, float>> th2fs;
+            std::map<std::pair<TString, TString>, std::tuple<unsigned int, float, float, unsigned int, float, float>> th2fs;
             Histograms();
             ~Histograms();
             void addHistogram(TString, unsigned int, float, float);
+            void addHistogram(TString, std::vector<float>);
             void add2DHistogram(TString, unsigned int, float, float, TString, unsigned int, float, float);
     };
 
@@ -66,8 +68,9 @@ namespace RooUtil
             void fillCutflows();
             void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw);
             void fillHistograms();
-            void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, int, int>>);
-            void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, int, int, unsigned, int, int>>);
+            void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float>>);
+            void bookHistogram(TString, std::pair<TString, std::vector<float>>);
+            void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float>>);
             void bookHistograms(Histograms& histograms);
             void bookHistograms(Histograms& histograms, std::vector<TString> cutlist);
             void bookHistogramsForCut(Histograms& histograms, TString);

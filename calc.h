@@ -30,6 +30,7 @@ namespace RooUtil
         float DeltaPhi(const LV& a, const LV& b);
         void printTLV(const TLorentzVector& a);
         void printLV(const LV& a);
+        int calcBin2D(const std::vector<float>& xbounds, const std::vector<float>& ybounds, float xval, float yval);
     }
 }
 

@@ -244,7 +244,7 @@ void RooUtil::Cutflow::bookHistograms(Histograms& histograms, std::vector<TStrin
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<unsigned, int, int>> key)
+void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<unsigned, float, float>> key)
 {
     TString varname = key.first;
     unsigned int nbin = std::get<0>(key.second);
@@ -263,7 +263,27 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString, TString>, std::tuple<unsigned, int, int, unsigned, int, int>> key)
+void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::vector<float>> key)
+{
+    TString varname = key.first;
+    std::vector<float> boundaries = key.second;
+    TString histname = cut + "__" + varname;
+    if (booked_histograms.find(std::make_tuple(cut, varname)) == booked_histograms.end())
+    {
+        Float_t bounds[boundaries.size()];
+        for (unsigned int i = 0; i < boundaries.size(); ++i)
+            bounds[i] = boundaries[i];
+        booked_histograms[std::make_tuple(cut, varname)] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut, varname)]->SetDirectory(0);
+        if (!tx)
+            error("bookHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
+        if (!tx->hasBranch<float>(varname))
+            tx->createBranch<float>(varname);
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float>> key)
 {
     TString varname = key.first.first;
     TString varnamey = key.first.second;
@@ -291,6 +311,7 @@ void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString,
 void RooUtil::Cutflow::bookHistogramsForCut(Histograms& histograms, TString cut)
 {
     for (auto& key : histograms.th1fs) bookHistogram(cut, key);
+    for (auto& key : histograms.th1fs_varbin) bookHistogram(cut, key);
     for (auto& key : histograms.th2fs) book2DHistogram(cut, key);
 }
 
@@ -325,6 +346,15 @@ void RooUtil::Histograms::addHistogram(TString name, unsigned int n, float min, 
 {
     if (th1fs.find(name) == th1fs.end())
         th1fs[name] = std::make_tuple(n, min, max);
+    else
+        error(TString::Format("histogram already exists name = %s", name.Data()));
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Histograms::addHistogram(TString name, std::vector<float> boundaries)
+{
+    if (th1fs_varbin.find(name) == th1fs_varbin.end())
+        th1fs_varbin[name] = boundaries;
     else
         error(TString::Format("histogram already exists name = %s", name.Data()));
 }

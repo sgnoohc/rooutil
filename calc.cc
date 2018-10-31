@@ -73,4 +73,60 @@ void RooUtil::Calc::printLV(const LV& a)
     std::cout <<  " a.pt(): " << a.pt() <<  " a.eta(): " << a.eta() <<  " a.phi(): " << a.phi() <<  " a.mass(): " << a.mass() <<  " a.energy(): " << a.energy() <<  std::endl;
 }
 
+//_________________________________________________________________________________________________
+// Two bounds are provided, and a point. computes the bin number
+int RooUtil::Calc::calcBin2D(const std::vector<float>& xbounds, const std::vector<float>& ybounds, float xval, float yval)
+{
+
+//  -1
+//
+//   2  2.4
+//             7    8    9   10   11   12
+//   1  1.6
+//             1    2    3    4    5    6
+//   0  0.0
+//           0   20   25   30   35   50   150
+//           0    1    2    3    4    5    6    -1
+
+//    1   2   3   4
+//    5   6   7   8
+
+    int cx = -1;
+    int cy = -1;
+
+    for (unsigned ix = 0; ix < xbounds.size(); ++ix)
+    {
+        // If the bound value is smaller than the xval I need to continue until the xbound is bigger than the given xval
+        if (xbounds[ix] < xval)
+            continue;
+
+        // Set the cx (chosen x index) to ix
+        cx = ix;
+        break;
+    }
+
+    // If it reached the highest bound set it to the last one
+    if (cx == -1) cx = xbounds.size() - 1;
+
+    for (unsigned iy = 0; iy < ybounds.size(); ++iy)
+    {
+        // If the bound value is smaller than the xval I need to continue until the xbound is bigger than the given xval
+        if (ybounds[iy] < yval)
+            continue;
+
+        // Set the cy (chosen y index) to iy
+        cy = iy;
+        break;
+    }
+
+    // If it reached the highest bound set it to the last one
+    if (cy == -1) cy = ybounds.size() - 1;
+
+    // If neither hit the value i want it failed to find one
+    if (cx == 0 or cy == 0)
+        return -1;
+
+    return (cx - 1) + (cy - 1) * (xbounds.size()-1);
+}
+
 //eof
