@@ -74,16 +74,17 @@ def get_shape_reweighting_histogram(numerator, denominator):
 def submit_metis(job_tag, samples_map, arguments="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs"):
 
     # file/dir paths
-    main_dir             = os.path.dirname(os.path.abspath(__file__))
+    main_dir             = os.getcwd()
     metis_path           = os.path.dirname(os.path.dirname(metis.__file__))
     tar_path             = os.path.join(metis_path, "package.tar")
     tar_gz_path          = tar_path + ".gz"
     metis_dashboard_path = os.path.join(metis_path, "dashboard")
     exec_path            = os.path.join(main_dir, exec_script)
-    hadoop_path          = "metis/{}/{}".format(testjobs, job_tag) # The output goes to /hadoop/cms/store/user/$USER/"hadoop_path"
+    hadoop_path          = "metis/{}/{}".format(hadoop_dirname, job_tag) # The output goes to /hadoop/cms/store/user/$USER/"hadoop_path"
 
     # Create tarball
     os.chdir(main_dir)
+    print "tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files))
     os.system("tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files)))
 
     # Change directory to metis
