@@ -255,6 +255,7 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
     {
         booked_histograms[std::make_tuple(cut, varname)] = new TH1F(histname, "", nbin, min, max);
         booked_histograms[std::make_tuple(cut, varname)]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut, varname)]->Sumw2();
         if (!tx)
             error("bookHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
         if (!tx->hasBranch<float>(varname))
@@ -275,6 +276,7 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::vector
             bounds[i] = boundaries[i];
         booked_histograms[std::make_tuple(cut, varname)] = new TH1F(histname, "", boundaries.size()-1, bounds);
         booked_histograms[std::make_tuple(cut, varname)]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut, varname)]->Sumw2();
         if (!tx)
             error("bookHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
         if (!tx->hasBranch<float>(varname))
@@ -298,6 +300,7 @@ void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString,
     {
         booked_2dhistograms[std::make_tuple(cut, varname, varnamey)] = new TH2F(histname, "", nbin, min, max, nbiny, miny, maxy);
         booked_2dhistograms[std::make_tuple(cut, varname, varnamey)]->SetDirectory(0);
+        booked_2dhistograms[std::make_tuple(cut, varname, varnamey)]->Sumw2();
         if (!tx)
             error("book2DHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
         if (!tx->hasBranch<float>(varname))

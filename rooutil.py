@@ -9,9 +9,12 @@ def get_histograms(list_of_file_names, hist_name):
     hists = []
     for file_name in list_of_file_names:
         f = r.TFile(file_name)
-        h = f.Get(hist_name).Clone(hist_name)
-        h.SetDirectory(0)
-        hists.append(h)
+        try:
+            h = f.Get(hist_name).Clone(hist_name)
+            h.SetDirectory(0)
+            hists.append(h)
+        except:
+            print "Could not find", hist_name, "in", file_name
     return hists
 
 #______________________________________________________________________________

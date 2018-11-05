@@ -17,6 +17,7 @@ import os
 sys.path.append("{0}/syncfiles/pyfiles".format(os.path.realpath(__file__).rsplit("/",1)[0]))
 from pytable import *
 from errors import E
+import errno    
 
 # ================================================================
 # New TColors
@@ -84,6 +85,17 @@ default_colors.extend(range(2001, 2013))
 default_colors.extend(range(7001, 7018))
 
 
+
+
+#______________________________________________________________________________________________________________________
+def makedir(dirpath):
+    try:
+        os.makedirs(dirpath)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(dirpath):
+            pass
+        else:
+            raise
 
 
 # ===============
@@ -702,6 +714,7 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
     x.set_theme_basic()
+    makedir(os.path.dirname(fname))
     f = open(fname, "w")
     f.write("".join(x.get_table_string()))
 
@@ -732,6 +745,9 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
 def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
+    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+
+def copy_nice_plot(plotdir):
     os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 #______________________________________________________________________________________________________________________
