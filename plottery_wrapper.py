@@ -900,6 +900,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         del options["ymax_scale"]
     yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * maxmult)
     yaxismin = get_nonzeromin_yaxis_range(bgs)
+    yaxismin = 1000
 
     if "yaxis_log" in options:
         if options["yaxis_log"] and "yaxis_range" not in options:
