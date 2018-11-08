@@ -51,8 +51,8 @@ namespace RooUtil
         std::pair<bool, float> passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
         void fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
         void fillRawCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
-        std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(CutNameListMap& cutlists);
-        std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists);
+        std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(CutNameListMap& cutlists, TString syst="");
+        std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, TString syst="");
         void fillCutflowHistograms(CutNameListMap& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
         void fillCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
         void saveCutflowHistograms(std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
@@ -64,7 +64,9 @@ namespace RooUtil
         public:
             TString name; 
             CutTree* parent;
+            std::vector<CutTree*> parents;
             std::vector<CutTree*> children;
+            std::map<TString, CutTree*> systs;
             bool pass;
             float weight;
             std::vector<std::tuple<int, int, unsigned long long>> eventlist;
@@ -73,20 +75,21 @@ namespace RooUtil
             {
                 for (auto& child : children)
                 {
-                    delete child;
+                    if (child)
+                        delete child;
                 }
             }
             void printCuts(int indent=0, std::vector<int> multichild=std::vector<int>())
             {
                 struct winsize w;
                 ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-                int colsize = w.ws_col - 50;
+                int colsize = min(w.ws_col - 50, 600);
                 if (indent == 0)
                 {
                     TString header = "Cut name";
                     int extra = colsize - header.Length();
                     for (int i = 0; i < extra; ++i) header += " ";
-                    header += "|pass|weight";
+                    header += "|pass|weight|systs";
                     print(header);
                     TString delimiter = "";
                     for (int i = 0; i < w.ws_col-10; ++i) delimiter += "=";
@@ -109,7 +112,11 @@ namespace RooUtil
                 int extrapad = colsize - msg.Length() > 0 ? colsize - msg.Length() : 0;
                 for (int i = 0; i < extrapad; ++i)
                     msg += " ";
-                msg += TString::Format("| %d | %.5f", pass, weight);
+                msg += TString::Format("| %d | %.5f|", pass, weight);
+                for (auto& key : systs)
+                {
+                    msg += key.first + " ";
+                }
                 print(msg);
                 if (children.size() > 1)
                     multichild.push_back(indent+1);
@@ -132,7 +139,17 @@ namespace RooUtil
             {
                 CutTree* obj = new CutTree(n);
                 obj->parent = this;
+                obj->parents.push_back(this);
                 children.push_back(obj);
+            }
+            void addSyst(TString syst)
+            {
+                // Syst CutTree object knows the parents, and children, however, the children does not know the syst-counter-part parent, nor the parent knows the syste-counter-part children.
+                CutTree* obj = new CutTree(this->name + syst);
+                systs[syst] = obj;
+                obj->children = this->children;
+                obj->parents = this->parents;
+                obj->parent = this->parent;
             }
             CutTree* getCutPointer(TString n)
             {

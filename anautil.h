@@ -36,11 +36,12 @@ namespace RooUtil
             std::map<TString, CutTree*> cuttreemap;
             std::map<TString, TH1F*> cutflow_histograms;
             std::map<TString, TH1F*> rawcutflow_histograms;
-            std::map<std::tuple<TString, TString>, TH1F*> booked_histograms; // key is <cutname, varname>
-            std::map<std::tuple<TString, TString, TString>, TH2F*> booked_2dhistograms; // key is <cutname, varname, varnamey>
+            std::map<std::tuple<TString, TString, TString>, TH1F*> booked_histograms; // key is <cutname, syst, varname>
+            std::map<std::tuple<TString, TString, TString, TString>, TH2F*> booked_2dhistograms; // key is <cutname, syst, varname, varnamey>
             TFile* ofile;
             TTree* t;
             TTreeX* tx;
+            std::vector<TString> systs;
             std::map<TString, std::vector<TString>> cutlists;
             Cutflow(TFile* o);
             ~Cutflow();
@@ -61,16 +62,20 @@ namespace RooUtil
             void saveCutflows();
             void saveHistograms();
             void setCut(TString cutname, bool pass, float weight);
+            void setCutSyst(TString cutname, TString syst, bool pass, float weight);
+            void addWgtSyst(TString syst);
+            void setWgtSyst(TString syst, float weight);
+            void createWgtSystBranches();
             void setVariable(TString varname, float);
             void setEventID(int, int, unsigned long long);
             void bookEventLists();
             void fill();
             void fillCutflows();
-            void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw);
+            void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
             void fillHistograms();
-            void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float>>);
-            void bookHistogram(TString, std::pair<TString, std::vector<float>>);
-            void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float>>);
+            void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float>>, TString="");
+            void bookHistogram(TString, std::pair<TString, std::vector<float>>, TString="");
+            void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float>>, TString="");
             void bookHistograms(Histograms& histograms);
             void bookHistograms(Histograms& histograms, std::vector<TString> cutlist);
             void bookHistogramsForCut(Histograms& histograms, TString);

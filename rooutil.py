@@ -4,21 +4,6 @@ import plottery_wrapper as p
 import ROOT as r
 import sys
 
-import time
-import json
-import metis
-
-from time import sleep
-
-from metis.Sample import DirectorySample
-from metis.CondorTask import CondorTask
-
-from metis.StatsParser import StatsParser
-
-import os
-import glob
-import subprocess
-
 
 
 #______________________________________________________________________________
@@ -71,7 +56,23 @@ def get_shape_reweighting_histogram(numerator, denominator):
     return ratio
 
 #______________________________________________________________________________
-def submit_metis(job_tag, samples_map, arguments="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs"):
+def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
+
+    import time
+    import json
+    import metis
+
+    from time import sleep
+
+    from metis.Sample import DirectorySample
+    from metis.CondorTask import CondorTask
+
+    from metis.StatsParser import StatsParser
+
+    import os
+    import glob
+    import subprocess
+
 
     # file/dir paths
     main_dir             = os.getcwd()
@@ -84,6 +85,7 @@ def submit_metis(job_tag, samples_map, arguments="", exec_script="metis.sh", tar
 
     # Create tarball
     os.chdir(main_dir)
+    print os.getcwd()
     print "tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files))
     os.system("tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files)))
 
@@ -98,6 +100,7 @@ def submit_metis(job_tag, samples_map, arguments="", exec_script="metis.sh", tar
                 DirectorySample(
                     dataset=key,
                     location=samples_map[key],
+                    globber=globber,
                     )
                 )
 
@@ -113,12 +116,12 @@ def submit_metis(job_tag, samples_map, arguments="", exec_script="metis.sh", tar
             maker_task = CondorTask(
                     sample               = sample,
                     tag                  = job_tag,
-                    arguments            = arguments,
+                    arguments            = arguments_map[sample.get_datasetname()],
                     executable           = exec_path,
                     tarfile              = tar_gz_path,
                     special_dir          = hadoop_path,
                     output_name          = "output.root",
-                    files_per_output     = 1,
+                    files_per_output     = files_per_output,
                     condor_submit_params = {"sites" : "T2_US_UCSD"},
                     open_dataset         = False,
                     flush                = True,
