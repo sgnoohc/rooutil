@@ -3,8 +3,7 @@
 import plottery_wrapper as p
 import ROOT as r
 import sys
-
-
+from errors import E
 
 #______________________________________________________________________________
 def get_histograms(list_of_file_names, hist_name):
@@ -17,14 +16,57 @@ def get_histograms(list_of_file_names, hist_name):
             hists.append(h)
         except:
             print "Could not find", hist_name, "in", file_name
+        f.Close()
     return hists
+
+#______________________________________________________________________________
+def get_list_of_histograms(list_of_file_names, hist_names):
+    hists = []
+    for file_name in list_of_file_names:
+        f = r.TFile(file_name)
+        for hist_name in hist_names:
+            try:
+                h = f.Get(hist_name).Clone(hist_name)
+                h.SetDirectory(0)
+                hists.append(h)
+            except:
+                print "Could not find", hist_name, "in", file_name
+        print file_name
+        f.Close()
+    return hists
+
+#______________________________________________________________________________
+def get_yield_histogram(list_of_file_names, regions, ):
+    final_h = r.TH1F("yields", "", len(regions), 0, len(regions))
+    yields = []
+    for i in xrange(len(regions)):
+        yields.append(E(0, 0))
+    for file_name in list_of_file_names:
+        f = r.TFile(file_name)
+        for index, region in enumerate(regions):
+            try:
+                prefix = region.split("(")[0]
+                h = f.Get(prefix + "_cutflow")
+                binoffset = int(region.split("(")[1].split(")")[0]) if len(region.split("(")) > 1 else h.GetNbinsX()
+                bc = h.GetBinContent(binoffset)
+                be = h.GetBinError(binoffset)
+                yields[index] += E(bc, be)
+            except:
+                print "Could not find", region+"_cutflow", "in", file_name
+        print file_name
+        f.Close()
+    for i in xrange(len(regions)):
+        final_h.SetBinContent(i+1, yields[i].val)
+        final_h.SetBinError(i+1, yields[i].err)
+    return final_h
 
 #______________________________________________________________________________
 def get_summed_histogram(list_of_file_names, hist_names):
     if isinstance(hist_names, list):
         hists = []
-        for hist_name in hist_names:
-            hists.extend(get_histograms(list_of_file_names, hist_name))
+        #for hist_name in hist_names:
+        #    hists.extend(get_histograms(list_of_file_names, hist_name))
+        hists.extend(get_list_of_histograms(list_of_file_names, hist_names))
         hist_name = hist_names[0] + "_plus_etc"
     else:
         hists = get_histograms(list_of_file_names, hist_names)

@@ -306,8 +306,8 @@ namespace RooUtil
             {
                 if (!parent)
                 {
-                    pass = pass_this_cut;
-                    weight = weight_this_cut;
+                    pass = 1;
+                    weight = 1;
                 }
                 else
                 {
@@ -338,7 +338,7 @@ namespace RooUtil
                     }
                 }
                 for (auto& child : children)
-                    child->evaluate(tx, cutsystname, pass, weight);
+                    child->evaluate_use_internal_variable(tx, cutsystname, doeventlist, pass, weight);
             }
             void evaluate_use_ttreex(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
             {
@@ -382,7 +382,7 @@ namespace RooUtil
                     }
                 }
                 for (auto& child : children)
-                    child->evaluate(tx, cutsystname, pass, weight);
+                    child->evaluate_use_ttreex(tx, cutsystname, doeventlist, pass, weight);
             }
             void sortEventList()
             {
@@ -413,13 +413,13 @@ namespace RooUtil
                 if (hists1d.size() != 0 or hists2d.size() != 0)
                 {
                     TString systkey = syst.IsNull() ? "Nominal" : syst;
-                    for (auto& tuple : hists1d[syst])
+                    for (auto& tuple : hists1d[systkey])
                     {
                         TH1F* h = std::get<0>(tuple);
                         TString varname = std::get<1>(tuple);
                         h->Fill(tx.getBranch<float>(varname), weight * extrawgt);
                     }
-                    for (auto& tuple : hists2d[syst])
+                    for (auto& tuple : hists2d[systkey])
                     {
                         TH2F* h = std::get<0>(tuple);
                         TString varname = std::get<1>(tuple);

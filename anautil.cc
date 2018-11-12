@@ -174,8 +174,13 @@ void RooUtil::Cutflow::setCutSyst(TString cutname, TString syst, bool pass, floa
         printSetFunctionError(msg);
         return;
     }
+#ifdef USE_TTREEX
     tx->setBranch<bool>(cutname+syst, pass, false, true);
     tx->setBranch<float>(cutname+syst+"_weight", weight, false, true);
+#else
+    cuttreemap[cutname.Data()]->systs[syst]->pass_this_cut = pass;
+    cuttreemap[cutname.Data()]->systs[syst]->weight_this_cut = weight;
+#endif
 }
 
 //_______________________________________________________________________________________________________
@@ -262,8 +267,13 @@ void RooUtil::Cutflow::fill()
         printSetFunctionError(msg);
         return;
     }
+#ifdef USE_TTREEX
     tx->setBranch<bool>("Root", 1); // Root is internally set
     tx->setBranch<float>("Root_weight", 1); // Root is internally set
+#else
+    cuttreemap["Root"]->pass_this_cut = 1;
+    cuttreemap["Root"]->weight_this_cut = 1;
+#endif
 
     // Evaluate nominal selection cutflows (the non cut varying selections)
     cuttree.evaluate(*tx, "", iseventlistbooked);
