@@ -42,7 +42,8 @@
 //#define MAP std::unordered_map
 //#define STRING std::string
 #define MAP std::map
-#define STRING TString
+//#define TTREEXSTRING std::string
+#define TTREEXSTRING TString
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // LorentzVector typedef that we use very often
@@ -82,20 +83,20 @@ namespace RooUtil
 
         private:
         TTree* ttree;
-        std::map<TString, Int_t  > mapInt_t;
-        std::map<TString, Bool_t > mapBool_t;
-        std::map<TString, Float_t> mapFloat_t;
-        std::map<TString, TString> mapTString;
-        std::map<TString, LV     > mapLV;
-        std::map<TString, TBits  > mapTBits;
-        std::map<TString, unsigned long long> mapULL;
-        std::map<TString, std::vector<Int_t  > > mapVecInt_t;
-        std::map<TString, std::vector<Bool_t > > mapVecBool_t;
-        std::map<TString, std::vector<Float_t> > mapVecFloat_t;
-        std::map<TString, std::vector<TString> > mapVecTString;
-        std::map<TString, std::vector<LV     > > mapVecLV;
+        std::map<TTREEXSTRING, Int_t  > mapInt_t;
+        std::map<TTREEXSTRING, Bool_t > mapBool_t;
+        std::map<TTREEXSTRING, Float_t> mapFloat_t;
+        std::map<TTREEXSTRING, TString> mapTString;
+        std::map<TTREEXSTRING, LV     > mapLV;
+        std::map<TTREEXSTRING, TBits  > mapTBits;
+        std::map<TTREEXSTRING, unsigned long long> mapULL;
+        std::map<TTREEXSTRING, std::vector<Int_t  > > mapVecInt_t;
+        std::map<TTREEXSTRING, std::vector<Bool_t > > mapVecBool_t;
+        std::map<TTREEXSTRING, std::vector<Float_t> > mapVecFloat_t;
+        std::map<TTREEXSTRING, std::vector<TString> > mapVecTString;
+        std::map<TTREEXSTRING, std::vector<LV     > > mapVecLV;
 
-        std::map<TString, Bool_t > mapIsBranchSet;
+        std::map<TTREEXSTRING, Bool_t > mapIsBranchSet;
 
         public:
         TTreeX();
@@ -113,7 +114,7 @@ namespace RooUtil
         template <class T>
         void createBranch(TString);
         template <class T>
-        void setBranch(TString, T);
+        void setBranch(TString, T, bool=false, bool=false);
         template <class T>
         const T& getBranch(TString, bool=true);
         template <class T>
@@ -143,18 +144,18 @@ namespace RooUtil
     };
 
     //_________________________________________________________________________________________________
-    template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val);
-    template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val);
-    template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val);
-    template <> void TTreeX::setBranch<TString             >(TString bn, TString              val);
-    template <> void TTreeX::setBranch<LV                  >(TString bn, LV                   val);
-    template <> void TTreeX::setBranch<TBits               >(TString bn, TBits                val);
-    template <> void TTreeX::setBranch<unsigned long long  >(TString bn, unsigned long long   val);
-    template <> void TTreeX::setBranch<std::vector<Int_t  >>(TString bn, std::vector<Int_t  > val);
-    template <> void TTreeX::setBranch<std::vector<Bool_t >>(TString bn, std::vector<Bool_t > val);
-    template <> void TTreeX::setBranch<std::vector<Float_t>>(TString bn, std::vector<Float_t> val);
-    template <> void TTreeX::setBranch<std::vector<TString>>(TString bn, std::vector<TString> val);
-    template <> void TTreeX::setBranch<std::vector<LV     >>(TString bn, std::vector<LV     > val);
+    template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<TString             >(TString bn, TString              val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<LV                  >(TString bn, LV                   val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<TBits               >(TString bn, TBits                val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<unsigned long long  >(TString bn, unsigned long long   val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<std::vector<Int_t  >>(TString bn, std::vector<Int_t  > val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<std::vector<Bool_t >>(TString bn, std::vector<Bool_t > val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<std::vector<Float_t>>(TString bn, std::vector<Float_t> val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<std::vector<TString>>(TString bn, std::vector<TString> val, bool force, bool ignore);
+    template <> void TTreeX::setBranch<std::vector<LV     >>(TString bn, std::vector<LV     > val, bool force, bool ignore);
     template <> void TTreeX::pushbackToBranch<Int_t        >(TString bn, Int_t       val);
     template <> void TTreeX::pushbackToBranch<Bool_t       >(TString bn, Bool_t      val);
     template <> void TTreeX::pushbackToBranch<Float_t      >(TString bn, Float_t     val);
@@ -209,8 +210,8 @@ namespace RooUtil
     template <> bool TTreeX::hasBranch<std::vector<LV     >>(TString bn);
 
     //_________________________________________________________________________________________________
-    template <> void TTreeX::setBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx);
-    template <> void TTreeX::createBranch<std::map<TString, std::vector<Int_t>>>(std::map<TString, std::vector<Int_t>>& objidx);
+    template <> void TTreeX::setBranch<std::map<TTREEXSTRING, std::vector<Int_t>>>(std::map<TTREEXSTRING, std::vector<Int_t>>& objidx);
+    template <> void TTreeX::createBranch<std::map<TTREEXSTRING, std::vector<Int_t>>>(std::map<TTREEXSTRING, std::vector<Int_t>>& objidx);
 
     template <class T>
     std::vector<T> TTreeX::sortFromRef( std::vector<T> const& in, std::vector<std::pair<size_t, TTreeX::lviter> > const& reference)

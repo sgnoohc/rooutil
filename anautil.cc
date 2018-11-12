@@ -1,13 +1,13 @@
 #include "anautil.h"
 
 //_______________________________________________________________________________________________________
-RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0) { cuttreemap["Root"] = &cuttree; }
+RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
 RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::addToCutTreeMap(TString n) { if (cuttreemap.find(n) == cuttreemap.end()) cuttreemap[n] = cuttree.getCutPointer(n); else error(TString::Format("Cut %s already exists! no duplicate cut names allowed!", n.Data())); }
+void RooUtil::Cutflow::addToCutTreeMap(TString n) { if (cuttreemap.find(n.Data()) == cuttreemap.end()) cuttreemap[n.Data()] = cuttree.getCutPointer(n); else error(TString::Format("Cut %s already exists! no duplicate cut names allowed!", n.Data())); }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setLastActiveCut(TString n) { last_active_cut = cuttree.getCutPointer(n); }
@@ -29,7 +29,7 @@ void RooUtil::Cutflow::removeCut(TString n)
 {
     CutTree* c = cuttree.getCutPointer(n);
     c->parent->children.erase(std::find(c->parent->children.begin(), c->parent->children.end(), c));
-    cuttreemap.erase(cuttreemap.find(n));
+    cuttreemap.erase(cuttreemap.find(n.Data()));
 }
 
 //_______________________________________________________________________________________________________
@@ -72,9 +72,18 @@ void RooUtil::Cutflow::bookCutflowHistograms(std::vector<TString> regions)
 
     for (auto& syst : systs)
     {
-        std::map<TString, TH1F*> cutflow_histograms_tmp;
-        std::map<TString, TH1F*> rawcutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, TH1F*> cutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, TH1F*> rawcutflow_histograms_tmp;
         std::tie(cutflow_histograms_tmp, rawcutflow_histograms_tmp) = RooUtil::CutflowUtil::createCutflowHistograms(cutlists, syst);
+        cutflow_histograms.insert(cutflow_histograms_tmp.begin(), cutflow_histograms_tmp.end());
+        rawcutflow_histograms.insert(rawcutflow_histograms_tmp.begin(), rawcutflow_histograms_tmp.end());
+    }
+
+    for (auto& cutsyst : cutsysts)
+    {
+        std::map<CUTFLOWMAPSTRING, TH1F*> cutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, TH1F*> rawcutflow_histograms_tmp;
+        std::tie(cutflow_histograms_tmp, rawcutflow_histograms_tmp) = RooUtil::CutflowUtil::createCutflowHistograms(cutlists, cutsyst);
         cutflow_histograms.insert(cutflow_histograms_tmp.begin(), cutflow_histograms_tmp.end());
         rawcutflow_histograms.insert(rawcutflow_histograms_tmp.begin(), rawcutflow_histograms_tmp.end());
     }
@@ -113,6 +122,9 @@ void RooUtil::Cutflow::saveOutput()
 {
     saveCutflows();
     saveHistograms();
+    TString filename = ofile->GetName();
+    TString msg = "Wrote output to " + filename;
+    print(msg);
 }
 
 //_______________________________________________________________________________________________________
@@ -136,32 +148,53 @@ void RooUtil::Cutflow::saveHistograms()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCut(TString cutname, bool pass, float weight)
 {
-    if (!tx->hasBranch<bool>(cutname))
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, setCut() for " + cutname;
+        printSetFunctionError(msg);
         return;
-    tx->setBranch<bool>(cutname, pass);
-    tx->setBranch<float>(cutname+"_weight", weight);
+    }
+
+#ifdef USE_TTREEX
+    tx->setBranch<bool>(cutname, pass, false, true);
+    tx->setBranch<float>(cutname+"_weight", weight, false, true);
+#else
+    cuttreemap[cutname.Data()]->pass_this_cut = pass;
+    cuttreemap[cutname.Data()]->weight_this_cut = weight;
+#endif
+
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCutSyst(TString cutname, TString syst, bool pass, float weight)
 {
-    if (!tx->hasBranch<bool>(cutname))
+    if (!tx)
     {
-        if (!tx->hasBranch<bool>(cutname+syst))
-            tx->createBranch<bool>(cutname+syst);
-        if (!tx->hasBranch<float>(cutname+syst+"_weight"))
-            tx->createBranch<float>(cutname+syst+"_weight");
+        TString msg = "No TTreeX object set, setCutSyst() for " + cutname + ", " + syst;
+        printSetFunctionError(msg);
+        return;
     }
-    tx->setBranch<bool>(cutname+syst, pass);
-    tx->setBranch<float>(cutname+syst+"_weight", weight);
+    tx->setBranch<bool>(cutname+syst, pass, false, true);
+    tx->setBranch<float>(cutname+syst+"_weight", weight, false, true);
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setWgtSyst(TString syst, float weight)
 {
-    if (!tx->hasBranch<bool>(syst))
-        return
-    tx->setBranch<float>(syst, weight);
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, setWgtSyst() for " + syst;
+        printSetFunctionError(msg);
+        return;
+    }
+    tx->setBranch<float>(syst, weight, false, true);
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::addCutSyst(TString syst, std::vector<TString> pattern)
+{
+    cutsysts.push_back(syst);
+    cuttree.addSyst(syst, pattern);
 }
 
 //_______________________________________________________________________________________________________
@@ -183,56 +216,91 @@ void RooUtil::Cutflow::createWgtSystBranches()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setVariable(TString varname, float val)
 {
-    if (!tx->hasBranch<float>(varname))
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, setVariable() for " + varname;
+        printSetFunctionError(msg);
         return;
-    tx->setBranch<float>(varname, val);
+    }
+    tx->setBranch<float>(varname, val, false, true);
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setEventID(int run, int lumi, unsigned long long evt)
 {
-    tx->setBranch<int>("run", run);
-    tx->setBranch<int>("lumi", lumi);
-    tx->setBranch<unsigned long long>("evt", evt);
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, setEventID()";
+        printSetFunctionError(msg);
+        return;
+    }
+    tx->setBranch<int>("run", run, false, true);
+    tx->setBranch<int>("lumi", lumi, false, true);
+    tx->setBranch<unsigned long long>("evt", evt, false, true);
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::bookEventLists()
 {
+    if (!tx)
+        error("bookEventLists():: No TTreeX has been set. Forgot to call bookCutflows()?");
     if (!tx->hasBranch<int>("run"))
         tx->createBranch<int>("run");
     if (!tx->hasBranch<int>("lumi"))
         tx->createBranch<int>("lumi");
     if (!tx->hasBranch<unsigned long long>("evt"))
         tx->createBranch<unsigned long long>("evt");
+    iseventlistbooked = true;
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::fill()
 {
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, fill()";
+        printSetFunctionError(msg);
+        return;
+    }
     tx->setBranch<bool>("Root", 1); // Root is internally set
     tx->setBranch<float>("Root_weight", 1); // Root is internally set
-    cuttree.evaluate(*tx);
+
+    // Evaluate nominal selection cutflows (the non cut varying selections)
+    cuttree.evaluate(*tx, "", iseventlistbooked);
+
+    // Nominal cutflow
     fillCutflows();
+
+    // Wgt systematic variations
+    for (auto& syst : systs) fillCutflows(syst);
+
+    // Fill nominal histograms
     fillHistograms();
+
+    // Wgt systematic variations
+    for (auto& syst : systs) fillHistograms(syst);
+
+    for (auto& cutsyst : cutsysts)
+    {
+        cuttree.evaluate(*tx, cutsyst, iseventlistbooked);
+        fillCutflows(cutsyst, false);
+        fillHistograms(cutsyst, false);
+    }
+
 //    tx->fill(); // TODO if i want to save this...
+
     tx->clear();
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::fillCutflows()
+void RooUtil::Cutflow::fillCutflows(TString syst, bool iswgtsyst)
 {
-//    RooUtil::CutflowUtil::fillCutflowHistograms(cutlists, *tx, cutflow_histograms, rawcutflow_histograms);
     for (auto& pair : cutlists)
     {
         const TString& region_name = pair.first;
         std::vector<TString>& cutlist = pair.second;
-        fillCutflow(cutlist, cutflow_histograms[region_name], rawcutflow_histograms[region_name]);
-        for (auto& syst : systs)
-        {
-            float wgtsyst = tx->getBranch<float>(syst);
-            fillCutflow(cutlist, cutflow_histograms[region_name+syst], rawcutflow_histograms[region_name+syst], wgtsyst);
-        }
+        float wgtsyst = (!syst.IsNull() and iswgtsyst) ? tx->getBranch<float>(syst) : 1;
+        fillCutflow(cutlist, cutflow_histograms[(region_name+syst).Data()], rawcutflow_histograms[(region_name+syst).Data()], wgtsyst);
     }
 }
 
@@ -241,47 +309,82 @@ void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F*
 {
     for (unsigned int i = 0; i < cutlist.size(); ++i)
     {
-        bool& pass = cuttreemap[cutlist[i]]->pass;
+        bool& pass = cuttreemap[cutlist[i].Data()]->pass;
         if (pass)
         {
-            float& weight = cuttreemap[cutlist[i]]->weight;
+            float& weight = cuttreemap[cutlist[i].Data()]->weight;
             h->Fill(i, weight * wgtsyst);
             hraw->Fill(i, 1);
+        }
+        else
+        {
+            return;
         }
     }
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::fillHistograms()
+void RooUtil::Cutflow::fillHistograms(TString syst, bool iswgtsyst)
 {
-//    std::map<std::tuple<TString, TString>, TH1F*> booked_histograms; // key is <cutname, varname>
-//    std::map<std::tuple<TString, TString, TString>, TH2F*> booked_2dhistograms; // key is <cutname, varname, varnamey>
-    for (auto& pair : booked_histograms)
-    {
-        TString cutname = std::get<0>(pair.first);
-        TString sysname = std::get<1>(pair.first);
-        TString varname = std::get<2>(pair.first);
-        TH1F* h = pair.second;
-        bool& passed = cuttreemap[cutname]->pass;
-        float& weight = cuttreemap[cutname]->weight;
-        float wgtsyst = sysname.IsNull() ? 1. : tx->getBranch<float>(sysname);
-        if (passed)
-            h->Fill(tx->getBranch<float>(varname), weight * wgtsyst);
-    }
 
-    for (auto& pair : booked_2dhistograms)
-    {
-        TString cutname = std::get<0>(pair.first);
-        TString sysname = std::get<1>(pair.first);
-        TString varname = std::get<2>(pair.first);
-        TString varnamey = std::get<3>(pair.first);
-        TH2F* h = pair.second;
-        bool& passed = cuttreemap[cutname]->pass;
-        float& weight = cuttreemap[cutname]->weight;
-        float wgtsyst = sysname.IsNull() ? 1. : tx->getBranch<float>(sysname);
-        if (passed)
-            h->Fill(tx->getBranch<float>(varname), tx->getBranch<float>(varnamey), weight * wgtsyst);
-    }
+    float wgtsyst = (!syst.IsNull() and iswgtsyst)? tx->getBranch<float>(syst) : 1.;
+    cuttree.fillHistograms(*tx, syst, wgtsyst);
+
+//    for (auto& key1d : booked_histograms_nominal_keys)
+//    {
+//        TString cutname = std::get<0>(key1d);
+//        std::get<1>(key1d) = syst;
+//        TString varname = std::get<2>(key1d);
+//        bool& passed = cuttreemap[cutname.Data()]->pass;
+//        if (!passed)
+//            continue;
+//        float& weight = cuttreemap[cutname.Data()]->weight;
+//        float wgtsyst = (!syst.IsNull() and iswgtsyst)? tx->getBranch<float>(syst) : 1.;
+//        TH1F* h = booked_histograms[key1d];
+//        h->Fill(tx->getBranch<float>(varname), weight * wgtsyst);
+//    }
+//
+//    for (auto& key2d : booked_2dhistograms_nominal_keys)
+//    {
+//        TString cutname = std::get<0>(key2d);
+//        std::get<1>(key2d) = syst;
+//        TString varname = std::get<2>(key2d);
+//        TString varnamey = std::get<3>(key2d);
+//        bool& passed = cuttreemap[cutname.Data()]->pass;
+//        if (!passed)
+//            continue;
+//        float& weight = cuttreemap[cutname.Data()]->weight;
+//        float wgtsyst = (!syst.IsNull() and iswgtsyst)? tx->getBranch<float>(syst) : 1.;
+//        TH2F* h = booked_2dhistograms[key2d];
+//        h->Fill(tx->getBranch<float>(varname), tx->getBranch<float>(varnamey), weight * wgtsyst);
+//    }
+
+//    for (auto& pair : booked_histograms)
+//    {
+//        TString cutname = std::get<0>(pair.first);
+//        TString sysname = std::get<1>(pair.first);
+//        TString varname = std::get<2>(pair.first);
+//        TH1F* h = pair.second;
+//        bool& passed = cuttreemap[cutname.DATA()]->pass;
+//        float& weight = cuttreemap[cutname.DATA()]->weight;
+//        float wgtsyst = sysname.IsNull() ? 1. : tx->getBranch<float>(sysname);
+//        if (passed)
+//            h->Fill(tx->getBranch<float>(varname), weight * wgtsyst);
+//    }
+//
+//    for (auto& pair : booked_2dhistograms)
+//    {
+//        TString cutname = std::get<0>(pair.first);
+//        TString sysname = std::get<1>(pair.first);
+//        TString varname = std::get<2>(pair.first);
+//        TString varnamey = std::get<3>(pair.first);
+//        TH2F* h = pair.second;
+//        bool& passed = cuttreemap[cutname.DATA()]->pass;
+//        float& weight = cuttreemap[cutname.DATA()]->weight;
+//        float wgtsyst = sysname.IsNull() ? 1. : tx->getBranch<float>(sysname);
+//        if (passed)
+//            h->Fill(tx->getBranch<float>(varname), tx->getBranch<float>(varnamey), weight * wgtsyst);
+//    }
 }
 
 //_______________________________________________________________________________________________________
@@ -312,15 +415,20 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
     float min = std::get<1>(key.second);
     float max = std::get<2>(key.second);
     TString histname = cut + syst + "__" + varname;
-    if (booked_histograms.find(std::make_tuple(cut, syst, varname)) == booked_histograms.end())
+    if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
-        booked_histograms[std::make_tuple(cut, syst, varname)] = new TH1F(histname, "", nbin, min, max);
-        booked_histograms[std::make_tuple(cut, syst, varname)]->SetDirectory(0);
-        booked_histograms[std::make_tuple(cut, syst, varname)]->Sumw2();
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", nbin, min, max);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_histograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data()));
+        }
         if (!tx)
             error("bookHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
         if (!tx->hasBranch<float>(varname))
             tx->createBranch<float>(varname);
+        cuttreemap[cut.Data()]->addHist1D(booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())], varname, syst);
     }
 }
 
@@ -330,18 +438,23 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::vector
     TString varname = key.first;
     std::vector<float> boundaries = key.second;
     TString histname = cut + syst + "__" + varname;
-    if (booked_histograms.find(std::make_tuple(cut, syst, varname)) == booked_histograms.end())
+    if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
         Float_t bounds[boundaries.size()];
         for (unsigned int i = 0; i < boundaries.size(); ++i)
             bounds[i] = boundaries[i];
-        booked_histograms[std::make_tuple(cut, syst, varname)] = new TH1F(histname, "", boundaries.size()-1, bounds);
-        booked_histograms[std::make_tuple(cut, syst, varname)]->SetDirectory(0);
-        booked_histograms[std::make_tuple(cut, syst, varname)]->Sumw2();
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_histograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data()));
+        }
         if (!tx)
             error("bookHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
         if (!tx->hasBranch<float>(varname))
             tx->createBranch<float>(varname);
+        cuttreemap[cut.Data()]->addHist1D(booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())], varname, syst);
     }
 }
 
@@ -357,17 +470,22 @@ void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString,
     float miny = std::get<1>(key.second);
     float maxy = std::get<2>(key.second);
     TString histname = cut + syst + "__" + varname+"_v_"+varnamey;
-    if (booked_2dhistograms.find(std::make_tuple(cut, syst, varname, varnamey)) == booked_2dhistograms.end())
+    if (booked_2dhistograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())) == booked_2dhistograms.end())
     {
-        booked_2dhistograms[std::make_tuple(cut, syst, varname, varnamey)] = new TH2F(histname, "", nbin, min, max, nbiny, miny, maxy);
-        booked_2dhistograms[std::make_tuple(cut, syst, varname, varnamey)]->SetDirectory(0);
-        booked_2dhistograms[std::make_tuple(cut, syst, varname, varnamey)]->Sumw2();
+        booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())] = new TH2F(histname, "", nbin, min, max, nbiny, miny, maxy);
+        booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())]->SetDirectory(0);
+        booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_2dhistograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data()));
+        }
         if (!tx)
             error("book2DHistogram():: No TTreeX has been set. Forgot to call bookCutflows()?");
         if (!tx->hasBranch<float>(varname))
             tx->createBranch<float>(varname);
         if (!tx->hasBranch<float>(varnamey))
             tx->createBranch<float>(varnamey);
+        cuttreemap[cut.Data()]->addHist2D(booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())], varname, varnamey, syst);
     }
 }
 
@@ -382,6 +500,12 @@ void RooUtil::Cutflow::bookHistogramsForCut(Histograms& histograms, TString cut)
         for (auto& key : histograms.th1fs)        bookHistogram  (cut, key, syst);
         for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key, syst);
         for (auto& key : histograms.th2fs)        book2DHistogram(cut, key, syst);
+    }
+    for (auto& cutsyst : cutsysts)
+    {
+        for (auto& key : histograms.th1fs)        bookHistogram  (cut, key, cutsyst);
+        for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key, cutsyst);
+        for (auto& key : histograms.th2fs)        book2DHistogram(cut, key, cutsyst);
     }
 }
 
@@ -399,6 +523,26 @@ void RooUtil::Cutflow::bookHistogramsForCutAndBelow(Histograms& histograms, TStr
 void RooUtil::Cutflow::bookHistogramsForCutAndAbove(Histograms& histograms, TString cut)
 {
     error("bookHistogramsForCutAndAbove not yet implemented");
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::printSetFunctionError(TString msg)
+{
+    if (seterrorcount < 100)
+    {
+        print(msg);
+        seterrorcount++;
+    }
+    else if (seterrorcount == 100)
+    {
+        print(msg);
+        print("Suppressing Cutflow::set\"Func\"() errors ... ");
+        seterrorcount++;
+    }
+    else
+    {
+        return;
+    }
 }
 
 //_______________________________________________________________________________________________________

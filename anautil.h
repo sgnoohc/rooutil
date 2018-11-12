@@ -33,16 +33,21 @@ namespace RooUtil
         public:
             CutTree cuttree;
             CutTree* last_active_cut; // when getCut is called this is set
-            std::map<TString, CutTree*> cuttreemap;
-            std::map<TString, TH1F*> cutflow_histograms;
-            std::map<TString, TH1F*> rawcutflow_histograms;
-            std::map<std::tuple<TString, TString, TString>, TH1F*> booked_histograms; // key is <cutname, syst, varname>
-            std::map<std::tuple<TString, TString, TString, TString>, TH2F*> booked_2dhistograms; // key is <cutname, syst, varname, varnamey>
+            std::map<TREEMAPSTRING, CutTree*> cuttreemap;
+            std::map<CUTFLOWMAPSTRING, TH1F*> cutflow_histograms;
+            std::map<CUTFLOWMAPSTRING, TH1F*> rawcutflow_histograms;
+            std::map<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>, TH1F*> booked_histograms; // key is <cutname, syst, varname>
+            std::map<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>, TH2F*> booked_2dhistograms; // key is <cutname, syst, varname, varnamey>
+            std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_histograms_nominal_keys; // key is <cutname, syst="", varname>
+            std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_2dhistograms_nominal_keys; // key is <cutname, syst="", varname, varnamey>
             TFile* ofile;
             TTree* t;
             TTreeX* tx;
+            std::vector<TString> cutsysts;
             std::vector<TString> systs;
             std::map<TString, std::vector<TString>> cutlists;
+            bool iseventlistbooked;
+            int seterrorcount;
             Cutflow(TFile* o);
             ~Cutflow();
             void addToCutTreeMap(TString n);
@@ -63,6 +68,7 @@ namespace RooUtil
             void saveHistograms();
             void setCut(TString cutname, bool pass, float weight);
             void setCutSyst(TString cutname, TString syst, bool pass, float weight);
+            void addCutSyst(TString syst, std::vector<TString> pattern);
             void addWgtSyst(TString syst);
             void setWgtSyst(TString syst, float weight);
             void createWgtSystBranches();
@@ -70,9 +76,9 @@ namespace RooUtil
             void setEventID(int, int, unsigned long long);
             void bookEventLists();
             void fill();
-            void fillCutflows();
+            void fillCutflows(TString syst="", bool iswgtsyst=true);
             void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
-            void fillHistograms();
+            void fillHistograms(TString syst="", bool iswgtsyst=true);
             void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float>>, TString="");
             void bookHistogram(TString, std::pair<TString, std::vector<float>>, TString="");
             void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float>>, TString="");
@@ -81,6 +87,7 @@ namespace RooUtil
             void bookHistogramsForCut(Histograms& histograms, TString);
             void bookHistogramsForCutAndBelow(Histograms& histograms, TString);
             void bookHistogramsForCutAndAbove(Histograms& histograms, TString);
+            void printSetFunctionError(TString msg);
     };
 }
 

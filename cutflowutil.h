@@ -12,6 +12,11 @@
 #include <algorithm>
 #include <sys/ioctl.h>
 
+//#define USE_TTREEX
+#define TREEMAPSTRING std::string
+#define CUTFLOWMAPSTRING TString
+#define DATA c_str
+
 namespace RooUtil
 {
     namespace CutflowUtil
@@ -51,11 +56,11 @@ namespace RooUtil
         std::pair<bool, float> passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
         void fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
         void fillRawCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
-        std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(CutNameListMap& cutlists, TString syst="");
-        std::tuple<std::map<TString, TH1F*>, std::map<TString, TH1F*>> createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, TString syst="");
-        void fillCutflowHistograms(CutNameListMap& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
-        void fillCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
-        void saveCutflowHistograms(std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
+        std::tuple<std::map<CUTFLOWMAPSTRING, TH1F*>, std::map<CUTFLOWMAPSTRING, TH1F*>> createCutflowHistograms(CutNameListMap& cutlists, TString syst="");
+        std::tuple<std::map<CUTFLOWMAPSTRING, TH1F*>, std::map<CUTFLOWMAPSTRING, TH1F*>> createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, TString syst="");
+        void saveCutflowHistograms(std::map<CUTFLOWMAPSTRING, TH1F*>& cutflows, std::map<CUTFLOWMAPSTRING, TH1F*>& rawcutflows);
+//        void fillCutflowHistograms(CutNameListMap& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
+//        void fillCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
 
     }
 
@@ -69,6 +74,12 @@ namespace RooUtil
             std::map<TString, CutTree*> systs;
             bool pass;
             float weight;
+            bool pass_this_cut;
+            float weight_this_cut;
+//            std::vector<TString> hists1d;
+//            std::vector<std::tuple<TString, TString>> hists2d;
+            std::map<TString, std::vector<std::tuple<TH1F*, TString>>> hists1d;
+            std::map<TString, std::vector<std::tuple<TH2F*, TString, TString>>> hists2d;
             std::vector<std::tuple<int, int, unsigned long long>> eventlist;
             CutTree(TString n) : name(n), parent(0), pass(false), weight(0) {}
             ~CutTree()
@@ -144,12 +155,29 @@ namespace RooUtil
             }
             void addSyst(TString syst)
             {
+                // If already added ignore
+                if (systs.find(syst) != systs.end())
+                    return;
                 // Syst CutTree object knows the parents, and children, however, the children does not know the syst-counter-part parent, nor the parent knows the syste-counter-part children.
                 CutTree* obj = new CutTree(this->name + syst);
                 systs[syst] = obj;
                 obj->children = this->children;
                 obj->parents = this->parents;
                 obj->parent = this->parent;
+            }
+            void addHist1D(TH1F* h, TString var, TString syst)
+            {
+                if (syst.IsNull())
+                    hists1d["Nominal"].push_back(std::make_tuple(h, var));
+                else
+                    hists1d[syst].push_back(std::make_tuple(h, var));
+            }
+            void addHist2D(TH2F* h, TString varx, TString vary, TString syst)
+            {
+                if (syst.IsNull())
+                    hists2d["Nominal"].push_back(std::make_tuple(h, varx, vary));
+                else
+                    hists2d[syst].push_back(std::make_tuple(h, varx, vary));
             }
             CutTree* getCutPointer(TString n)
             {
@@ -258,7 +286,61 @@ namespace RooUtil
                 for (auto& child : children)
                     child->clear();
             }
-            void evaluate(RooUtil::TTreeX& tx, bool aggregated_pass=true, float aggregated_weight=1)
+            void addSyst(TString syst, std::vector<TString> patterns)
+            {
+                for (auto& pattern : patterns)
+                    if (name.Contains(pattern))
+                        addSyst(syst);
+                for (auto& child : children)
+                    child->addSyst(syst, patterns);
+            }
+            void evaluate(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
+            {
+#ifdef USE_TTREEX
+                evaluate_use_ttreex(tx, cutsystname, doeventlist, aggregated_pass, aggregated_weight);
+#else
+                evaluate_use_internal_variable(tx, cutsystname, doeventlist, aggregated_pass, aggregated_weight);
+#endif
+            }
+            void evaluate_use_internal_variable(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
+            {
+                if (!parent)
+                {
+                    pass = pass_this_cut;
+                    weight = weight_this_cut;
+                }
+                else
+                {
+                    if (cutsystname.IsNull())
+                    {
+                        pass = pass_this_cut && aggregated_pass;
+                        weight = weight_this_cut * aggregated_weight;
+                    }
+                    else
+                    {
+                        if (systs.find(cutsystname) == systs.end())
+                        {
+                            pass = pass_this_cut && aggregated_pass;
+                            weight = weight_this_cut * aggregated_weight;
+                        }
+                        else
+                        {
+                            pass = systs[cutsystname]->pass_this_cut && aggregated_pass;
+                            weight = systs[cutsystname]->weight_this_cut * aggregated_weight;
+                        }
+                    }
+                }
+                if (doeventlist and pass)
+                {
+                    if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
+                    {
+                        eventlist.push_back(std::make_tuple(tx.getBranch<int>("run"), tx.getBranch<int>("lumi"), tx.getBranch<unsigned long long>("evt")));
+                    }
+                }
+                for (auto& child : children)
+                    child->evaluate(tx, cutsystname, pass, weight);
+            }
+            void evaluate_use_ttreex(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
             {
                 if (!parent)
                 {
@@ -267,10 +349,32 @@ namespace RooUtil
                 }
                 else
                 {
-                    pass = tx.getBranch<bool>(name) && aggregated_pass;
-                    weight = tx.getBranch<float>(name+"_weight") * aggregated_weight;
+                    if (cutsystname.IsNull())
+                    {
+                        if (!tx.hasBranch<bool>(name))
+                            return;
+                        pass = tx.getBranch<bool>(name) && aggregated_pass;
+                        weight = tx.getBranch<float>(name+"_weight") * aggregated_weight;
+                    }
+                    else
+                    {
+                        if (systs.find(cutsystname) == systs.end())
+                        {
+                            if (!tx.hasBranch<bool>(name))
+                                return;
+                            pass = tx.getBranch<bool>(name) && aggregated_pass;
+                            weight = tx.getBranch<float>(name+"_weight") * aggregated_weight;
+                        }
+                        else
+                        {
+                            if (!tx.hasBranch<bool>(name+cutsystname))
+                                return;
+                            pass = tx.getBranch<bool>(name+cutsystname) && aggregated_pass;
+                            weight = tx.getBranch<float>(name+cutsystname+"_weight") * aggregated_weight;
+                        }
+                    }
                 }
-                if (pass)
+                if (doeventlist and pass)
                 {
                     if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
                     {
@@ -278,7 +382,7 @@ namespace RooUtil
                     }
                 }
                 for (auto& child : children)
-                    child->evaluate(tx, pass, weight);
+                    child->evaluate(tx, cutsystname, pass, weight);
             }
             void sortEventList()
             {
@@ -299,6 +403,59 @@ namespace RooUtil
             void addEventList(int run, int lumi, unsigned long long evt)
             {
                 eventlist.push_back(std::make_tuple(run, lumi, evt));
+            }
+            void fillHistograms(RooUtil::TTreeX& tx, TString syst, float extrawgt)
+            {
+                // If the cut didn't pass then stop
+                if (!pass)
+                    return;
+
+                if (hists1d.size() != 0 or hists2d.size() != 0)
+                {
+                    TString systkey = syst.IsNull() ? "Nominal" : syst;
+                    for (auto& tuple : hists1d[syst])
+                    {
+                        TH1F* h = std::get<0>(tuple);
+                        TString varname = std::get<1>(tuple);
+                        h->Fill(tx.getBranch<float>(varname), weight * extrawgt);
+                    }
+                    for (auto& tuple : hists2d[syst])
+                    {
+                        TH2F* h = std::get<0>(tuple);
+                        TString varname = std::get<1>(tuple);
+                        TString varnamey = std::get<2>(tuple);
+                        h->Fill(tx.getBranch<float>(varname), tx.getBranch<float>(varnamey), weight * extrawgt);
+                    }
+                }
+                for (auto& child : children)
+                    child->fillHistograms(tx, syst, extrawgt);
+
+//                if (!parent)
+//                {
+//                    pass = pass_this_cut;
+//                    weight = weight_this_cut;
+//                }
+//                else
+//                {
+//                    if (cutsystname.IsNull())
+//                    {
+//                        pass = pass_this_cut && aggregated_pass;
+//                        weight = weight_this_cut * aggregated_weight;
+//                    }
+//                    else
+//                    {
+//                        if (systs.find(cutsystname) == systs.end())
+//                        {
+//                            pass = pass_this_cut && aggregated_pass;
+//                            weight = weight_this_cut * aggregated_weight;
+//                        }
+//                        else
+//                        {
+//                            pass = systs[cutsystname]->pass_this_cut && aggregated_pass;
+//                            weight = systs[cutsystname]->weight_this_cut * aggregated_weight;
+//                        }
+//                    }
+//                }
             }
     };
 }
