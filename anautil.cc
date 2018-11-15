@@ -145,6 +145,36 @@ void RooUtil::Cutflow::saveHistograms()
         pair.second->Write();
 }
 
+#ifdef USE_CUTLAMBDA
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setCut(TString cutname, std::function<bool()> pass, std::function<float()> weight)
+{
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, setCut() for " + cutname;
+        printSetFunctionError(msg);
+        return;
+    }
+    cuttreemap[cutname.Data()]->pass_this_cut_func = pass;
+    cuttreemap[cutname.Data()]->weight_this_cut_func = weight;
+
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setCutSyst(TString cutname, TString syst, std::function<bool()> pass, std::function<float()> weight)
+{
+    if (!tx)
+    {
+        TString msg = "No TTreeX object set, setCutSyst() for " + cutname + ", " + syst;
+        printSetFunctionError(msg);
+        return;
+    }
+    cuttreemap[cutname.Data()]->systs[syst]->pass_this_cut_func = pass;
+    cuttreemap[cutname.Data()]->systs[syst]->weight_this_cut_func = weight;
+}
+
+#else
+
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCut(TString cutname, bool pass, float weight)
 {
@@ -182,6 +212,8 @@ void RooUtil::Cutflow::setCutSyst(TString cutname, TString syst, bool pass, floa
     cuttreemap[cutname.Data()]->systs[syst]->weight_this_cut = weight;
 #endif
 }
+
+#endif // USE_CUTLAMBDA
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setWgtSyst(TString syst, float weight)
@@ -533,6 +565,16 @@ void RooUtil::Cutflow::bookHistogramsForCutAndBelow(Histograms& histograms, TStr
 void RooUtil::Cutflow::bookHistogramsForCutAndAbove(Histograms& histograms, TString cut)
 {
     error("bookHistogramsForCutAndAbove not yet implemented");
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookHistogramsForEndCuts(Histograms& histograms)
+{
+    std::vector<TString> regions = cuttree.getEndCuts();
+    for (auto& region : regions)
+    {
+        bookHistogramsForCut(histograms, region);
+    }
 }
 
 //_______________________________________________________________________________________________________

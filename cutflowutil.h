@@ -11,8 +11,10 @@
 #include <iostream>
 #include <algorithm>
 #include <sys/ioctl.h>
+#include <functional>
 
 //#define USE_TTREEX
+#define USE_CUTLAMBDA
 #define TREEMAPSTRING std::string
 #define CUTFLOWMAPSTRING TString
 #define DATA c_str
@@ -76,6 +78,8 @@ namespace RooUtil
             float weight;
             bool pass_this_cut;
             float weight_this_cut;
+            std::function<bool()> pass_this_cut_func;
+            std::function<float()> weight_this_cut_func;
 //            std::vector<TString> hists1d;
 //            std::vector<std::tuple<TString, TString>> hists2d;
             std::map<TString, std::vector<std::tuple<TH1F*, TString>>> hists1d;
@@ -299,8 +303,80 @@ namespace RooUtil
 #ifdef USE_TTREEX
                 evaluate_use_ttreex(tx, cutsystname, doeventlist, aggregated_pass, aggregated_weight);
 #else
+    #ifdef USE_CUTLAMBDA
+                evaluate_use_lambda(tx, cutsystname, doeventlist, aggregated_pass, aggregated_weight);
+    #else
                 evaluate_use_internal_variable(tx, cutsystname, doeventlist, aggregated_pass, aggregated_weight);
+    #endif
 #endif
+            }
+            void evaluate_use_lambda(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
+            {
+                if (!parent)
+                {
+                    pass = 1;
+                    weight = 1;
+                }
+                else
+                {
+                    if (cutsystname.IsNull())
+                    {
+                        if (pass_this_cut_func)
+                        {
+                            pass = pass_this_cut_func() && aggregated_pass;
+                            weight = weight_this_cut_func() * aggregated_weight;
+                        }
+                        else
+                        {
+                            TString msg = "cowardly passing the event because cut and weight func not set! cut name = " + name;
+                            warning(msg);
+                            pass = aggregated_pass;
+                            weight = aggregated_weight;
+                        }
+                    }
+                    else
+                    {
+                        if (systs.find(cutsystname) == systs.end())
+                        {
+                            if (pass_this_cut_func)
+                            {
+                                pass = pass_this_cut_func() && aggregated_pass;
+                                weight = weight_this_cut_func() * aggregated_weight;
+                            }
+                            else
+                            {
+                                TString msg = "cowardly passing the event because cut and weight func not set! cut name = " + name;
+                                warning(msg);
+                                pass = aggregated_pass;
+                                weight = aggregated_weight;
+                            }
+                        }
+                        else
+                        {
+                            if (systs[cutsystname]->pass_this_cut_func)
+                            {
+                                pass = systs[cutsystname]->pass_this_cut_func() && aggregated_pass;
+                                weight = systs[cutsystname]->weight_this_cut_func() * aggregated_weight;
+                            }
+                            else
+                            {
+                                TString msg = "cowardly passing the event because cut and weight func not set! cut name = " + name + " syst name = " + cutsystname;
+                                warning(msg);
+                                pass = aggregated_pass;
+                                weight = aggregated_weight;
+                            }
+                        }
+                    }
+                }
+                if (doeventlist and pass)
+                {
+                    if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
+                    {
+                        eventlist.push_back(std::make_tuple(tx.getBranch<int>("run"), tx.getBranch<int>("lumi"), tx.getBranch<unsigned long long>("evt")));
+                    }
+                }
+                for (auto& child : children)
+                    child->evaluate_use_lambda(tx, cutsystname, doeventlist, pass, weight);
             }
             void evaluate_use_internal_variable(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
             {

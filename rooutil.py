@@ -31,12 +31,12 @@ def get_list_of_histograms(list_of_file_names, hist_names):
                 hists.append(h)
             except:
                 print "Could not find", hist_name, "in", file_name
-        print file_name
+        #print file_name
         f.Close()
     return hists
 
 #______________________________________________________________________________
-def get_yield_histogram(list_of_file_names, regions, ):
+def get_yield_histogram(list_of_file_names, regions, hsuffix="_cutflow"):
     final_h = r.TH1F("yields", "", len(regions), 0, len(regions))
     yields = []
     for i in xrange(len(regions)):
@@ -46,14 +46,14 @@ def get_yield_histogram(list_of_file_names, regions, ):
         for index, region in enumerate(regions):
             try:
                 prefix = region.split("(")[0]
-                h = f.Get(prefix + "_cutflow")
+                h = f.Get(prefix + hsuffix)
                 binoffset = int(region.split("(")[1].split(")")[0]) if len(region.split("(")) > 1 else h.GetNbinsX()
                 bc = h.GetBinContent(binoffset)
                 be = h.GetBinError(binoffset)
                 yields[index] += E(bc, be)
             except:
-                print "Could not find", region+"_cutflow", "in", file_name
-        print file_name
+                print "Could not find", region+hsuffix, "in", file_name
+        #print file_name
         f.Close()
     for i in xrange(len(regions)):
         final_h.SetBinContent(i+1, yields[i].val)

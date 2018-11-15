@@ -66,11 +66,16 @@ namespace RooUtil
             void saveOutput();
             void saveCutflows();
             void saveHistograms();
+#ifdef USE_CUTLAMBDA
+            void setCut    (TString cutname, std::function<bool()> pass, std::function<float()> weight);
+            void setCutSyst(TString cutname, TString syst, std::function<bool()> pass, std::function<float()> weight);
+#else
             void setCut(TString cutname, bool pass, float weight);
             void setCutSyst(TString cutname, TString syst, bool pass, float weight);
+#endif
             void addCutSyst(TString syst, std::vector<TString> pattern);
             void addWgtSyst(TString syst);
-            void setWgtSyst(TString syst, float weight);
+            void setWgtSyst(TString syst, float weight); // TODO make TTreeX using lambda...?
             void createWgtSystBranches();
             void setVariable(TString varname, float);
             void setEventID(int, int, unsigned long long);
@@ -87,6 +92,7 @@ namespace RooUtil
             void bookHistogramsForCut(Histograms& histograms, TString);
             void bookHistogramsForCutAndBelow(Histograms& histograms, TString);
             void bookHistogramsForCutAndAbove(Histograms& histograms, TString);
+            void bookHistogramsForEndCuts(Histograms& histograms);
             void printSetFunctionError(TString msg);
     };
 }

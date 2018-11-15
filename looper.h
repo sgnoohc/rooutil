@@ -83,6 +83,7 @@ namespace RooUtil
         bool silent;
         bool isinit;
         bool use_treeclass_progress;
+        bool isnewfileopened;
 //        bool use_tqdm_progress_bar;
         unsigned int nskipped_batch;
         unsigned int nskipped;
@@ -104,6 +105,7 @@ namespace RooUtil
         bool allEventsInTreeProcessed();
         bool allEventsInChainProcessed();
         bool nextEvent();
+        bool isNewFileInChain();
         TTree* getTree() { return ttree; }
         TChain* getTChain() { return tchain; }
         unsigned int getNEventsProcessed() { return nEventsProcessed; }
@@ -475,6 +477,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
             if ( nextEventInTree() )
             {
                 //                std::cout << " I think this is the first event in first tree" << std::endl;
+                // Set the boolean that a new file opened for this event
+                isnewfileopened = true;
                 return true;
             }
             // If the first event in this tree was not good, continue to the next tree
@@ -486,6 +490,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
         // return false and call it quits.
         // At this point it will exit the loop without processing any events.
         //        printProgressBar();
+        // Set the boolean that a new file has not opened for this event
+        isnewfileopened = false;
         return false;
     }
     // If tree exists, it means that we're in the middle of a loop
@@ -493,7 +499,11 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
     {
         // If next event is successfully loaded proceed.
         if ( nextEventInTree() )
+        {
+            // Set the boolean that a new file has not opened for this event
+            isnewfileopened = false;
             return true;
+        }
         // If next event is not loaded then check why.
         else
         {
@@ -502,6 +512,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
             if ( allEventsInChainProcessed() )
             {
                 //                printProgressBar();
+                // Set the boolean that a new file has not opened for this event
+                isnewfileopened = false;
                 return false;
             }
             // If failed because it's last in the tree then load the next tree and the event
@@ -512,7 +524,11 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
                 {
                     // If the next event in tree was successfully loaded return true, that it's good.
                     if ( nextEventInTree() )
+                    {
+                        // Set the boolean that a new file has opened for this event
+                        isnewfileopened = true;
                         return true;
+                    }
                     // If the first event in this tree was not good, continue to the next tree
                     else
                         continue;
@@ -522,6 +538,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
                 // return false and call it quits.
                 // Again you're done!
                 //                printProgressBar();
+                // Set the boolean that a new file has not opened for this event
+                isnewfileopened = false;
                 return false;
             }
             else
@@ -529,10 +547,19 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
                 // Why are you even here?
                 // spit error and return false to avoid warnings
                 error( "You should not be here! Please contact philip@physics.ucsd.edu", __FUNCTION__ );
+                // Set the boolean that a new file has not opened for this event
+                isnewfileopened = false;
                 return false;
             }
         }
     }
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+bool RooUtil::Looper<TREECLASS>::isNewFileInChain()
+{
+    return isnewfileopened;
 }
 
 //_________________________________________________________________________________________________
