@@ -98,7 +98,7 @@ namespace RooUtil
             {
                 struct winsize w;
                 ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-                int colsize = min(w.ws_col - 50, 600);
+                int colsize = std::min(w.ws_col - 50, 600);
                 if (indent == 0)
                 {
                     TString header = "Cut name";
@@ -298,6 +298,13 @@ namespace RooUtil
                 for (auto& child : children)
                     child->addSyst(syst, patterns);
             }
+            void clear_passbits()
+            {
+                pass = 0;
+                weight = 0;
+                for (auto& child : children)
+                    child->clear_passbits();
+            }
             void evaluate(RooUtil::TTreeX& tx, TString cutsystname="", bool doeventlist=false, bool aggregated_pass=true, float aggregated_weight=1)
             {
 #ifdef USE_TTREEX
@@ -314,6 +321,7 @@ namespace RooUtil
             {
                 if (!parent)
                 {
+                    clear_passbits();
                     pass = 1;
                     weight = 1;
                 }
@@ -325,6 +333,8 @@ namespace RooUtil
                         {
                             pass = pass_this_cut_func() && aggregated_pass;
                             weight = weight_this_cut_func() * aggregated_weight;
+                            if (!pass)
+                                return;
                         }
                         else
                         {
@@ -342,6 +352,8 @@ namespace RooUtil
                             {
                                 pass = pass_this_cut_func() && aggregated_pass;
                                 weight = weight_this_cut_func() * aggregated_weight;
+                                if (!pass)
+                                    return;
                             }
                             else
                             {
@@ -357,6 +369,8 @@ namespace RooUtil
                             {
                                 pass = systs[cutsystname]->pass_this_cut_func() && aggregated_pass;
                                 weight = systs[cutsystname]->weight_this_cut_func() * aggregated_weight;
+                                if (!pass)
+                                    return;
                             }
                             else
                             {
@@ -382,6 +396,7 @@ namespace RooUtil
             {
                 if (!parent)
                 {
+                    clear_passbits();
                     pass = 1;
                     weight = 1;
                 }
@@ -391,6 +406,8 @@ namespace RooUtil
                     {
                         pass = pass_this_cut && aggregated_pass;
                         weight = weight_this_cut * aggregated_weight;
+                        if (!pass)
+                            return;
                     }
                     else
                     {
@@ -398,11 +415,15 @@ namespace RooUtil
                         {
                             pass = pass_this_cut && aggregated_pass;
                             weight = weight_this_cut * aggregated_weight;
+                            if (!pass)
+                                return;
                         }
                         else
                         {
                             pass = systs[cutsystname]->pass_this_cut && aggregated_pass;
                             weight = systs[cutsystname]->weight_this_cut * aggregated_weight;
+                            if (!pass)
+                                return;
                         }
                     }
                 }

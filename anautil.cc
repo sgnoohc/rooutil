@@ -1,5 +1,8 @@
 #include "anautil.h"
 
+bool PASS() { return true; }
+float UNITY() { return 1; }
+
 //_______________________________________________________________________________________________________
 RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0) { cuttreemap["Root"] = &cuttree; }
 
@@ -13,16 +16,39 @@ void RooUtil::Cutflow::addToCutTreeMap(TString n) { if (cuttreemap.find(n.Data()
 void RooUtil::Cutflow::setLastActiveCut(TString n) { last_active_cut = cuttree.getCutPointer(n); }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::printCuts() { cuttree.printCuts(); }
+
+//_______________________________________________________________________________________________________
+CutTree& RooUtil::Cutflow::getCut(TString n) { CutTree& c = cuttree.getCut(n); setLastActiveCut(n); return c; }
+
+#ifdef USE_CUTLAMBDA
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::addCut(TString n, std::function<bool()> cut, std::function<float()> weight)
+{
+    cuttree.addCut(n);
+    addToCutTreeMap(n);
+    setLastActiveCut(n);
+    setCut(n, cut, weight);
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::addCutToLastActiveCut(TString n, std::function<bool()> cut, std::function<float()> weight)
+{
+    last_active_cut->addCut(n);
+    addToCutTreeMap(n);
+    setLastActiveCut(n);
+    setCut(n, cut, weight);
+}
+
+#else
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::addCut(TString n) { cuttree.addCut(n); addToCutTreeMap(n); setLastActiveCut(n); }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::addCutToLastActiveCut(TString n) { last_active_cut->addCut(n); addToCutTreeMap(n); setLastActiveCut(n); }
 
-//_______________________________________________________________________________________________________
-void RooUtil::Cutflow::printCuts() { cuttree.printCuts(); }
-
-//_______________________________________________________________________________________________________
-CutTree& RooUtil::Cutflow::getCut(TString n) { CutTree& c = cuttree.getCut(n); setLastActiveCut(n); return c; }
+#endif
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::removeCut(TString n)
@@ -149,26 +175,13 @@ void RooUtil::Cutflow::saveHistograms()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCut(TString cutname, std::function<bool()> pass, std::function<float()> weight)
 {
-    if (!tx)
-    {
-        TString msg = "No TTreeX object set, setCut() for " + cutname;
-        printSetFunctionError(msg);
-        return;
-    }
     cuttreemap[cutname.Data()]->pass_this_cut_func = pass;
     cuttreemap[cutname.Data()]->weight_this_cut_func = weight;
-
 }
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCutSyst(TString cutname, TString syst, std::function<bool()> pass, std::function<float()> weight)
 {
-    if (!tx)
-    {
-        TString msg = "No TTreeX object set, setCutSyst() for " + cutname + ", " + syst;
-        printSetFunctionError(msg);
-        return;
-    }
     cuttreemap[cutname.Data()]->systs[syst]->pass_this_cut_func = pass;
     cuttreemap[cutname.Data()]->systs[syst]->weight_this_cut_func = weight;
 }

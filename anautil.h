@@ -13,6 +13,9 @@
 #include <iostream>
 #include <algorithm>
 
+bool PASS();
+float UNITY();
+
 namespace RooUtil
 {
     class Histograms
@@ -52,8 +55,13 @@ namespace RooUtil
             ~Cutflow();
             void addToCutTreeMap(TString n);
             void setLastActiveCut(TString n);
+#ifdef USE_CUTLAMBDA
+            void addCut(TString n, std::function<bool()> pass, std::function<float()> weight);
+            void addCutToLastActiveCut(TString n, std::function<bool()> pass, std::function<float()> weight);
+#else
             void addCut(TString n);
             void addCutToLastActiveCut(TString n);
+#endif
             void copyAndEditCuts(TString, std::map<TString, TString>);
             void printCuts();
             CutTree& getCut(TString n);
