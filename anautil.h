@@ -21,14 +21,26 @@ namespace RooUtil
     class Histograms
     {
         public:
+#ifdef USE_CUTLAMBDA
+            std::map<TString, std::tuple<std::vector<float>, std::function<float()>>> th1fs_varbin;
+            std::map<TString, std::tuple<unsigned int, float, float, std::function<float()>>> th1fs;
+            std::map<std::pair<TString, TString>, std::tuple<unsigned int, float, float, unsigned int, float, float, std::function<float()>, std::function<float()>>> th2fs;
+#else
             std::map<TString, std::vector<float>> th1fs_varbin;
             std::map<TString, std::tuple<unsigned int, float, float>> th1fs;
             std::map<std::pair<TString, TString>, std::tuple<unsigned int, float, float, unsigned int, float, float>> th2fs;
+#endif
             Histograms();
             ~Histograms();
-            void addHistogram(TString, unsigned int, float, float);
-            void addHistogram(TString, std::vector<float>);
+#ifdef USE_CUTLAMBDA
+            void addHistogram(TString, unsigned int, float, float, std::function<float()>);
+            void addHistogram(TString, std::vector<float>, std::function<float()>);
+            void add2DHistogram(TString, unsigned int, float, float, TString, unsigned int, float, float, std::function<float()>, std::function<float()>);
+#else
+            void addHistogram(TString, unsigned int, float, float, std::function<float()> vardef);
+            void addHistogram(TString, std::vector<float>, std::function<float()> vardef);
             void add2DHistogram(TString, unsigned int, float, float, TString, unsigned int, float, float);
+#endif
     };
 
     class Cutflow
@@ -48,6 +60,7 @@ namespace RooUtil
             TTreeX* tx;
             std::vector<TString> cutsysts;
             std::vector<TString> systs;
+            std::map<TString, std::function<float()>> systs_funcs;
             std::map<TString, std::vector<TString>> cutlists;
             bool iseventlistbooked;
             int seterrorcount;
@@ -82,19 +95,29 @@ namespace RooUtil
             void setCutSyst(TString cutname, TString syst, bool pass, float weight);
 #endif
             void addCutSyst(TString syst, std::vector<TString> pattern);
+#ifdef USE_CUTLAMBDA
+            void addWgtSyst(TString syst, std::function<float()>);
+#else
             void addWgtSyst(TString syst);
+#endif
             void setWgtSyst(TString syst, float weight); // TODO make TTreeX using lambda...?
             void createWgtSystBranches();
             void setVariable(TString varname, float);
             void setEventID(int, int, unsigned long long);
             void bookEventLists();
             void fill();
-            void fillCutflows(TString syst="", bool iswgtsyst=true);
             void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
+            void fillCutflows(TString syst="", bool iswgtsyst=true);
             void fillHistograms(TString syst="", bool iswgtsyst=true);
+#ifdef USE_CUTLAMBDA
+            void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float, std::function<float()>>>, TString="");
+            void bookHistogram(TString, std::pair<TString, std::tuple<std::vector<float>, std::function<float()>>>, TString="");
+            void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float, std::function<float()>, std::function<float()>>>, TString="");
+#else
             void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float>>, TString="");
             void bookHistogram(TString, std::pair<TString, std::vector<float>>, TString="");
             void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float>>, TString="");
+#endif
             void bookHistograms(Histograms& histograms);
             void bookHistograms(Histograms& histograms, std::vector<TString> cutlist);
             void bookHistogramsForCut(Histograms& histograms, TString);

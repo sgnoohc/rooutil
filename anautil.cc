@@ -247,11 +247,20 @@ void RooUtil::Cutflow::addCutSyst(TString syst, std::vector<TString> pattern)
     cuttree.addSyst(syst, pattern);
 }
 
+#ifdef USE_CUTLAMBDA
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::addWgtSyst(TString syst, std::function<float()> weight)
+{
+    systs.push_back(syst);
+    systs_funcs[syst] = weight;
+}
+#else
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::addWgtSyst(TString syst)
 {
     systs.push_back(syst);
 }
+#endif
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::createWgtSystBranches()
@@ -347,6 +356,19 @@ void RooUtil::Cutflow::fill()
     tx->clear();
 }
 
+#ifdef USE_CUTLAMBDA
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::fillCutflows(TString syst, bool iswgtsyst)
+{
+    for (auto& pair : cutlists)
+    {
+        const TString& region_name = pair.first;
+        std::vector<TString>& cutlist = pair.second;
+        float wgtsyst = (!syst.IsNull() and iswgtsyst) ? systs_funcs[syst]() : 1;
+        fillCutflow(cutlist, cutflow_histograms[(region_name+syst).Data()], rawcutflow_histograms[(region_name+syst).Data()], wgtsyst);
+    }
+}
+#else
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::fillCutflows(TString syst, bool iswgtsyst)
 {
@@ -358,6 +380,7 @@ void RooUtil::Cutflow::fillCutflows(TString syst, bool iswgtsyst)
         fillCutflow(cutlist, cutflow_histograms[(region_name+syst).Data()], rawcutflow_histograms[(region_name+syst).Data()], wgtsyst);
     }
 }
+#endif
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst)
@@ -382,8 +405,13 @@ void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F*
 void RooUtil::Cutflow::fillHistograms(TString syst, bool iswgtsyst)
 {
 
+#ifdef USE_CUTLAMBDA
+    float wgtsyst = (!syst.IsNull() and iswgtsyst) ? systs_funcs[syst]() : 1;
+    cuttree.fillHistograms(syst, wgtsyst);
+#else
     float wgtsyst = (!syst.IsNull() and iswgtsyst)? tx->getBranch<float>(syst) : 1.;
     cuttree.fillHistograms(*tx, syst, wgtsyst);
+#endif
 
 //    for (auto& key1d : booked_histograms_nominal_keys)
 //    {
@@ -462,6 +490,79 @@ void RooUtil::Cutflow::bookHistograms(Histograms& histograms, std::vector<TStrin
     }
 }
 
+#ifdef USE_CUTLAMBDA
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<unsigned, float, float, std::function<float()>>> key, TString syst)
+{
+    TString varname = key.first;
+    unsigned int nbin = std::get<0>(key.second);
+    float min = std::get<1>(key.second);
+    float max = std::get<2>(key.second);
+    std::function<float()> vardef = std::get<3>(key.second);
+    TString histname = cut + syst + "__" + varname;
+    if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
+    {
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", nbin, min, max);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_histograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data()));
+        }
+        cuttreemap[cut.Data()]->addHist1D(booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())], vardef, syst);
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<std::vector<float>, std::function<float()>>> key, TString syst)
+{
+    TString varname = key.first;
+    std::vector<float> boundaries = std::get<0>(key.second);
+    std::function<float()> vardef = std::get<1>(key.second);
+    TString histname = cut + syst + "__" + varname;
+    if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
+    {
+        Float_t bounds[boundaries.size()];
+        for (unsigned int i = 0; i < boundaries.size(); ++i)
+            bounds[i] = boundaries[i];
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_histograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data()));
+        }
+        cuttreemap[cut.Data()]->addHist1D(booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())], vardef, syst);
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float, std::function<float()>, std::function<float()>>> key, TString syst)
+{
+    TString varname = key.first.first;
+    TString varnamey = key.first.second;
+    unsigned int nbin = std::get<0>(key.second);
+    float min = std::get<1>(key.second);
+    float max = std::get<2>(key.second);
+    unsigned int nbiny = std::get<3>(key.second);
+    float miny = std::get<4>(key.second);
+    float maxy = std::get<5>(key.second);
+    std::function<float()> varxdef = std::get<6>(key.second);
+    std::function<float()> varydef = std::get<7>(key.second);
+    TString histname = cut + syst + "__" + varname+"_v_"+varnamey;
+    if (booked_2dhistograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())) == booked_2dhistograms.end())
+    {
+        booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())] = new TH2F(histname, "", nbin, min, max, nbiny, miny, maxy);
+        booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())]->SetDirectory(0);
+        booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_2dhistograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data()));
+        }
+        cuttreemap[cut.Data()]->addHist2D(booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())], varxdef, varydef, syst);
+    }
+}
+#else
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<unsigned, float, float>> key, TString syst)
 {
@@ -543,6 +644,7 @@ void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString,
         cuttreemap[cut.Data()]->addHist2D(booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())], varname, varnamey, syst);
     }
 }
+#endif
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::bookHistogramsForCut(Histograms& histograms, TString cut)
@@ -620,6 +722,45 @@ RooUtil::Histograms::~Histograms()
 {
 }
 
+#ifdef USE_CUTLAMBDA
+//_______________________________________________________________________________________________________
+void RooUtil::Histograms::addHistogram(TString name, unsigned int n, float min, float max, std::function<float()> vardef)
+{
+    if (th1fs.find(name) == th1fs.end())
+    {
+        th1fs[name] = std::make_tuple(n, min, max, vardef);
+    }
+    else
+    {
+        error(TString::Format("histogram already exists name = %s", name.Data()));
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Histograms::addHistogram(TString name, std::vector<float> boundaries, std::function<float()> vardef)
+{
+    if (th1fs_varbin.find(name) == th1fs_varbin.end())
+    {
+        th1fs_varbin[name] = std::make_tuple(boundaries, vardef);
+    }
+    else
+    {
+        error(TString::Format("histogram already exists name = %s", name.Data()));
+    }
+}
+//_______________________________________________________________________________________________________
+void RooUtil::Histograms::add2DHistogram(TString name, unsigned int n, float min, float max, TString namey, unsigned int ny, float miny, float maxy, std::function<float()> varxdef, std::function<float()> varydef)
+{
+    if (th2fs.find(std::make_pair(name, namey)) == th2fs.end())
+    {
+        th2fs[std::make_pair(name, namey)] = std::make_tuple(n, min, max, ny, miny, maxy, varxdef, varydef);
+    }
+    else
+    {
+        error(TString::Format("histogram already exists name = %s", (name+"_v_"+namey).Data()));
+    }
+}
+#else
 //_______________________________________________________________________________________________________
 void RooUtil::Histograms::addHistogram(TString name, unsigned int n, float min, float max)
 {
@@ -646,4 +787,6 @@ void RooUtil::Histograms::add2DHistogram(TString name, unsigned int n, float min
     else
         error(TString::Format("histogram already exists name = %s", (name+"_v_"+namey).Data()));
 }
+#endif
+
 

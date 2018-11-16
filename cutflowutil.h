@@ -82,8 +82,13 @@ namespace RooUtil
             std::function<float()> weight_this_cut_func;
 //            std::vector<TString> hists1d;
 //            std::vector<std::tuple<TString, TString>> hists2d;
+#ifdef USE_CUTLAMBDA
+            std::map<TString, std::vector<std::tuple<TH1F*, std::function<float()>>>> hists1d;
+            std::map<TString, std::vector<std::tuple<TH2F*, std::function<float()>, std::function<float()>>>> hists2d;
+#else
             std::map<TString, std::vector<std::tuple<TH1F*, TString>>> hists1d;
             std::map<TString, std::vector<std::tuple<TH2F*, TString, TString>>> hists2d;
+#endif
             std::vector<std::tuple<int, int, unsigned long long>> eventlist;
             CutTree(TString n) : name(n), parent(0), pass(false), weight(0) {}
             ~CutTree()
@@ -169,6 +174,22 @@ namespace RooUtil
                 obj->parents = this->parents;
                 obj->parent = this->parent;
             }
+#ifdef USE_CUTLAMBDA
+            void addHist1D(TH1F* h, std::function<float()> var, TString syst)
+            {
+                if (syst.IsNull())
+                    hists1d["Nominal"].push_back(std::make_tuple(h, var));
+                else
+                    hists1d[syst].push_back(std::make_tuple(h, var));
+            }
+            void addHist2D(TH2F* h, std::function<float()> varx, std::function<float()> vary, TString syst)
+            {
+                if (syst.IsNull())
+                    hists2d["Nominal"].push_back(std::make_tuple(h, varx, vary));
+                else
+                    hists2d[syst].push_back(std::make_tuple(h, varx, vary));
+            }
+#else
             void addHist1D(TH1F* h, TString var, TString syst)
             {
                 if (syst.IsNull())
@@ -183,6 +204,7 @@ namespace RooUtil
                 else
                     hists2d[syst].push_back(std::make_tuple(h, varx, vary));
             }
+#endif
             CutTree* getCutPointer(TString n)
             {
                 // If the name match then return itself
@@ -501,6 +523,34 @@ namespace RooUtil
             {
                 eventlist.push_back(std::make_tuple(run, lumi, evt));
             }
+#ifdef USE_CUTLAMBDA
+            void fillHistograms(TString syst, float extrawgt)
+            {
+                // If the cut didn't pass then stop
+                if (!pass)
+                    return;
+
+                if (hists1d.size() != 0 or hists2d.size() != 0)
+                {
+                    TString systkey = syst.IsNull() ? "Nominal" : syst;
+                    for (auto& tuple : hists1d[systkey])
+                    {
+                        TH1F* h = std::get<0>(tuple);
+                        std::function<float()> vardef = std::get<1>(tuple);
+                        h->Fill(vardef(), weight * extrawgt);
+                    }
+                    for (auto& tuple : hists2d[systkey])
+                    {
+                        TH2F* h = std::get<0>(tuple);
+                        std::function<float()> varxdef = std::get<1>(tuple);
+                        std::function<float()> varydef = std::get<2>(tuple);
+                        h->Fill(varxdef(), varydef(), weight * extrawgt);
+                    }
+                }
+                for (auto& child : children)
+                    child->fillHistograms(syst, extrawgt);
+            }
+#else
             void fillHistograms(RooUtil::TTreeX& tx, TString syst, float extrawgt)
             {
                 // If the cut didn't pass then stop
@@ -554,6 +604,7 @@ namespace RooUtil
 //                    }
 //                }
             }
+#endif
     };
 }
 
