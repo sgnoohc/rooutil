@@ -98,6 +98,44 @@ def get_shape_reweighting_histogram(numerator, denominator):
     return ratio
 
 #______________________________________________________________________________
+def get_sf(h_proc, h_data, h_sub):
+
+    if isinstance(h_proc, list):
+        if len(h_proc) == 0:
+            raise ValueError("provided histogram list is null")
+        h_proc_tmp = h_proc[0].Clone()
+        h_proc_tmp.Reset()
+        for h in h_proc:
+            h_proc_tmp.Add(h)
+        h_proc = h_proc_tmp
+
+    if isinstance(h_sub, list):
+        if len(h_sub) == 0:
+            h_sub = None
+        else:
+            h_sub_tmp = h_sub[0].Clone()
+            h_sub_tmp.Reset()
+            for h in h_sub:
+                h_sub_tmp.Add(h)
+            h_sub = h_sub_tmp
+
+    if isinstance(h_data, list):
+        if len(h_data) == 0:
+            raise ValueError("provided histogram list is null")
+        h_data_tmp = h_data[0].Clone()
+        h_data_tmp.Reset()
+        for h in h_data:
+            h_data_tmp.Add(h)
+        h_data = h_data_tmp
+
+    h_ddproc = h_data.Clone()
+    if h_sub:
+        h_ddproc.Add(h_sub, -1)
+    h_ddproc.Divide(h_proc)
+
+    return h_ddproc
+
+#______________________________________________________________________________
 def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
 
     import time

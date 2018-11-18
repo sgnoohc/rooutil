@@ -68,10 +68,17 @@ void RooUtil::Cutflow::setCutLists(std::vector<TString> regions)
 //        for (auto& cutname : cutlists[region])
 //            std::cout << cutname << std::endl;
     }
+    for (auto& region : regions)
+    {
+        for (auto& cutname : cutlists[region])
+        {
+            cuttreelists[region].push_back(cuttreemap[cutname.Data()]);
+        }
+    }
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::bookCutflowTree(std::vector<TString> regions)
+void RooUtil::Cutflow::bookCutflowTree()
 {
     if (!t)
     {
@@ -90,7 +97,86 @@ void RooUtil::Cutflow::bookCutflowTree(std::vector<TString> regions)
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::bookCutflowHistograms(std::vector<TString> regions)
+void RooUtil::Cutflow::bookCutflowHistograms()
+{
+    bookCutflowHistograms_v1();
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookCutflowHistograms_v2()
+{
+    ofile->cd();
+
+    // Nominal
+    for (auto& cuttreelist : cuttreelists)
+    {
+        TH1F* h     = new TH1F(cuttreelist.first + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+        TH1F* h_raw = new TH1F(cuttreelist.first + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+        h    ->Sumw2();
+        h_raw->Sumw2();
+        h    ->SetDirectory(0);
+        h_raw->SetDirectory(0);
+        std::vector<int*> passes;
+        std::vector<float*> weights;
+        for (auto& cuttree : cuttreelist.second)
+        {
+            passes.push_back(&(cuttree->pass));
+            weights.push_back(&(cuttree->weight));
+        }
+        cutflow_histograms_v2   .push_back(std::make_tuple(h    , passes, weights, UNITY));
+        rawcutflow_histograms_v2.push_back(std::make_tuple(h_raw, passes));
+    }
+
+    // Wgt varying systematic cutflow
+    for (auto& syst : systs)
+    {
+        for (auto& cuttreelist : cuttreelists)
+        {
+            TH1F* h     = new TH1F(cuttreelist.first+syst + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            TH1F* h_raw = new TH1F(cuttreelist.first+syst + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            h    ->Sumw2();
+            h_raw->Sumw2();
+            h    ->SetDirectory(0);
+            h_raw->SetDirectory(0);
+            std::vector<int*> passes;
+            std::vector<float*> weights;
+            for (auto& cuttree : cuttreelist.second)
+            {
+                passes.push_back(&(cuttree->pass));
+                weights.push_back(&(cuttree->weight));
+            }
+            cutflow_histograms_v2   .push_back(std::make_tuple(h    , passes, weights, systs_funcs[syst]));
+            rawcutflow_histograms_v2.push_back(std::make_tuple(h_raw, passes));
+        }
+    }
+
+    // Nominal
+    for (unsigned int i = 0; i < cutsysts.size(); ++i)
+    {
+        TString cutsyst = cutsysts[i];
+        for (auto& cuttreelist : cuttreelists)
+        {
+            TH1F* h     = new TH1F(cuttreelist.first+cutsyst + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            TH1F* h_raw = new TH1F(cuttreelist.first+cutsyst + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            h    ->Sumw2();
+            h_raw->Sumw2();
+            h    ->SetDirectory(0);
+            h_raw->SetDirectory(0);
+            std::vector<int*> passes;
+            std::vector<float*> weights;
+            for (auto& cuttree : cuttreelist.second)
+            {
+                passes.push_back(&(cuttree->systpasses[i]));
+                weights.push_back(&(cuttree->systweights[i]));
+            }
+            cutflow_histograms_v2   .push_back(std::make_tuple(h    , passes, weights, UNITY));
+            rawcutflow_histograms_v2.push_back(std::make_tuple(h_raw, passes));
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookCutflowHistograms_v1()
 {
     ofile->cd();
 
@@ -130,8 +216,8 @@ void RooUtil::Cutflow::bookCutflowHistograms(std::vector<TString> regions)
 void RooUtil::Cutflow::bookCutflowsForRegions(std::vector<TString> regions)
 {
     setCutLists(regions);
-    bookCutflowTree(regions);
-    bookCutflowHistograms(regions);
+    bookCutflowTree();
+    bookCutflowHistograms();
 }
 
 //_______________________________________________________________________________________________________
@@ -139,8 +225,8 @@ void RooUtil::Cutflow::bookCutflows()
 {
     std::vector<TString> regions = cuttree.getEndCuts();
     setCutLists(regions);
-    bookCutflowTree(regions);
-    bookCutflowHistograms(regions);
+    bookCutflowTree();
+    bookCutflowHistograms();
 }
 
 //_______________________________________________________________________________________________________
@@ -360,12 +446,30 @@ void RooUtil::Cutflow::fill()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::fillCutflows(TString syst, bool iswgtsyst)
 {
+    fillCutflows_v2(syst, iswgtsyst);
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::fillCutflows_v1(TString syst, bool iswgtsyst)
+{
     for (auto& pair : cutlists)
     {
         const TString& region_name = pair.first;
         std::vector<TString>& cutlist = pair.second;
         float wgtsyst = (!syst.IsNull() and iswgtsyst) ? systs_funcs[syst]() : 1;
         fillCutflow(cutlist, cutflow_histograms[(region_name+syst).Data()], rawcutflow_histograms[(region_name+syst).Data()], wgtsyst);
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::fillCutflows_v2(TString syst, bool iswgtsyst)
+{
+    for (auto& pair : cuttreelists)
+    {
+        const TString& region_name = pair.first;
+        std::vector<CutTree*>& cuttreelist = pair.second;
+        float wgtsyst = (!syst.IsNull() and iswgtsyst) ? systs_funcs[syst]() : 1;
+        fillCutflow_v2(cuttreelist, cutflow_histograms[(region_name+syst).Data()], rawcutflow_histograms[(region_name+syst).Data()], wgtsyst);
     }
 }
 #else
@@ -387,10 +491,30 @@ void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F*
 {
     for (unsigned int i = 0; i < cutlist.size(); ++i)
     {
-        bool& pass = cuttreemap[cutlist[i].Data()]->pass;
+        int& pass = cuttreemap[cutlist[i].Data()]->pass;
         if (pass)
         {
             float& weight = cuttreemap[cutlist[i].Data()]->weight;
+            h->Fill(i, weight * wgtsyst);
+            hraw->Fill(i, 1);
+        }
+        else
+        {
+            return;
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::fillCutflow_v2(std::vector<CutTree*>& cuttreelist, TH1F* h, TH1F* hraw, float wgtsyst)
+{
+    for (unsigned int i = 0; i < cuttreelist.size(); ++i)
+    {
+        CutTree* cuttree = cuttreelist[i];
+        int& pass = cuttree->pass;
+        if (pass)
+        {
+            float& weight = cuttree->weight;
             h->Fill(i, weight * wgtsyst);
             hraw->Fill(i, 1);
         }

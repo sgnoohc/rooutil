@@ -73,9 +73,13 @@ namespace RooUtil
             CutTree* parent;
             std::vector<CutTree*> parents;
             std::vector<CutTree*> children;
+            std::vector<TString> systcutnames;
+            std::vector<CutTree*> systcuts;
             std::map<TString, CutTree*> systs;
-            bool pass;
+            int pass;
             float weight;
+            std::vector<int> systpasses;
+            std::vector<float> systweights;
             bool pass_this_cut;
             float weight_this_cut;
             std::function<bool()> pass_this_cut_func;
@@ -132,7 +136,8 @@ namespace RooUtil
                 int extrapad = colsize - msg.Length() > 0 ? colsize - msg.Length() : 0;
                 for (int i = 0; i < extrapad; ++i)
                     msg += " ";
-                msg += TString::Format("| %d | %.5f|", pass, weight);
+                //msg += TString::Format("| %d | %.5f|", pass, weight);
+                msg += TString::Format("| %d | %f|", pass, weight);
                 for (auto& key : systs)
                 {
                     msg += key.first + " ";
@@ -170,6 +175,10 @@ namespace RooUtil
                 // Syst CutTree object knows the parents, and children, however, the children does not know the syst-counter-part parent, nor the parent knows the syste-counter-part children.
                 CutTree* obj = new CutTree(this->name + syst);
                 systs[syst] = obj;
+                systcutnames.push_back(syst);
+                systcuts.push_back(obj);
+                systpasses.push_back(1);
+                systweights.push_back(1);
                 obj->children = this->children;
                 obj->parents = this->parents;
                 obj->parent = this->parent;

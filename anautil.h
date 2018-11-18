@@ -55,6 +55,8 @@ namespace RooUtil
             std::map<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>, TH2F*> booked_2dhistograms; // key is <cutname, syst, varname, varnamey>
             std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_histograms_nominal_keys; // key is <cutname, syst="", varname>
             std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_2dhistograms_nominal_keys; // key is <cutname, syst="", varname, varnamey>
+            std::vector<std::tuple<TH1F*, std::vector<int*>, std::vector<float*>, std::function<float()>>> cutflow_histograms_v2;
+            std::vector<std::tuple<TH1F*, std::vector<int*>>> rawcutflow_histograms_v2;
             TFile* ofile;
             TTree* t;
             TTreeX* tx;
@@ -62,6 +64,7 @@ namespace RooUtil
             std::vector<TString> systs;
             std::map<TString, std::function<float()>> systs_funcs;
             std::map<TString, std::vector<TString>> cutlists;
+            std::map<TString, std::vector<CutTree*>> cuttreelists;
             bool iseventlistbooked;
             int seterrorcount;
             Cutflow(TFile* o);
@@ -80,8 +83,10 @@ namespace RooUtil
             CutTree& getCut(TString n);
             void removeCut(TString n);
             void setCutLists(std::vector<TString> regions);
-            void bookCutflowTree(std::vector<TString> regions);
-            void bookCutflowHistograms(std::vector<TString> regions);
+            void bookCutflowTree();
+            void bookCutflowHistograms();
+            void bookCutflowHistograms_v1();
+            void bookCutflowHistograms_v2();
             void bookCutflowsForRegions(std::vector<TString> regions);
             void bookCutflows();
             void saveOutput();
@@ -106,8 +111,11 @@ namespace RooUtil
             void setEventID(int, int, unsigned long long);
             void bookEventLists();
             void fill();
-            void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
             void fillCutflows(TString syst="", bool iswgtsyst=true);
+            void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
+            void fillCutflows_v1(TString syst="", bool iswgtsyst=true);
+            void fillCutflow_v2(std::vector<CutTree*>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
+            void fillCutflows_v2(TString syst="", bool iswgtsyst=true);
             void fillHistograms(TString syst="", bool iswgtsyst=true);
 #ifdef USE_CUTLAMBDA
             void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float, std::function<float()>>>, TString="");

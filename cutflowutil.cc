@@ -96,6 +96,8 @@ std::tuple<std::map<CUTFLOWMAPSTRING, TH1F*>, std::map<CUTFLOWMAPSTRING, TH1F*>>
     {
         cutflows[(cutlist.first+syst).Data()] = new TH1F(cutlist.first+syst + "_cutflow", "", cutlist.second.size(), 0, cutlist.second.size());
         rawcutflows[(cutlist.first+syst).Data()] = new TH1F(cutlist.first+syst + "_rawcutflow", "", cutlist.second.size(), 0, cutlist.second.size());
+        cutflows[(cutlist.first+syst).Data()]->Sumw2();
+        rawcutflows[(cutlist.first+syst).Data()]->Sumw2();
         cutflows[(cutlist.first+syst).Data()]->SetDirectory(0);
         rawcutflows[(cutlist.first+syst).Data()]->SetDirectory(0);
     }
