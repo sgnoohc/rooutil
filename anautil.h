@@ -82,6 +82,8 @@ namespace RooUtil
             void printCuts();
             CutTree& getCut(TString n);
             void removeCut(TString n);
+            void filterCuts(TString n);
+            void filterCuts(std::vector<TString> ns);
             void setCutLists(std::vector<TString> regions);
             void bookCutflowTree();
             void bookCutflowHistograms();

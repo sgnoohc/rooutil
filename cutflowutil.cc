@@ -100,6 +100,11 @@ std::tuple<std::map<CUTFLOWMAPSTRING, TH1F*>, std::map<CUTFLOWMAPSTRING, TH1F*>>
         rawcutflows[(cutlist.first+syst).Data()]->Sumw2();
         cutflows[(cutlist.first+syst).Data()]->SetDirectory(0);
         rawcutflows[(cutlist.first+syst).Data()]->SetDirectory(0);
+        for (unsigned int i = 0; i < cutlist.second.size(); ++i)
+        {
+            cutflows[(cutlist.first+syst).Data()]->GetXaxis()->SetBinLabel(i+1, cutlist.second[i]);
+            rawcutflows[(cutlist.first+syst).Data()]->GetXaxis()->SetBinLabel(i+1, cutlist.second[i]);
+        }
     }
     return std::make_tuple(cutflows, rawcutflows);
 }

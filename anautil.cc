@@ -59,6 +59,44 @@ void RooUtil::Cutflow::removeCut(TString n)
 }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::filterCuts(std::vector<TString> ns)
+{
+    //
+    std::vector<TString> to_not_remove;
+    for (auto& n : ns)
+    {
+        std::vector<TString> cutlist = cuttree.getCutList(n);
+        for (auto& cut : cutlist)
+        {
+            to_not_remove.push_back(cut);
+        }
+    }
+
+    for (auto& n : ns)
+    {
+        std::vector<TString> cutlist = cuttree.getCutList(n);
+        for (unsigned int i = 0; i < cutlist.size() - 1; ++i)
+        {
+            CutTree* cut = cuttree.getCutPointer(cutlist[i]);
+            std::vector<CutTree*> toremove;
+            for (auto& child : cut->children)
+            {
+                if (not child->name.EqualTo(cutlist[i+1]))
+                {
+                    if (std::find(to_not_remove.begin(), to_not_remove.end(), child->name) == to_not_remove.end())
+                        toremove.push_back(child);
+                }
+            }
+            for (auto& child : toremove)
+            {
+                cut->children.erase(std::find(cut->children.begin(), cut->children.end(), child));
+                cuttreemap.erase(cuttreemap.find(child->name.Data()));
+            }
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCutLists(std::vector<TString> regions)
 {
     for (auto& region : regions)
