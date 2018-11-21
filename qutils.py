@@ -7,7 +7,6 @@ import errno
 import sys
 from QFramework import *
 from syncfiles.pyfiles.errors import E
-from syncfiles.pyfiles.mytqdm import tqdm
 import multiprocessing
 import plottery_wrapper as p
 import time
