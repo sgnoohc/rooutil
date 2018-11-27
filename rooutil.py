@@ -196,7 +196,7 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
             maker_task = CondorTask(
                     sample               = sample,
                     tag                  = job_tag,
-                    arguments            = arguments_map[sample.get_datasetname()],
+                    arguments            = arguments_map[sample.get_datasetname()] if arguments_map else "",
                     executable           = exec_path,
                     tarfile              = tar_gz_path,
                     special_dir          = hadoop_path,
