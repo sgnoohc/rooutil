@@ -225,6 +225,7 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
         # Print msummary table so I don't have to load up website
         os.system("msummary -r | tee summary.txt")
         os.system("chmod -R 755 {}".format(metis_dashboard_path))
+        os.system("chmod 644 {}/images/*".format(metis_dashboard_path))
 
         # If all done exit the loop
         if all_tasks_complete:
