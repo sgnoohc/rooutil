@@ -202,7 +202,7 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
                     special_dir          = hadoop_path,
                     output_name          = "output.root",
                     files_per_output     = files_per_output,
-                    condor_submit_params = {"sites" : "T2_US_UCSD"},
+                    condor_submit_params = {"sites" : "T2_US_UCSD,LOCAL"},
                     open_dataset         = False,
                     flush                = True,
                     #no_load_from_backup  = True,
@@ -241,6 +241,8 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
         except KeyboardInterrupt:
             raw_input("Press Enter to force update, or Ctrl-C to quit.")
             print "Force updating..."
+
+    os.chdir(main_dir)
 
 if __name__ == "__main__":
     main()
