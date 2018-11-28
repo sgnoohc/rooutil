@@ -136,7 +136,7 @@ def get_sf(h_proc, h_data, h_sub):
     return h_ddproc
 
 #______________________________________________________________________________
-def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
+def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
 
     import time
     import json
@@ -174,8 +174,13 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
 
     total_summary = {}
 
+    # if no sample_list is provided then we form it via the keys of the samples_map
+    if len(sample_list) == 0:
+        for key in samples_map:
+            sample_list.append(key)
+
     samples_to_run = []
-    for key in samples_map:
+    for key in sample_list:
         samples_to_run.append(
                 DirectorySample(
                     dataset=key,
