@@ -188,7 +188,7 @@ def get_sf(h_proc, h_data, h_sub):
     return h_ddproc
 
 #______________________________________________________________________________
-def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
+def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
 
     import time
     import json
@@ -226,8 +226,13 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
 
     total_summary = {}
 
+    # if no sample_list is provided then we form it via the keys of the samples_map
+    if len(sample_list) == 0:
+        for key in samples_map:
+            sample_list.append(key)
+
     samples_to_run = []
-    for key in samples_map:
+    for key in sample_list:
         samples_to_run.append(
                 DirectorySample(
                     dataset=key,
@@ -248,13 +253,13 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
             maker_task = CondorTask(
                     sample               = sample,
                     tag                  = job_tag,
-                    arguments            = arguments_map[sample.get_datasetname()],
+                    arguments            = arguments_map[sample.get_datasetname()] if arguments_map else "",
                     executable           = exec_path,
                     tarfile              = tar_gz_path,
                     special_dir          = hadoop_path,
                     output_name          = "output.root",
                     files_per_output     = files_per_output,
-                    condor_submit_params = {"sites" : "T2_US_UCSD"},
+                    condor_submit_params = {"sites" : "T2_US_UCSD,LOCAL"},
                     open_dataset         = False,
                     flush                = True,
                     #no_load_from_backup  = True,
@@ -277,6 +282,7 @@ def submit_metis(job_tag, samples_map, arguments_map="", exec_script="metis.sh",
         # Print msummary table so I don't have to load up website
         os.system("msummary -r | tee summary.txt")
         os.system("chmod -R 755 {}".format(metis_dashboard_path))
+        os.system("chmod 644 {}/images/*".format(metis_dashboard_path))
 
         # If all done exit the loop
         if all_tasks_complete:
@@ -457,6 +463,7 @@ observation  {}
     data.SetTitle("observed data")
     data.Write()
     tf.Close()
+    os.chdir(main_dir)
 
 if __name__ == "__main__":
     main()
