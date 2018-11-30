@@ -4,6 +4,7 @@ import plottery_wrapper as p
 import ROOT as r
 import sys
 from errors import E
+import math
 
 #______________________________________________________________________________
 def frac_syst_hists(h, error, errordn=None):
@@ -34,6 +35,30 @@ def frac_syst_hists(h, error, errordn=None):
             bc = hdn.GetBinContent(i+1)
             nb = bc - error[i] * bc
             hdn.SetBinContent(i+1, nb if nb > 0 else 1e-6)
+
+        # Return systematic histograms
+        return [hup, hdn]
+
+    # If the error provided is a flat percentage
+    elif isinstance(error, float):
+
+        if errordn:
+            if not isinstance(errordn, float):
+                raise ValueError("provided errordn but the type of errordn is not float, while error is.")
+
+        # loop over bins and add fractional errors and set the histogram bin content based on it
+        hup = h.Clone()
+        for i in xrange(1, hup.GetNbinsX()+1):
+            bc = hup.GetBinContent(i)
+            nb = bc + error * bc
+            hup.SetBinContent(i, nb if nb > 0 else 1e-6)
+
+        # loop over bins and add fractional errors based on errordn (or error if errordn wasn't provided) and set the histogram bin content based on it
+        hdn = h.Clone()
+        for i in xrange(1, hdn.GetNbinsX()+1):
+            bc = hdn.GetBinContent(i)
+            nb = bc - error * bc
+            hdn.SetBinContent(i, nb if nb > 0 else 1e-6)
 
         # Return systematic histograms
         return [hup, hdn]
@@ -150,6 +175,15 @@ def get_shape_reweighting_histogram(numerator, denominator):
     return ratio
 
 #______________________________________________________________________________
+def remove_negative_or_zero(h):
+    for i in xrange(0, h.GetNbinsX()+2):
+        bc = h.GetBinContent(i)
+        if bc <= 0:
+            h.SetBinContent(i, 1e-6)
+            h.SetBinError(i, 1e-6)
+    return h
+
+#______________________________________________________________________________
 def get_sf(h_proc, h_data, h_sub):
 
     if isinstance(h_proc, list):
@@ -186,6 +220,46 @@ def get_sf(h_proc, h_data, h_sub):
     h_ddproc.Divide(h_proc)
 
     return h_ddproc
+
+#______________________________________________________________________________
+# inputs
+#    bgs = dictionary {"lostlep" : TH1, ... }
+#    systs = {"JES" : {"lostlep" : [TH1, TH1], ... } , ... }
+#
+# This is largely for plotting. So it will take up and down and error and do sqrt( (dU^2 + dD^2) / 2)
+def get_total_error(bgs={}, systs={}):
+
+    if len(bgs) == 0:
+        raise ValueError("attempting to compute total error. but you didn't provide any background histograms.")
+
+    new_bgs = {}
+    for bg in bgs:
+        new_bgs[bg] = bgs[bg].Clone()
+        for syst in systs:
+            for proc in systs[syst]:
+                if proc == bg:
+                    for i in xrange(0, new_bgs[bg].GetNbinsX()+2):
+                        bc = new_bgs[bg].GetBinContent(i) # Central
+                        be = new_bgs[bg].GetBinError(i) # Current error
+                        ue = systs[syst][proc][0].GetBinContent(i) # Up error
+                        de = systs[syst][proc][1].GetBinContent(i) # Down error
+                        se = math.sqrt(((ue - bc)**2 + (de - bc)**2)/2) # Symmetrized error
+                        ne = math.sqrt(be**2 + se**2) # New error
+                        new_bgs[bg].SetBinError(i, ne) # New error
+
+    # Sum all processes
+    ks = new_bgs.keys()
+    total_bkg = new_bgs[ks[0]].Clone()
+    total_bkg.Reset()
+    for new_bg in new_bgs:
+        total_bkg.Add(new_bgs[new_bg])
+
+    # Set the content as errors (this is the format plottery expects)
+    for i in xrange(0, total_bkg.GetNbinsX()+2):
+        total_bkg.SetBinContent(i, total_bkg.GetBinError(i))
+
+    return total_bkg
+
 
 #______________________________________________________________________________
 def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root", sites="T2_US_UCSD"):
@@ -445,20 +519,28 @@ observation  {}
                 eh.SetBinContent(i + 1, nc if nc > 0 else 1e-6)
                 eh.Write()
 
+    # Obtain a list of ordered systogram names
+    list_of_systs = systs.keys()
+    list_of_systs.sort()
+
     # Treat the systematic histograms
-    for proc in systs:
-        for syst in systs[proc]:
-
-            # Write the line that declares the systematic
-            f.write("""{:24s}shape           {}
-""".format(proc + "_" + syst, "".join(["{:13s}".format("1" if proc == iproc else "-") for iproc in hists_names])))
-
-            # Then write the histograms to the output file
-            for index, h in enumerate(systs[proc][syst]): # There are two histograms to loop over and they are up and down variations
-                histname = proc + "_" + proc + "_" + syst + ("Up" if index == 0 else "Down")
+    for syst in list_of_systs:
+        for proc in systs[syst]:
+            # Write the histograms to the output file
+            for index, h in enumerate(systs[syst][proc]): # There are two histograms to loop over and they are up and down variations
+                histname = proc + "_" + syst + ("Up" if index == 0 else "Down")
                 h.SetName(histname)
                 h.SetTitle(syst)
+                for i in xrange(1, x.GetNbinsX() + 1):
+                    bc = h.GetBinContent(i)
+                    if bc <= 0:
+                        h.SetBinContent(i, 1e-6)
                 h.Write()
+
+        # Write the line that declares the systematic
+        f.write("""{:24s}shape           {}
+""".format(syst, "".join(["{:13s}".format("1" if iproc in systs[syst].keys() else "-") for iproc in hists_names])))
+
 
     # Write the data histogram
     data.SetName("data_obs") # HiggsCombineTool wants data histograms to set to exactly this name
