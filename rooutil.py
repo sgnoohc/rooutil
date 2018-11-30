@@ -188,7 +188,7 @@ def get_sf(h_proc, h_data, h_sub):
     return h_ddproc
 
 #______________________________________________________________________________
-def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root"):
+def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root", sites="T2_US_UCSD"):
 
     import time
     import json
@@ -259,7 +259,7 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
                     special_dir          = hadoop_path,
                     output_name          = "output.root",
                     files_per_output     = files_per_output,
-                    condor_submit_params = {"sites" : "T2_US_UCSD,LOCAL"},
+                    condor_submit_params = {"sites" : sites},
                     open_dataset         = False,
                     flush                = True,
                     #no_load_from_backup  = True,
