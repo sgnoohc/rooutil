@@ -300,6 +300,8 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
             raw_input("Press Enter to force update, or Ctrl-C to quit.")
             print "Force updating..."
 
+    os.chdir(main_dir)
+
 #______________________________________________________________________________
 def write_shape_fit_datacard(sig=None, bgs=[], data=None, datacard_filename="datacard.txt", region_name="SR", hist_filename="hist.root", systs={}):
 
@@ -463,7 +465,6 @@ observation  {}
     data.SetTitle("observed data")
     data.Write()
     tf.Close()
-    os.chdir(main_dir)
 
 if __name__ == "__main__":
     main()
