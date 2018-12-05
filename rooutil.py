@@ -339,7 +339,6 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
                     #no_load_from_backup  = True,
                     )
 
-
             # process the job (either submits, checks for resubmit, or finishes etc.)
             maker_task.process()
 
@@ -393,6 +392,7 @@ def write_shape_fit_datacard(sig=None, bgs=[], data=None, datacard_filename="dat
         print "data will be set to total bkg expectation. (of course rounded."
         fakedata = bgs[0].Clone()
         fakedata.Reset()
+        fakedata.GetXaxis().SetCanExtend(False)
         for b in bgs:
             fakedata.Add(b)
         for i in xrange(1,fakedata.GetNbinsX()+2):
@@ -515,8 +515,8 @@ observation  {}
                 name = h.GetName() # TH1::SetName() is now the process name
                 stat_error_hist_name = name + "_" + name + "_stat_" + str(i) + var # The TH1 naming convention is defined in datacard.txt line of "shapes * * .... "
                 eh = h.Clone(stat_error_hist_name)
-                nc = eh.GetBinContent(i + 1) + eh.GetBinError(i + 1) if var == "Up" else eh.GetBinContent(i + 1) - eh.GetBinError(i + 1)
-                eh.SetBinContent(i + 1, nc if nc > 0 else 1e-6)
+                nc = eh.GetBinContent(i) + eh.GetBinError(i) if var == "Up" else eh.GetBinContent(i) - eh.GetBinError(i)
+                eh.SetBinContent(i, nc if nc > 0 else 1e-6)
                 eh.Write()
 
     # Obtain a list of ordered systogram names
