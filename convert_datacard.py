@@ -31,7 +31,9 @@ class DataCardConverter:
         self.get_shape_systematic_lines()
         self.process_systematics()
         #self.print_contents()
-        return self.self.get_header() + self.get_rates_table() + self.get_systematic_table()
+
+    def get_str(self):
+        return self.get_header() + self.get_rates_table() + self.get_systematic_table()
 
     def open_datacard_file(self):
         self.f = open(self.datacard_path)
@@ -149,7 +151,7 @@ class DataCardConverter:
         header += "{}\n".format(self.get_delimiter())
         header += "bin            {}\n".format(self.bin_name)
         header += "observation    0\n"
-        header += "{}".format(self.get_delimiter())
+        header += "{}\n".format(self.get_delimiter())
         return header
 
     def get_rates_table(self):
@@ -169,12 +171,13 @@ class DataCardConverter:
         rtn += proc_index_line + "\n"
         rtn += proc_label_line + "\n"
         rtn += proc_rates_line + "\n"
-        rtn += self.get_delimiter + "\n"
+        rtn += self.get_delimiter() + "\n"
         return rtn
 
     def get_systematic_table(self):
         """ Print the main systematic error table portion"""
         """ loop over systematics and process and print the table"""
+        rtnstr = ""
         for syst in sorted(self.systs.keys()):
             tmpstr = "{:23s}lnN            ".format(syst)
             for proc in self.systs[syst]:
@@ -182,7 +185,8 @@ class DataCardConverter:
                     tmpstr += "{:17s}".format("-")
                 else:
                     tmpstr += "{:.5f}/{:.5f}  ".format(self.systs[syst][proc]["Up"], self.systs[syst][proc]["Down"])
-            return tmpstr
+            rtnstr += tmpstr + "\n"
+        return rtnstr
 
     def print_contents(self):
         print self.f
@@ -210,4 +214,5 @@ if __name__ == "__main__":
     datacard_path = sys.argv[1]
 
     dc = DataCardConverter(datacard_path, 3)
+    print dc.get_str()
 
