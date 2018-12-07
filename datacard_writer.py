@@ -69,6 +69,9 @@ class DataCardWriter:
     def set_bin(self, i):
         self.bin_number = i
 
+    def set_region_name(self, i):
+        self.region_name = i
+
     def process(self):
         self.sanity_check()
         self.preproces_data()
@@ -647,15 +650,25 @@ if __name__ == "__main__":
     # Now create data card writer
     # bkg2 does not need stat error as it is taken care of by CR stats
     d = DataCardWriter(sig=sig, bgs=[bkg1, bkg2, bkg3], data=None, systs=systs, no_stat_procs=["bkg2"])
-    d.set_bin(1) # First write output for bin 1
+
+    d.set_bin(1)
+    d.set_region_name("bin1")
     d.write("test_datacard_bin1.txt")
-    d.set_bin(2) # First write output for bin 1
+
+    d.set_bin(2)
+    d.set_region_name("bin2")
     d.write("test_datacard_bin2.txt")
-    d.set_bin(3) # First write output for bin 1
+
+    d.set_bin(3)
+    d.set_region_name("bin3")
     d.write("test_datacard_bin3.txt")
-    d.set_bin(4) # First write output for bin 1
+
+    d.set_bin(4)
+    d.set_region_name("bin4")
     d.write("test_datacard_bin4.txt")
-    d.set_bin(5) # First write output for bin 1
+
+    d.set_bin(5)
+    d.set_region_name("bin5")
     d.write("test_datacard_bin5.txt")
 
     #  # Testing
