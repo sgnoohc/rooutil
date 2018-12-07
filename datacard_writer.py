@@ -3,6 +3,17 @@
 import sys
 import ROOT as r
 
+##########################################################
+#
+# TOC
+#
+#  + Class DataCardWriter (Takes in histograms and writes txt based datacards.)
+#
+#  + Class DataCardConverter (Takes in shape-based datacards and writes txt based datacards.)
+#
+#
+##########################################################
+
 class DataCardWriter:
 
     def __init__(self, sig=None, bgs=[], data=None, datacard_filename="datacard.txt", region_name="SR", bin_number=1, no_stat_procs=[], systs=[]):
@@ -38,6 +49,7 @@ class DataCardWriter:
             ...
             # If provided is a gmN then the 3rd option has the data yield for gmN and each process has the extrapolation factors
             ('WW_norm', 'gmN', [TH1], {'qqWW': TH1, 'ggWW': TH1, 'ggH': TH1, 'others': TH1}),
+            ('WW_norm', 'gmN', [TH1], {'qqWW': [float,..], 'ggWW': [float,..], 'ggH': [float,..], 'others': [float,..]}),
             ...
             ...
             ...
@@ -160,7 +172,7 @@ class DataCardWriter:
             ('syst', 'lnN', [], {'qqWW': [TH1, TH1], 'ggWW': None, 'ggH': [TH1, TH1], 'others': None}),
             ('syst', 'lnN', [], {'qqWW': float, 'ggWW': None, 'ggH': float, 'others': None}),
             ('WW_norm', 'gmN', [TH1], {'qqWW': TH1, 'ggWW': TH1, 'ggH': TH1, 'others': TH1}),
-        NOTE: if error type is gmN, the currently supports only when the extrapolation factor (alpha) is provided via TH1
+        NOTE: if error type is gmN, the currently supports only when the extrapolation factor (alpha) is provided via TH1, or a list of float
         """
 
         """ Parse the relevant information"""
@@ -171,15 +183,15 @@ class DataCardWriter:
         gmNyield = syst[2][0].GetBinContent(self.bin_number) if isgmNerr else ""
         systdict = syst[3]
 
-        """ Sanity check for gmN case. Currently only supports when the extrapolation factor (alpha) is provided via TH1 """
+        """ Sanity check for gmN case. Currently only supports when the extrapolation factor (alpha) is provided via TH1 or list of string"""
         if isgmNerr:
             """ Need to check either it is 0 or None or r.TH1"""
             for i in systdict:
-                if isinstance(systdict[i], r.TH1) or systdict[i] == None or systdict[i] == 0:
+                if isinstance(systdict[i], r.TH1) or systdict[i] == None or systdict[i] == 0 or (isinstance(systdict[i], list) and isinstance(systdict[i][0], str)):
                     pass
                 else:
                     print syst
-                    raise ValueError("gmN error must be accompanied with extrapolation factors via TH1.")
+                    raise ValueError("gmN error must be accompanied with extrapolation factors via TH1 or a direct list of string expression.")
 
         """ The first column is the name of the syst, and the second (or third) is the syst type"""
         rtn  = "{:27s}".format(systname)
@@ -240,15 +252,36 @@ class DataCardWriter:
                 """ Case 5"""
                 rtn += "{:17s}".format(systval)
             else:
-                print systval
+                print proc, systval, systdict
                 raise ValueError("Hm? I don't know how to process this")
 
         return rtn
 
+    def check_gmN(self, syst):
+        """ Check if gmN error is relevant for this bin"""
+        """ OR if it is just a regular error just skip"""
+        isgmNerr = len(syst[2]) != 0
+        if isgmNerr:
+            systdict = syst[3]
+            isgood = False
+            for proc in self.proc_names:
+                if isinstance(systdict[proc], list):
+                    if isinstance(systdict[proc][self.bin_number-1], str):
+                        if systdict[proc][self.bin_number-1] != "-":
+                            isgood = True
+                elif isinstance(systdict[proc], r.TH1):
+                    for i in xrange(1, systdict[proc].GetNbinsX()+1):
+                        if systdict[proc].GetBinContent(i) != 0:
+                            isgood = True
+            return isgood
+        else:
+            return True
+
     def get_systs_str(self):
         rtn = ""
         for syst in self.systs:
-            rtn += self.get_syst_str(syst) + "\n"
+            if self.check_gmN(syst):
+                rtn += self.get_syst_str(syst) + "\n"
         return rtn
 
     def get_str(self):
@@ -479,8 +512,154 @@ class DataCardConverter:
 
 if __name__ == "__main__":
 
-    datacard_path = sys.argv[1]
+    # NOTE in every histogram the "SetTitle" is what determines the process name in the datacard output (I wanted to leave SetName along since, a lot of us uses SetName for various things, i.e. TLegend etc.)
 
-    dc = DataCardConverter(datacard_path, 3)
-    print dc.get_str()
+    # Create dummy histograms for testing
+    sig = r.TH1F("h_signal", "signal", 5, 0, 5)
+    sig.SetBinContent(1, 1.2)
+    sig.SetBinContent(2, 2.3)
+    sig.SetBinContent(3, 3.5)
+    sig.SetBinContent(4, 4.2)
+    sig.SetBinContent(5, 7.9)
+    # ~3% error
+    sig.SetBinError(1, 1.2*0.0331)
+    sig.SetBinError(2, 2.3*0.0231)
+    sig.SetBinError(3, 3.5*0.0378)
+    sig.SetBinError(4, 4.2*0.0294)
+    sig.SetBinError(5, 7.9*0.0412)
+
+    # bkg1
+    bkg1 = r.TH1F("h_bkg1", "bkg1", 5, 0, 5)
+    bkg1.SetBinContent(1, 5.2)
+    bkg1.SetBinContent(2, 3.3)
+    bkg1.SetBinContent(3, 2.5)
+    bkg1.SetBinContent(4, 1.2)
+    bkg1.SetBinContent(5, 0.9)
+    # errors
+    bkg1.SetBinError(1, 5.2*0.0631)
+    bkg1.SetBinError(2, 3.3*0.0231)
+    bkg1.SetBinError(3, 2.5*0.0478)
+    bkg1.SetBinError(4, 1.2*0.0394)
+    bkg1.SetBinError(5, 0.9*0.0112)
+
+    # bkg2 (This will be data-driven via CR)
+    bkg2 = r.TH1F("h_bkg2", "bkg2", 5, 0, 5)
+    bkg2.SetBinContent(1, 2.2)
+    bkg2.SetBinContent(2, 3.3)
+    bkg2.SetBinContent(3, 5.5)
+    bkg2.SetBinContent(4, 2.2)
+    bkg2.SetBinContent(5, 1.9)
+    # errors
+    bkg2.SetBinError(1, 2.2*0.0631)
+    bkg2.SetBinError(2, 3.3*0.0231)
+    bkg2.SetBinError(3, 5.5*0.0478)
+    bkg2.SetBinError(4, 2.2*0.0394)
+    bkg2.SetBinError(5, 1.9*0.0112)
+
+    # bkgCR2 (This will be the control region for bkg2)
+    bkgCR2 = r.TH1F("h_bkgCR2", "bkgCR2", 5, 0, 5)
+    bkgCR2.SetBinContent(1, 20)
+    bkgCR2.SetBinContent(2, 33)
+    bkgCR2.SetBinContent(3, 55)
+    bkgCR2.SetBinContent(4, 27)
+    bkgCR2.SetBinContent(5, 15)
+    # errors (data has no errors, man)
+    bkgCR2.SetBinError(1, 0)
+    bkgCR2.SetBinError(2, 0)
+    bkgCR2.SetBinError(3, 0)
+    bkgCR2.SetBinError(4, 0)
+    bkgCR2.SetBinError(5, 0)
+
+    # extrapolation factor (The MC_SR / MC_CR value that will be multiplied to data yields in CR to estimate bkg2 in SR)
+    # I am going to just divide SR / data, since I am creating a dummy example.
+    alpha = bkg2.Clone("h_alpha")
+    alpha.Divide(bkgCR2)
+
+    # bkg3 (the deadly bkg)
+    bkg3 = r.TH1F("h_bkg3", "bkg3", 5, 0, 5)
+    bkg3.SetBinContent(1, 1.2)
+    bkg3.SetBinContent(2, 1.3)
+    bkg3.SetBinContent(3, 2.5)
+    bkg3.SetBinContent(4, 2.2)
+    bkg3.SetBinContent(5, 3.9)
+    # errors
+    bkg3.SetBinError(1, 1.2*0.0231)
+    bkg3.SetBinError(2, 1.3*0.0231)
+    bkg3.SetBinError(3, 2.5*0.0378)
+    bkg3.SetBinError(4, 2.2*0.0394)
+    bkg3.SetBinError(5, 3.9*0.0212)
+
+    # Systematics
+    # Supported types of input are
+    #    1. [TH1, TH1] # up and down variation
+    #    2. TH1
+    #    3. [float, float] # up and down variation
+    #    4. float
+    #    5. str         # direct input
+    #    6. [str, ... ] # direct input per bin
+    #    7. None
+    # All of the yields on these are expected to be the YIELDS AFTER SYST IS APPLIED. (i.e. NOT FRACTIONS)
+    # You can mix and match
+    systs = []
+
+    # 20% symmetric error on bkg1
+    bkg1XsecSyst = bkg1.Clone()
+    bkg1XsecSyst.Scale(1.2) # 20% symmetric error
+    systs.append( ("bkg1XsecSyst", "lnN", [], {"signal":0, "bkg1":bkg1XsecSyst, "bkg2":0, "bkg3":0}) )
+
+    # bkg2 CR statistical error via gmN
+    systs.append( ("bkg2CRbin1", "gmN", [bkgCR2], {"signal":0, "bkg1":0, "bkg2":[ "{:.4f}".format(alpha.GetBinContent(i)) if i == 1 else "-" for i in xrange(1, alpha.GetNbinsX()+1) ], "bkg3":0}) )
+    systs.append( ("bkg2CRbin2", "gmN", [bkgCR2], {"signal":0, "bkg1":0, "bkg2":[ "{:.4f}".format(alpha.GetBinContent(i)) if i == 2 else "-" for i in xrange(1, alpha.GetNbinsX()+1) ], "bkg3":0}) )
+    systs.append( ("bkg2CRbin3", "gmN", [bkgCR2], {"signal":0, "bkg1":0, "bkg2":[ "{:.4f}".format(alpha.GetBinContent(i)) if i == 3 else "-" for i in xrange(1, alpha.GetNbinsX()+1) ], "bkg3":0}) )
+    systs.append( ("bkg2CRbin4", "gmN", [bkgCR2], {"signal":0, "bkg1":0, "bkg2":[ "{:.4f}".format(alpha.GetBinContent(i)) if i == 4 else "-" for i in xrange(1, alpha.GetNbinsX()+1) ], "bkg3":0}) )
+    systs.append( ("bkg2CRbin5", "gmN", [bkgCR2], {"signal":0, "bkg1":0, "bkg2":[ "{:.4f}".format(alpha.GetBinContent(i)) if i == 5 else "-" for i in xrange(1, alpha.GetNbinsX()+1) ], "bkg3":0}) )
+
+    # bkg2 10% error for extrapolation
+    systs.append( ("bkg2alphaError", "lnN", [], {"signal":0, "bkg1":0, "bkg2":"1.1", "bkg3":0}) )
+
+    # Just a trick to generate random ~N% error
+    def get_nfracerror(n):
+        h = r.TH1F("rng", "rng", 5, 0, 5)
+        h.FillRandom("pol0", int((1/(n))**2))
+        h.Scale(h.GetNbinsX()/h.Integral())
+        return h
+
+    # experimental systematics-ish error which are provided by TH1 (e.g. JES, LepSF, etc. which are correlated across all process)
+    sigExptSyst1 = sig.Clone()
+    bkg1ExptSyst1 = bkg1.Clone()
+    bkg2ExptSyst1 = bkg2.Clone()
+    bkg3ExptSyst1 = bkg3.Clone()
+    sigExptSyst2Up = sig.Clone()
+    bkg1ExptSyst2Up = bkg1.Clone()
+    bkg2ExptSyst2Up = bkg2.Clone()
+    bkg3ExptSyst2Up = bkg3.Clone()
+    sigExptSyst2Down = sig.Clone()
+    bkg1ExptSyst2Down = bkg1.Clone()
+    bkg2ExptSyst2Down = bkg2.Clone()
+    bkg3ExptSyst2Down = bkg3.Clone()
+    sigExptSyst1    .Multiply(get_nfracerror(0.03)); bkg1ExptSyst1    .Multiply(get_nfracerror(0.03)); bkg2ExptSyst1    .Multiply(get_nfracerror(0.03)); bkg3ExptSyst1    .Multiply(get_nfracerror(0.03));
+    sigExptSyst2Up  .Multiply(get_nfracerror(0.05)); bkg1ExptSyst2Up  .Multiply(get_nfracerror(0.05)); bkg2ExptSyst2Up  .Multiply(get_nfracerror(0.05)); bkg3ExptSyst2Up  .Multiply(get_nfracerror(0.05));
+    sigExptSyst2Down.Multiply(get_nfracerror(0.05)); bkg1ExptSyst2Down.Multiply(get_nfracerror(0.05)); bkg2ExptSyst2Down.Multiply(get_nfracerror(0.05)); bkg3ExptSyst2Down.Multiply(get_nfracerror(0.05));
+
+    systs.append( ("ExptSyst1", "lnN", [], {"signal":sigExptSyst1, "bkg1":bkg1ExptSyst1, "bkg2":bkg2ExptSyst1, "bkg3":bkg3ExptSyst1}) )
+    systs.append( ("ExptSyst2", "lnN", [], {"signal":[sigExptSyst2Up,sigExptSyst2Down] , "bkg1":[bkg1ExptSyst2Up,bkg1ExptSyst2Down] , "bkg2":[bkg2ExptSyst2Up,bkg2ExptSyst2Down] , "bkg3":[bkg3ExptSyst2Up,bkg3ExptSyst2Down] }) )
+
+    # Now create data card writer
+    # bkg2 does not need stat error as it is taken care of by CR stats
+    d = DataCardWriter(sig=sig, bgs=[bkg1, bkg2, bkg3], data=None, systs=systs, no_stat_procs=["bkg2"])
+    d.set_bin(1) # First write output for bin 1
+    d.write("test_datacard_bin1.txt")
+    d.set_bin(2) # First write output for bin 1
+    d.write("test_datacard_bin2.txt")
+    d.set_bin(3) # First write output for bin 1
+    d.write("test_datacard_bin3.txt")
+    d.set_bin(4) # First write output for bin 1
+    d.write("test_datacard_bin4.txt")
+    d.set_bin(5) # First write output for bin 1
+    d.write("test_datacard_bin5.txt")
+
+    #  # Testing
+    #  # A Shape-based datacard -> text based datacard converter
+    #  dc = DataCardConverter(datacard_path, 3)
+    #  print dc.get_str()
 
