@@ -97,7 +97,10 @@ class DataCardConverter:
         """ From the nominal and systematic histograms compute the fractional error for the datacard"""
         rate_nom = self.get_rate(proc)
         rate_sys = self.get_rate(proc, syst)
-        return rate_sys / rate_nom if rate_nom != 0 else 1
+        frac_err = rate_sys / rate_nom if rate_nom != 0 else 1
+        if frac_err <= 1e-3:
+            frac_err = 1e-3
+        return frac_err
 
     def get_shape_systematic_lines(self):
         """ Identify lines that refer to systematics and save them"""
@@ -180,11 +183,12 @@ class DataCardConverter:
         rtnstr = ""
         for syst in sorted(self.systs.keys()):
             tmpstr = "{:23s}lnN            ".format(syst)
-            for proc in self.systs[syst]:
+            for index in self.process_names_indices_map:
+                proc = self.process_names_indices_map[index]
                 if self.systs[syst][proc]["Up"] == "-":
                     tmpstr += "{:17s}".format("-")
                 else:
-                    tmpstr += "{:.5f}/{:.5f}  ".format(self.systs[syst][proc]["Up"], self.systs[syst][proc]["Down"])
+                    tmpstr += "{:.5f}/{:.5f}  ".format(self.systs[syst][proc]["Down"], self.systs[syst][proc]["Up"])
             rtnstr += tmpstr + "\n"
         return rtnstr
 

@@ -90,7 +90,8 @@ def get_histograms(list_of_file_names, hist_name, sfs={}):
             apply_sf(h, sfs, file_name, hist_name.split("_")[0])
             hists.append(h)
         except:
-            print "Could not find", hist_name, "in", file_name
+            #print "Could not find", hist_name, "in", file_name
+            pass
         f.Close()
     return hists
 
@@ -106,7 +107,8 @@ def get_list_of_histograms(list_of_file_names, hist_names, sfs={}):
                 apply_sf(h, sfs, file_name, hist_name.split("_")[0])
                 hists.append(h)
             except:
-                print "Could not find", hist_name, "in", file_name
+                #print "Could not find", hist_name, "in", file_name
+                pass
         #print file_name
         f.Close()
     return hists
@@ -129,7 +131,8 @@ def get_yield_histogram(list_of_file_names, regions, hsuffix="_cutflow", sfs={})
                 be = h.GetBinError(binoffset)
                 yields[index] += E(bc, be)
             except:
-                print "Could not find", region+hsuffix, "in", file_name
+                #print "Could not find", region+hsuffix, "in", file_name
+                pass
         #print file_name
         f.Close()
     for i in xrange(len(regions)):
@@ -176,12 +179,55 @@ def get_shape_reweighting_histogram(numerator, denominator):
 
 #______________________________________________________________________________
 def remove_negative_or_zero(h):
-    for i in xrange(0, h.GetNbinsX()+2):
+    for i in xrange(1, h.GetNbinsX()+1):
         bc = h.GetBinContent(i)
         if bc <= 0:
             h.SetBinContent(i, 1e-6)
             h.SetBinError(i, 1e-6)
     return h
+
+#______________________________________________________________________________
+def get_alpha(h_proc_sr, h_proc, h_data, h_sub):
+
+    if isinstance(h_proc, list):
+        if len(h_proc) == 0:
+            raise ValueError("provided histogram list is null")
+        h_proc_tmp = h_proc[0].Clone()
+        h_proc_tmp.Reset()
+        for h in h_proc:
+            h_proc_tmp.Add(h)
+        h_proc = h_proc_tmp
+
+    if isinstance(h_sub, list):
+        if len(h_sub) == 0:
+            h_sub = None
+        else:
+            h_sub_tmp = h_sub[0].Clone()
+            h_sub_tmp.Reset()
+            for h in h_sub:
+                h_sub_tmp.Add(h)
+            h_sub = h_sub_tmp
+
+    if isinstance(h_data, list):
+        if len(h_data) == 0:
+            raise ValueError("provided histogram list is null")
+        h_data_tmp = h_data[0].Clone()
+        h_data_tmp.Reset()
+        for h in h_data:
+            h_data_tmp.Add(h)
+        h_data = h_data_tmp
+
+    h_ddproc = h_data.Clone()
+    if h_sub:
+        h_ddproc.Add(h_sub, -1)
+    h_ddproc.Divide(h_proc)
+    #h_ddproc.Print("all")
+    h_ddproc.Multiply(h_proc_sr)
+    #h_ddproc.Print("all")
+    h_ddproc.Divide(h_data)
+    #h_ddproc.Print("all")
+
+    return h_ddproc
 
 #______________________________________________________________________________
 def get_sf(h_proc, h_data, h_sub):
