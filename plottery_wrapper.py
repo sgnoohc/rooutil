@@ -16,6 +16,7 @@ import uuid
 import os
 sys.path.append("{0}/syncfiles/pyfiles".format(os.path.realpath(__file__).rsplit("/",1)[0]))
 from pytable import *
+import tabletex
 from errors import E
 import errno    
 
@@ -700,6 +701,13 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
 def yield_str(hist, i, prec=3):
     e = E(hist.GetBinContent(i), hist.GetBinError(i))
     return e.round(prec)
+#______________________________________________________________________________________________________________________
+def yield_tex_str(hist, i, prec=3):
+    tmp = yield_str(hist, i, prec)
+    tmp = tmp.__str__()
+    sep = '\xc2\xb1'
+    tmp = tmp.replace(sep, "$\pm$")
+    return tmp
 
 #______________________________________________________________________________________________________________________
 def print_yield_table_from_list(hists, outputname, prec=2):
@@ -714,9 +722,63 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
     x.set_theme_basic()
+
+    # Write text version
     makedir(os.path.dirname(fname))
     f = open(fname, "w")
     f.write("".join(x.get_table_string()))
+
+#______________________________________________________________________________________________________________________
+def print_yield_tex_table_from_list(hists, outputname, prec=2):
+    x = Table()
+    if len(hists) == 0:
+        return
+    # add bin column
+    x.add_column("Bin number", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    for hist in hists:
+        x.add_column(hist.GetTitle(), [ yield_tex_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+    fname = outputname
+    fname = os.path.splitext(fname)[0]+'.tex'
+    x.set_theme_basic()
+
+    # Change style for easier tex conversion
+    x.d_style["INNER_INTERSECT"] = ''
+    x.d_style["OUTER_RIGHT_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_LEFT"] = ''
+    x.d_style["OUTER_BOTTOM_RIGHT"] = ''
+    x.d_style["OUTER_TOP_INTERSECT"] = ''
+    x.d_style["OUTER_TOP_LEFT"] = ''
+    x.d_style["OUTER_TOP_RIGHT"] = ''
+    x.d_style["INNER_HORIZONTAL"] = ''
+    x.d_style["OUTER_BOTTOM_HORIZONTAL"] = ''
+    x.d_style["OUTER_TOP_HORIZONTAL"] = ''
+
+    x.d_style["OUTER_LEFT_VERTICAL"] = ''
+    x.d_style["OUTER_RIGHT_VERTICAL"] = ''
+
+#        self.d_style["INNER_HORIZONTAL"] = '-'
+#        self.d_style["INNER_INTERSECT"] = '+'
+#        self.d_style["INNER_VERTICAL"] = '|'
+#        self.d_style["OUTER_LEFT_INTERSECT"] = '|'
+#        self.d_style["OUTER_RIGHT_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_BOTTOM_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_LEFT"] = '+'
+#        self.d_style["OUTER_BOTTOM_RIGHT"] = '+'
+#        self.d_style["OUTER_TOP_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_TOP_INTERSECT"] = '+'
+#        self.d_style["OUTER_TOP_LEFT"] = '+'
+#        self.d_style["OUTER_TOP_RIGHT"] = '+'
+
+    content = [ x for x in ("".join(x.get_table_string())).split('\n') if len(x) > 0 ]
+
+    # Write tex from text version table
+    fnametex = fname.replace('.tex','_yield_table.tex')
+    fnamepdf = fname.replace('.tex','_yield_table.pdf')
+    f = open(fnametex, 'w')
+    content = tabletex.makeTableTeX(content, complete=False)
+    f.write(content)
 
 #______________________________________________________________________________________________________________________
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
@@ -741,6 +803,7 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         prec = options["yield_prec"]
         del options["yield_prec"]
     print_yield_table_from_list(hists, options["output_name"], prec)
+    print_yield_tex_table_from_list(hists, options["output_name"], prec)
 
 def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
