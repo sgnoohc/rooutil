@@ -19,6 +19,12 @@ namespace RooUtil
             double eval(double);
             double eval(double, double);
             double eval(double, double, double);
+            double eval_up(double);
+            double eval_up(double, double);
+            double eval_up(double, double, double);
+            double eval_down(double);
+            double eval_down(double, double);
+            double eval_down(double, double, double);
 
     };
 }

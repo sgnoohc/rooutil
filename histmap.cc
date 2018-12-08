@@ -19,6 +19,16 @@ RooUtil::HistMap::~HistMap()
 }
 
 //_________________________________________________________________________________________________
-double RooUtil::HistMap::eval(double x) { return hist->GetBinContent(hist->FindBin(x)); }
-double RooUtil::HistMap::eval(double x, double y) { return hist->GetBinContent(hist->FindBin(x, y)); }
+double RooUtil::HistMap::eval(double x)                     { return hist->GetBinContent(hist->FindBin(x));       }
+double RooUtil::HistMap::eval(double x, double y)           { return hist->GetBinContent(hist->FindBin(x, y));    }
 double RooUtil::HistMap::eval(double x, double y, double z) { return hist->GetBinContent(hist->FindBin(x, y, z)); }
+
+//_________________________________________________________________________________________________
+double RooUtil::HistMap::eval_up(double x)                     { return hist->GetBinContent(hist->FindBin(x))       + hist->GetBinError(hist->FindBin(x));       }
+double RooUtil::HistMap::eval_up(double x, double y)           { return hist->GetBinContent(hist->FindBin(x, y))    + hist->GetBinError(hist->FindBin(x, y));    }
+double RooUtil::HistMap::eval_up(double x, double y, double z) { return hist->GetBinContent(hist->FindBin(x, y, z)) + hist->GetBinError(hist->FindBin(x, y, z)); }
+
+//_________________________________________________________________________________________________
+double RooUtil::HistMap::eval_down(double x)                     { return hist->GetBinContent(hist->FindBin(x))       - hist->GetBinError(hist->FindBin(x));       }
+double RooUtil::HistMap::eval_down(double x, double y)           { return hist->GetBinContent(hist->FindBin(x, y))    - hist->GetBinError(hist->FindBin(x, y));    }
+double RooUtil::HistMap::eval_down(double x, double y, double z) { return hist->GetBinContent(hist->FindBin(x, y, z)) - hist->GetBinError(hist->FindBin(x, y, z)); }
