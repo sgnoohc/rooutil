@@ -114,8 +114,9 @@ def get_list_of_histograms(list_of_file_names, hist_names, sfs={}):
     return hists
 
 #______________________________________________________________________________
-def get_yield_histogram(list_of_file_names, regions, hsuffix="_cutflow", sfs={}):
+def get_yield_histogram(list_of_file_names, regions, labels=[], hsuffix="_cutflow", sfs={}):
     final_h = r.TH1F("yields", "", len(regions), 0, len(regions))
+    final_h.Sumw2()
     yields = []
     for i in xrange(len(regions)):
         yields.append(E(0, 0))
@@ -138,6 +139,9 @@ def get_yield_histogram(list_of_file_names, regions, hsuffix="_cutflow", sfs={})
     for i in xrange(len(regions)):
         final_h.SetBinContent(i+1, yields[i].val)
         final_h.SetBinError(i+1, yields[i].err)
+        if len(labels):
+            final_h.GetXaxis().SetBinLabel(i+1, labels[i])
+            final_h.SetCanExtend(False)
     return final_h
 
 #______________________________________________________________________________
@@ -266,6 +270,42 @@ def get_sf(h_proc, h_data, h_sub):
     h_ddproc.Divide(h_proc)
 
     return h_ddproc
+
+#______________________________________________________________________________
+def longestSubstringFinder(string1, string2):
+    from difflib import SequenceMatcher
+    match = SequenceMatcher(None, string1, string2).find_longest_match(0, len(string1), 0, len(string2))
+    return string1[match.a: match.a + match.size]
+
+#______________________________________________________________________________
+def longest_substring_finder(l):
+    if not isinstance(l, list):
+        raise ValueError("longest_substring_finder: I don't know what to do if it is not a list")
+    if len(l) < 2:
+        raise ValueError("longest_substring_finder: I don't know what to do if the list is less or equal to length of 1")
+    common = longestSubstringFinder(l[0], l[1])
+    for il in l:
+        common = longestSubstringFinder(common, il)
+    return common
+
+#______________________________________________________________________________
+def remove_common_longest_common_substring(l):
+    if len(l) < 2:
+        raise ValueError("Called to remove common substring but you only provided one or less number of strigs.")
+    common = longest_substring_finder(l)
+    l = [ i.replace(common, "") for i in l ]
+    return l
+
+#______________________________________________________________________________
+def remove_all_common_longest_common_substring(l):
+    if len(l) < 2:
+        raise ValueError("Called to remove common substring but you only provided one or less number of strigs.")
+    common = longest_substring_finder(l)
+    if common == "":
+        return l
+    else:
+        l = remove_common_longest_common_substring(l)
+        return remove_all_common_longest_common_substring(l)
 
 #______________________________________________________________________________
 # inputs

@@ -736,7 +736,11 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2):
     # add bin column
     x.add_column("Bin number", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
     for hist in hists:
-        x.add_column(hist.GetTitle(), [ yield_tex_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+        name = hist.GetName()
+        if '#' in name:
+            name = name.replace("#", "\\")
+            name = "$" + name + "$"
+        x.add_column(name, [ yield_tex_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.tex'
     x.set_theme_basic()
