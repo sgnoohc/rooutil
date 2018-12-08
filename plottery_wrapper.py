@@ -734,7 +734,11 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2):
     if len(hists) == 0:
         return
     # add bin column
-    x.add_column("Bin number", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    labels = hists[0].GetXaxis().GetLabels()
+    if labels:
+        x.add_column("Bin number", [hists[0].GetXaxis().GetBinLabel(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    else:
+        x.add_column("Bin number", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
     for hist in hists:
         name = hist.GetName()
         if '#' in name:
@@ -782,7 +786,16 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2):
     fnamepdf = fname.replace('.tex','_yield_table.pdf')
     f = open(fnametex, 'w')
     content = tabletex.makeTableTeX(content, complete=False)
+    header = """\\begin{table}[htb]
+\\caption{PUT YOUR CAPTION HERE}
+\\resizebox{1.0\\textwidth}{!}{
+"""
+    footer = """}
+\\end{table}
+"""
+    f.write(header)
     f.write(content)
+    f.write(footer)
 
 #______________________________________________________________________________________________________________________
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
