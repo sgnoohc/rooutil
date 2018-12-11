@@ -67,6 +67,7 @@ namespace RooUtil
             std::map<TString, std::vector<CutTree*>> cuttreelists;
             bool iseventlistbooked;
             int seterrorcount;
+            bool doskipsysthist;
             Cutflow(TFile* o);
             ~Cutflow();
             void addToCutTreeMap(TString n);
@@ -91,6 +92,7 @@ namespace RooUtil
             void bookCutflowHistograms_v2();
             void bookCutflowsForRegions(std::vector<TString> regions);
             void bookCutflows();
+            void setSkipSystematicHistograms(bool=true);
             void saveOutput();
             void saveCutflows();
             void saveHistograms();

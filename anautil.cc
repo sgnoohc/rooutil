@@ -4,7 +4,7 @@ bool PASS() { return true; }
 float UNITY() { return 1; }
 
 //_______________________________________________________________________________________________________
-RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0) { cuttreemap["Root"] = &cuttree; }
+RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
 RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
@@ -465,14 +465,18 @@ void RooUtil::Cutflow::fill()
     // Fill nominal histograms
     fillHistograms();
 
-    // Wgt systematic variations
-    for (auto& syst : systs) fillHistograms(syst);
+    if (not doskipsysthist)
+    {
+        // Wgt systematic variations
+        for (auto& syst : systs) fillHistograms(syst);
+    }
 
     for (auto& cutsyst : cutsysts)
     {
         cuttree.evaluate(*tx, cutsyst, iseventlistbooked);
         fillCutflows(cutsyst, false);
-        fillHistograms(cutsyst, false);
+        if (not doskipsysthist)
+            fillHistograms(cutsyst, false);
     }
 
 //    tx->fill(); // TODO if i want to save this...
@@ -814,17 +818,20 @@ void RooUtil::Cutflow::bookHistogramsForCut(Histograms& histograms, TString cut)
     for (auto& key : histograms.th1fs)        bookHistogram  (cut, key);
     for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key);
     for (auto& key : histograms.th2fs)        book2DHistogram(cut, key);
-    for (auto& syst : systs)
+    if (not doskipsysthist)
     {
-        for (auto& key : histograms.th1fs)        bookHistogram  (cut, key, syst);
-        for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key, syst);
-        for (auto& key : histograms.th2fs)        book2DHistogram(cut, key, syst);
-    }
-    for (auto& cutsyst : cutsysts)
-    {
-        for (auto& key : histograms.th1fs)        bookHistogram  (cut, key, cutsyst);
-        for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key, cutsyst);
-        for (auto& key : histograms.th2fs)        book2DHistogram(cut, key, cutsyst);
+        for (auto& syst : systs)
+        {
+            for (auto& key : histograms.th1fs)        bookHistogram  (cut, key, syst);
+            for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key, syst);
+            for (auto& key : histograms.th2fs)        book2DHistogram(cut, key, syst);
+        }
+        for (auto& cutsyst : cutsysts)
+        {
+            for (auto& key : histograms.th1fs)        bookHistogram  (cut, key, cutsyst);
+            for (auto& key : histograms.th1fs_varbin) bookHistogram  (cut, key, cutsyst);
+            for (auto& key : histograms.th2fs)        book2DHistogram(cut, key, cutsyst);
+        }
     }
 }
 
@@ -852,6 +859,12 @@ void RooUtil::Cutflow::bookHistogramsForEndCuts(Histograms& histograms)
     {
         bookHistogramsForCut(histograms, region);
     }
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setSkipSystematicHistograms(bool v)
+{
+    doskipsysthist = v;
 }
 
 //_______________________________________________________________________________________________________

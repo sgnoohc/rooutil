@@ -146,7 +146,9 @@ namespace RooUtil
                 if (children.size() > 1)
                     multichild.push_back(indent+1);
                 for (auto& child : children)
+                {
                     (*child).printCuts(indent+1,multichild);
+                }
             }
             void printEventList()
             {

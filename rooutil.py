@@ -128,6 +128,8 @@ def get_yield_histogram(list_of_file_names, regions, labels=[], hsuffix="_cutflo
                 h = f.Get(prefix + hsuffix)
                 apply_sf(h, sfs, file_name, prefix)
                 binoffset = int(region.split("(")[1].split(")")[0]) if len(region.split("(")) > 1 else h.GetNbinsX()
+                if binoffset < 0:
+                    binoffset = h.GetNbinsX() + 1 + binoffset
                 bc = h.GetBinContent(binoffset)
                 be = h.GetBinError(binoffset)
                 yields[index] += E(bc, be)

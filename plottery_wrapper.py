@@ -729,7 +729,7 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     f.write("".join(x.get_table_string()))
 
 #______________________________________________________________________________________________________________________
-def print_yield_tex_table_from_list(hists, outputname, prec=2):
+def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE"):
     x = Table()
     if len(hists) == 0:
         return
@@ -782,12 +782,12 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2):
     content = [ x for x in ("".join(x.get_table_string())).split('\n') if len(x) > 0 ]
 
     # Write tex from text version table
-    fnametex = fname.replace('.tex','_yield_table.tex')
-    fnamepdf = fname.replace('.tex','_yield_table.pdf')
-    f = open(fnametex, 'w')
+    f = open(fname, 'w')
     content = tabletex.makeTableTeX(content, complete=False)
     header = """\\begin{table}[htb]
-\\caption{PUT YOUR CAPTION HERE}
+\\caption{"""
+    header += caption
+    header +="""}
 \\resizebox{1.0\\textwidth}{!}{
 """
     footer = """}
@@ -820,12 +820,14 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         prec = options["yield_prec"]
         del options["yield_prec"]
     print_yield_table_from_list(hists, options["output_name"], prec)
-    print_yield_tex_table_from_list(hists, options["output_name"], prec)
+    print_yield_tex_table_from_list(hists, options["output_name"], prec, options["yield_table_caption"] if "yield_table_caption" in options else "PUT YOUR CAPTION HERE")
+    if "yield_table_caption" in options: del options["yield_table_caption"]
 
 def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
-    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+    os.system("cp {}/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+#    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 def copy_nice_plot(plotdir):
     os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
@@ -878,6 +880,13 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     """
     Wrapper function to call Plottery.
     """
+
+    # Set can extend turned off if label exists
+    for h in bgs + sigs + [data] + [syst]:
+        if h:
+            labels = h.GetXaxis().GetLabels()
+            if labels:
+                h.SetCanExtend(False)
 
     # If print_all true, print all histogram content
     if "print_all" in options:
