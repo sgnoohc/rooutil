@@ -736,9 +736,9 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
     # add bin column
     labels = hists[0].GetXaxis().GetLabels()
     if labels:
-        x.add_column("Bin number", [hists[0].GetXaxis().GetBinLabel(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+        x.add_column("", [hists[0].GetXaxis().GetBinLabel(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
     else:
-        x.add_column("Bin number", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+        x.add_column("", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
     for hist in hists:
         name = hist.GetName()
         if '#' in name:
@@ -784,7 +784,7 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
     # Write tex from text version table
     f = open(fname, 'w')
     content = tabletex.makeTableTeX(content, complete=False)
-    header = """\\begin{table}[htb]
+    header = """\\begin{table}[!htb]
 \\caption{"""
     header += caption
     header +="""}
