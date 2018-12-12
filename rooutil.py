@@ -5,6 +5,9 @@ import ROOT as r
 import sys
 from errors import E
 import math
+from pytable import *
+import tabletex
+import os
 
 #______________________________________________________________________________
 def frac_syst_hists(h, error, errordn=None):
@@ -348,6 +351,76 @@ def get_total_error(bgs={}, systs={}):
 
     return total_bkg
 
+#______________________________________________________________________________
+# Write a tex table
+def write_tex_table(table, outputname, prec=2, caption="PUT YOUR CAPTION HERE"):
+#    x = Table()
+#    if len(hists) == 0:
+#        return
+#    # add bin column
+#    labels = hists[0].GetXaxis().GetLabels()
+#    if labels:
+#        x.add_column("Bin number", [hists[0].GetXaxis().GetBinLabel(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+#    else:
+#        x.add_column("Bin number", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+#    for hist in hists:
+#        name = hist.GetName()
+#        if '#' in name:
+#            name = name.replace("#", "\\")
+#            name = "$" + name + "$"
+#        x.add_column(name, [ yield_tex_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+    x = table
+    fname = outputname
+    fname = os.path.splitext(fname)[0]+'.tex'
+    x.set_theme_basic()
+
+    # Change style for easier tex conversion
+    x.d_style["INNER_INTERSECT"] = ''
+    x.d_style["OUTER_RIGHT_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_LEFT"] = ''
+    x.d_style["OUTER_BOTTOM_RIGHT"] = ''
+    x.d_style["OUTER_TOP_INTERSECT"] = ''
+    x.d_style["OUTER_TOP_LEFT"] = ''
+    x.d_style["OUTER_TOP_RIGHT"] = ''
+    x.d_style["INNER_HORIZONTAL"] = ''
+    x.d_style["OUTER_BOTTOM_HORIZONTAL"] = ''
+    x.d_style["OUTER_TOP_HORIZONTAL"] = ''
+
+    x.d_style["OUTER_LEFT_VERTICAL"] = ''
+    x.d_style["OUTER_RIGHT_VERTICAL"] = ''
+
+#        self.d_style["INNER_HORIZONTAL"] = '-'
+#        self.d_style["INNER_INTERSECT"] = '+'
+#        self.d_style["INNER_VERTICAL"] = '|'
+#        self.d_style["OUTER_LEFT_INTERSECT"] = '|'
+#        self.d_style["OUTER_RIGHT_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_BOTTOM_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_LEFT"] = '+'
+#        self.d_style["OUTER_BOTTOM_RIGHT"] = '+'
+#        self.d_style["OUTER_TOP_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_TOP_INTERSECT"] = '+'
+#        self.d_style["OUTER_TOP_LEFT"] = '+'
+#        self.d_style["OUTER_TOP_RIGHT"] = '+'
+
+    content = [ x for x in ("".join(x.get_table_string())).split('\n') if len(x) > 0 ]
+
+    # Write tex from text version table
+    f = open(fname, 'w')
+    content = tabletex.makeTableTeX(content, complete=False)
+    header = """\\begin{table}[htb]
+\\caption{"""
+    header += caption
+    header +="""}
+\\resizebox{1.0\\textwidth}{!}{
+"""
+    footer = """}
+\\end{table}
+"""
+    f.write(header)
+    f.write(content)
+    f.write(footer)
 
 #______________________________________________________________________________
 def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_script="metis.sh", tar_files=[], hadoop_dirname="testjobs", files_per_output=1, globber="*.root", sites="T2_US_UCSD"):
