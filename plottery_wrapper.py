@@ -16,7 +16,9 @@ import uuid
 import os
 sys.path.append("{0}/syncfiles/pyfiles".format(os.path.realpath(__file__).rsplit("/",1)[0]))
 from pytable import *
+import tabletex
 from errors import E
+import errno    
 
 # ================================================================
 # New TColors
@@ -84,6 +86,17 @@ default_colors.extend(range(2001, 2013))
 default_colors.extend(range(7001, 7018))
 
 
+
+
+#______________________________________________________________________________________________________________________
+def makedir(dirpath):
+    try:
+        os.makedirs(dirpath)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(dirpath):
+            pass
+        else:
+            raise
 
 
 # ===============
@@ -688,6 +701,13 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
 def yield_str(hist, i, prec=3):
     e = E(hist.GetBinContent(i), hist.GetBinError(i))
     return e.round(prec)
+#______________________________________________________________________________________________________________________
+def yield_tex_str(hist, i, prec=3):
+    tmp = yield_str(hist, i, prec)
+    tmp = tmp.__str__()
+    sep = '\xc2\xb1'
+    tmp = tmp.replace(sep, "$\pm$")
+    return tmp
 
 #______________________________________________________________________________________________________________________
 def print_yield_table_from_list(hists, outputname, prec=2):
@@ -702,8 +722,80 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
     x.set_theme_basic()
+
+    # Write text version
+    makedir(os.path.dirname(fname))
     f = open(fname, "w")
     f.write("".join(x.get_table_string()))
+
+#______________________________________________________________________________________________________________________
+def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE"):
+    x = Table()
+    if len(hists) == 0:
+        return
+    # add bin column
+    labels = hists[0].GetXaxis().GetLabels()
+    if labels:
+        x.add_column("", [hists[0].GetXaxis().GetBinLabel(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    else:
+        x.add_column("", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    for hist in hists:
+        name = hist.GetName()
+        if '#' in name:
+            name = name.replace("#", "\\")
+            name = "$" + name + "$"
+        x.add_column(name, [ yield_tex_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+    fname = outputname
+    fname = os.path.splitext(fname)[0]+'.tex'
+    x.set_theme_basic()
+
+    # Change style for easier tex conversion
+    x.d_style["INNER_INTERSECT"] = ''
+    x.d_style["OUTER_RIGHT_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_LEFT"] = ''
+    x.d_style["OUTER_BOTTOM_RIGHT"] = ''
+    x.d_style["OUTER_TOP_INTERSECT"] = ''
+    x.d_style["OUTER_TOP_LEFT"] = ''
+    x.d_style["OUTER_TOP_RIGHT"] = ''
+    x.d_style["INNER_HORIZONTAL"] = ''
+    x.d_style["OUTER_BOTTOM_HORIZONTAL"] = ''
+    x.d_style["OUTER_TOP_HORIZONTAL"] = ''
+
+    x.d_style["OUTER_LEFT_VERTICAL"] = ''
+    x.d_style["OUTER_RIGHT_VERTICAL"] = ''
+
+#        self.d_style["INNER_HORIZONTAL"] = '-'
+#        self.d_style["INNER_INTERSECT"] = '+'
+#        self.d_style["INNER_VERTICAL"] = '|'
+#        self.d_style["OUTER_LEFT_INTERSECT"] = '|'
+#        self.d_style["OUTER_RIGHT_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_BOTTOM_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_LEFT"] = '+'
+#        self.d_style["OUTER_BOTTOM_RIGHT"] = '+'
+#        self.d_style["OUTER_TOP_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_TOP_INTERSECT"] = '+'
+#        self.d_style["OUTER_TOP_LEFT"] = '+'
+#        self.d_style["OUTER_TOP_RIGHT"] = '+'
+
+    content = [ x for x in ("".join(x.get_table_string())).split('\n') if len(x) > 0 ]
+
+    # Write tex from text version table
+    f = open(fname, 'w')
+    content = tabletex.makeTableTeX(content, complete=False)
+    header = """\\begin{table}[!htb]
+\\caption{"""
+    header += caption
+    header +="""}
+\\resizebox{1.0\\textwidth}{!}{
+"""
+    footer = """}
+\\end{table}
+"""
+    f.write(header)
+    f.write(content)
+    f.write(footer)
 
 #______________________________________________________________________________________________________________________
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
@@ -716,7 +808,10 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         htotal.SetName("Total")
         hists.append(htotal)
     if hdata and len(hbkgs) != 0:
-        hratio = makeRatioHist(hdata, hbkgs)
+        #print hdata
+        #hratio = makeRatioHist(hdata, hbkgs)
+        hratio = hdata.Clone("Ratio")
+        hratio.Divide(htotal)
         #hists.append(htotal)
         hists.append(hdata)
         hists.append(hratio)
@@ -725,10 +820,16 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         prec = options["yield_prec"]
         del options["yield_prec"]
     print_yield_table_from_list(hists, options["output_name"], prec)
+    print_yield_tex_table_from_list(hists, options["output_name"], prec, options["yield_table_caption"] if "yield_table_caption" in options else "PUT YOUR CAPTION HERE")
+    if "yield_table_caption" in options: del options["yield_table_caption"]
 
 def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
+    os.system("cp {}/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+#    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+
+def copy_nice_plot(plotdir):
     os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 #______________________________________________________________________________________________________________________
@@ -779,6 +880,13 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     """
     Wrapper function to call Plottery.
     """
+
+    # Set can extend turned off if label exists
+    for h in bgs + sigs + [data] + [syst]:
+        if h:
+            labels = h.GetXaxis().GetLabels()
+            if labels:
+                h.SetCanExtend(False)
 
     # If print_all true, print all histogram content
     if "print_all" in options:
@@ -881,6 +989,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         del options["ymax_scale"]
     yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * maxmult)
     yaxismin = get_nonzeromin_yaxis_range(bgs)
+    yaxismin = 1000
 
     if "yaxis_log" in options:
         if options["yaxis_log"] and "yaxis_range" not in options:

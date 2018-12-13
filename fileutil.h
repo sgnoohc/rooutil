@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <map>
+#include <dirent.h>
 
 #include "TChain.h"
 #include "TDirectory.h"
@@ -29,6 +30,7 @@ namespace RooUtil
         void saveAllHistograms(std::map<TString, TH1*>, TFile*);
         void saveJson(json& j, TFile*, TString="json");
         json getJson(TFile*, TString="json");
+        std::vector<TString> getFilePathsInDirectory(TString dirpath);
     }
 }
 

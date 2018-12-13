@@ -25,6 +25,8 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     }
 
     TChain* chain = new TChain(name);
+    inputs = inputs.ReplaceAll("\"",""); // In case some rogue " or ' is left over
+    inputs = inputs.ReplaceAll("\'",""); // In case some rogue " or ' is left over
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
     {
         RooUtil::print(Form("Adding %s", ff.Data()));
@@ -90,4 +92,26 @@ json RooUtil::FileUtil::getJson(TFile* ofile, TString jsonname)
     std::string s = vp->at(0);
     json j = json::parse(s);
     return j;
+}
+
+std::vector<TString> RooUtil::FileUtil::getFilePathsInDirectory(TString dirpath)
+{
+    std::vector<TString> rtn;
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir(dirpath.Data())) != NULL)
+    {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL)
+        {
+            if (!TString(ent->d_name).EqualTo(".") && !TString(ent->d_name).EqualTo(".."))
+                rtn.push_back(ent->d_name);
+        }
+        closedir (dir);
+        return rtn;
+    } else {
+        /* could not open directory */
+        error(TString::Format("Could not open directory = %s", dirpath.Data()));
+        return rtn;
+    }
 }

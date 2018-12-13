@@ -33,6 +33,9 @@ namespace RooUtil
         float getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false);
         float getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385);
         TVector2 getEtaPhiVecRotated(const LV& target, const LV& ref, const LV& axis_ref);
+        void printTLV(const TLorentzVector& a);
+        void printLV(const LV& a);
+        int calcBin2D(const std::vector<float>& xbounds, const std::vector<float>& ybounds, float xval, float yval);
     }
 }
 

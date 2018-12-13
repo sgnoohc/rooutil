@@ -39,7 +39,7 @@
 
 #include "printutil.h"
 
-#include "cpptqdm/tqdm.h"
+//#include "cpptqdm/tqdm.h"
 
 namespace RooUtil
 {
@@ -83,14 +83,15 @@ namespace RooUtil
         bool silent;
         bool isinit;
         bool use_treeclass_progress;
-        bool use_tqdm_progress_bar;
+        bool isnewfileopened;
+//        bool use_tqdm_progress_bar;
         unsigned int nskipped_batch;
         unsigned int nskipped;
         unsigned int nbatch_skip_threshold;
         unsigned int nbatch_to_skip;
         unsigned int nskipped_threshold;
         unsigned int ncounter;
-        tqdm bar;
+//        tqdm bar;
         public:
         // Functions
         Looper();
@@ -104,6 +105,7 @@ namespace RooUtil
         bool allEventsInTreeProcessed();
         bool allEventsInChainProcessed();
         bool nextEvent();
+        bool isNewFileInChain();
         TTree* getTree() { return ttree; }
         TChain* getTChain() { return tchain; }
         unsigned int getNEventsProcessed() { return nEventsProcessed; }
@@ -178,7 +180,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     silent( false ),
     isinit( false ),
     use_treeclass_progress( false ),
-    use_tqdm_progress_bar( isatty(1) ),
+//    use_tqdm_progress_bar( isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -187,7 +189,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     ncounter( 0 )
 {
     bmark = new TBenchmark();
-    bar.disable_colors();
+//    bar.disable_colors();
 }
 
 //_________________________________________________________________________________________________
@@ -216,7 +218,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     silent( false ),
     isinit( false ),
     use_treeclass_progress( false ),
-    use_tqdm_progress_bar( isatty(1) ),
+//    use_tqdm_progress_bar( isatty(1) ),
     nskipped_batch( 0 ),
     nskipped( 0 ),
     nbatch_skip_threshold( 500 ),
@@ -227,7 +229,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     bmark = new TBenchmark();
     if ( c && t )
         init( c, t, nevtToProc );
-    bar.disable_colors();
+//    bar.disable_colors();
 }
 
 //_________________________________________________________________________________________________
@@ -475,6 +477,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
             if ( nextEventInTree() )
             {
                 //                std::cout << " I think this is the first event in first tree" << std::endl;
+                // Set the boolean that a new file opened for this event
+                isnewfileopened = true;
                 return true;
             }
             // If the first event in this tree was not good, continue to the next tree
@@ -486,6 +490,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
         // return false and call it quits.
         // At this point it will exit the loop without processing any events.
         //        printProgressBar();
+        // Set the boolean that a new file has not opened for this event
+        isnewfileopened = false;
         return false;
     }
     // If tree exists, it means that we're in the middle of a loop
@@ -493,7 +499,11 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
     {
         // If next event is successfully loaded proceed.
         if ( nextEventInTree() )
+        {
+            // Set the boolean that a new file has not opened for this event
+            isnewfileopened = false;
             return true;
+        }
         // If next event is not loaded then check why.
         else
         {
@@ -502,6 +512,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
             if ( allEventsInChainProcessed() )
             {
                 //                printProgressBar();
+                // Set the boolean that a new file has not opened for this event
+                isnewfileopened = false;
                 return false;
             }
             // If failed because it's last in the tree then load the next tree and the event
@@ -512,7 +524,11 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
                 {
                     // If the next event in tree was successfully loaded return true, that it's good.
                     if ( nextEventInTree() )
+                    {
+                        // Set the boolean that a new file has opened for this event
+                        isnewfileopened = true;
                         return true;
+                    }
                     // If the first event in this tree was not good, continue to the next tree
                     else
                         continue;
@@ -522,6 +538,8 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
                 // return false and call it quits.
                 // Again you're done!
                 //                printProgressBar();
+                // Set the boolean that a new file has not opened for this event
+                isnewfileopened = false;
                 return false;
             }
             else
@@ -529,10 +547,19 @@ bool RooUtil::Looper<TREECLASS>::nextEvent()
                 // Why are you even here?
                 // spit error and return false to avoid warnings
                 error( "You should not be here! Please contact philip@physics.ucsd.edu", __FUNCTION__ );
+                // Set the boolean that a new file has not opened for this event
+                isnewfileopened = false;
                 return false;
             }
         }
     }
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+bool RooUtil::Looper<TREECLASS>::isNewFileInChain()
+{
+    return isnewfileopened;
 }
 
 //_________________________________________________________________________________________________
@@ -591,12 +618,12 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
     int entry = nEventsProcessed;
     int totalN = nEventsToProcess;
 
-    if (use_tqdm_progress_bar)
-    {
-        if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
-        bar.progress(nEventsProcessed-1, nEventsToProcess); // tqdm expects 0 to N-1 index not 1 to N
-        return;
-    }
+//    if (use_tqdm_progress_bar)
+//    {
+//        if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
+//        bar.progress(nEventsProcessed-1, nEventsToProcess); // tqdm expects 0 to N-1 index not 1 to N
+//        return;
+//    }
 
     if (use_treeclass_progress)
     {

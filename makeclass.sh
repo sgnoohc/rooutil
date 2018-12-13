@@ -122,73 +122,177 @@ fi
 
 source $DIR/root.sh ""
 
-if [ -e ~/cmstas/Software/makeCMS3ClassFiles/makeCMS3ClassFiles.C ]; then
-  root -l -b -q ~/cmstas/Software/makeCMS3ClassFiles/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\) &> /dev/null
-else
-  git clone git@github.com:cmstas/Software.git
-  root -l -b -q Software/makeCMS3ClassFiles/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\) &> /dev/null
-  rm -rf Software
+if [ -e rooutil/makeCMS3ClassFiles.C ]; then
+  echo "running makeCMS3ClassFiles.C"
+  #root -l -b -q rooutil/makeCMS3ClassFiles.C
+  root -l -b -q rooutil/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\)  &> /dev/null
 fi
 
-e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
+if [ -e ${MAKECLASSNAME}.cc ]; then
+    e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
+else
+    e_error "RooUtil:: Failed to generate ${MAKECLASSNAME}.cc/h!"
+    exit
+fi
 
 if [ "$GENERATEEXTRACODE" == true ]; then
 
-    if [ -e process.cc ]; then
-        if [ "${FORCE}" == true ]; then
-            :
-        else
-            e_error "RooUtil:: process.cc already exists!"
-            e_error "RooUtil:: Do you want to override? If so, provide option -f. For more info use option -h"
-            exit
-        fi
-    fi
-    #
-    # Create process.cc
-    #
-    echo "#include \"looper.h\""                                                                   >  process.cc
-    echo "#include \"ttreex.h\""                                                                   >> process.cc
-    echo "#include \"${MAKECLASSNAME}.h\""                                                         >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                     >> process.cc
-    echo "int main(int argc, char** argv)"                                                         >> process.cc
-    echo "{"                                                                                       >> process.cc
-    echo "    // Argument checking"                                                                >> process.cc
-    echo "    if (argc < 3)"                                                                       >> process.cc
-    echo "    {"                                                                                   >> process.cc
-    echo "        std::cout << \"Usage:\" << std::endl;"                                           >> process.cc
-    echo "        std::cout << \"  $ ./process INPUTFILEFILE OUTPUTFILE [NEVENTS]\" << std::endl;" >> process.cc
-    echo "        return 1;"                                                                       >> process.cc
-    echo "    }"                                                                                   >> process.cc
-    echo "    TChain* ch = new TChain(\"${TTREENAME}\");"                                          >> process.cc
-    echo "    ch->Add(argv[1]);"                                                                   >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "    // Creating output file"                                                             >> process.cc
-    echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                    >> process.cc
-    echo "    TTree* t = new TTree(\"t\", \"t\");"                                                 >> process.cc
-    echo "    RooUtil::TTreeX tx(t);"                                                              >> process.cc
-    echo "    //tx.createBranch<LV>(\"p0\");"                                                      >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "    // Looping input file"                                                               >> process.cc
-    echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                        >> process.cc
-    echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"        >> process.cc
-    echo "    while (looper.nextEvent())"                                                          >> process.cc
-    echo "    {"                                                                                   >> process.cc
-    echo "        //Do what you need to do in for each event here"                                 >> process.cc
-    echo "        //To save use the following function"                                            >> process.cc
-    echo "        //tx.fill();"                                                                    >> process.cc
-    echo "    }"                                                                                   >> process.cc
-    echo ""                                                                                        >> process.cc
-    echo "    // Writing output file"                                                              >> process.cc
-    echo "    tx.save(ofile);"                                                                     >> process.cc
-    echo "}"                                                                                       >> process.cc
+#    #
+#    # Add "rooutil" to the class
+#    #
+#    echo "#include \"rooutil/rooutil.cc\"" >> ${MAKECLASSNAME}.cc
+#    echo "#include \"rooutil/rooutil.h\"" >> ${MAKECLASSNAME}.h
 
-    cat $DIR/TemplateMakefile | sed -e "s/MAKECLASSNAME/${MAKECLASSNAME}/" > Makefile
+
+    if [ -e process.cc ]; then
+        e_error "RooUtil:: process.cc already exists. We will leave it alone. Erase it if you want to override"
+    else
+
+        #
+        # Create process.cc
+        #
+        echo "#include \"${MAKECLASSNAME}.h\""                                                                                                 >  process.cc
+        echo "#include \"rooutil/rooutil.h\""                                                                                                  >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                                                             >> process.cc
+        echo "int main(int argc, char** argv)"                                                                                                 >> process.cc
+        echo "{"                                                                                                                               >> process.cc
+        echo "    // Argument checking"                                                                                                        >> process.cc
+        echo "    if (argc < 3)"                                                                                                               >> process.cc
+        echo "    {"                                                                                                                           >> process.cc
+        echo "        std::cout << \"Usage:\" << std::endl;"                                                                                   >> process.cc
+        echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"                                            >> process.cc
+        echo "        std::cout << std::endl;"                                                                                                 >> process.cc
+        echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"                                              >> process.cc
+        echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                                                       >> process.cc
+        echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"                                                >> process.cc
+        echo "        std::cout << std::endl;"                                                                                                 >> process.cc
+        echo "        return 1;"                                                                                                               >> process.cc
+        echo "    }"                                                                                                                           >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Creating output file where we will put the outputs of the processing"                                                     >> process.cc
+        echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                                                            >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Create a TChain of the input files"                                                                                       >> process.cc
+        echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\") or with wildcard (n.b. be sure to escape)"        >> process.cc
+        echo "    TChain* ch = RooUtil::FileUtil::createTChain(\"${TTREENAME}\", argv[1]);"                                                    >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Number of events to loop over"                                                                                            >> process.cc
+        echo "    int nEvents = argc > 3 ? atoi(argv[3]) : -1;"                                                                                >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Create a Looper object to loop over input files"                                                                          >> process.cc
+        echo "    RooUtil::Looper<${MAKECLASSNAME}> looper(ch, &${TREEINSTANCENAME}, nEvents);"                                                >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Cutflow utility object that creates a tree structure of cuts"                                                             >> process.cc
+        echo "    RooUtil::Cutflow cutflow(ofile);"                                                                                            >> process.cc
+        echo "    cutflow.addCut(\"DiElChannel\");"                                                                                            >> process.cc
+        echo "    cutflow.addCut(\"DiMuChannel\");"                                                                                            >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    cutflow.getCut(\"DiElChannel\");"                                                                                            >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiElChannelCutA\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiElChannelCutB\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiElChannelCutC\");"                                                                         >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    cutflow.getCut(\"DiMuChannel\");"                                                                                            >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiMuChannelCutA\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiMuChannelCutB\");"                                                                         >> process.cc
+        echo "    cutflow.addCutToLastActiveCut(\"DiMuChannelCutC\");"                                                                         >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Print cut structure"                                                                                                      >> process.cc
+        echo "    cutflow.printCuts();"                                                                                                        >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Histogram utility object that is used to define the histograms"                                                           >> process.cc
+        echo "    RooUtil::Histograms histograms;"                                                                                             >> process.cc
+        echo "    histograms.addHistogram(\"Mll\", 180, 0, 250);"                                                                              >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Book cutflows"                                                                                                            >> process.cc
+        echo "    cutflow.bookCutflows();"                                                                                                     >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Book Histograms"                                                                                                          >> process.cc
+        echo "    cutflow.bookHistogramsForCutAndBelow(histograms, \"DiElChannel\");"                                                          >> process.cc
+        echo "    cutflow.bookHistogramsForCutAndBelow(histograms, \"DiMuChannel\");"                                                          >> process.cc
+        echo "    // cutflow.bookHistograms(histograms); // if just want to book everywhere"                                                   >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Looping input file"                                                                                                       >> process.cc
+        echo "    while (looper.nextEvent())"                                                                                                  >> process.cc
+        echo "    {"                                                                                                                           >> process.cc
+        echo "        //Do what you need to do in for each event here"                                                                         >> process.cc
+        echo "        //To save use the following function"                                                                                    >> process.cc
+        echo "        cutflow.setCut(\"DiElChannel\"    , 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannel\"    , 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiElChannelCutA\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiElChannelCutB\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiElChannelCutC\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannelCutA\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannelCutB\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setCut(\"DiMuChannelCutC\", 1/* set your cut here*/, 1/*set your weight for this cut here e.g. scalefactors*/);" >> process.cc
+        echo "        cutflow.setVariable(\"Mll\", 1/* set your variable here*/);"                                                             >> process.cc
+        echo "        cutflow.fill();"                                                                                                         >> process.cc
+        echo "    }"                                                                                                                           >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // Writing output file"                                                                                                      >> process.cc
+        echo "    cutflow.saveOutput();"                                                                                                       >> process.cc
+        echo ""                                                                                                                                >> process.cc
+        echo "    // The below can be sometimes crucial"                                                                                       >> process.cc
+        echo "    delete ofile;"                                                                                                               >> process.cc
+        echo "}"                                                                                                                               >> process.cc
+
+    fi
+
+    #
+    # Create Makefile
+    #
+    echo '# Simple makefile'                                                                                                                            >  Makefile
+    echo ''                                                                                                                                             >> Makefile
+    echo 'EXE=doAnalysis'                                                                                                                               >> Makefile
+    echo ''                                                                                                                                             >> Makefile
+    echo 'SOURCES=$(wildcard *.cc)'                                                                                                                     >> Makefile
+    echo 'OBJECTS=$(SOURCES:.cc=.o)'                                                                                                                    >> Makefile
+    echo 'HEADERS=$(SOURCES:.cc=.h)'                                                                                                                    >> Makefile
+    echo ''                                                                                                                                             >> Makefile
+    echo 'CC         = g++'                                                                                                                             >> Makefile
+    echo 'CXX        = g++'                                                                                                                             >> Makefile
+    echo 'CXXFLAGS   = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                                                >> Makefile
+    echo 'LD         = g++'                                                                                                                             >> Makefile
+    echo 'LDFLAGS    = -g -O2'                                                                                                                          >> Makefile
+    echo 'SOFLAGS    = -g -shared'                                                                                                                      >> Makefile
+    echo 'CXXFLAGS   = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                                                >> Makefile
+    echo 'LDFLAGS    = -g -O2'                                                                                                                          >> Makefile
+    echo 'ROOTLIBS   = $(shell root-config --libs)'                                                                                                     >> Makefile
+    echo 'ROOTCFLAGS = $(shell root-config --cflags)'                                                                                                   >> Makefile
+    echo 'CXXFLAGS  += $(ROOTCFLAGS)'                                                                                                                   >> Makefile
+    echo 'CFLAGS     = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                                         >> Makefile
+    echo 'EXTRAFLAGS = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer'                               >> Makefile
+    echo ''                                                                                                                                             >> Makefile
+#    echo '.PHONY: check-env'                                                                                                                            >> Makefile
+#    echo ''                                                                                                                                             >> Makefile
+#    echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o check-env'                                                                                            >> Makefile
+    echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o'                                                                                                      >> Makefile
+    echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                >> Makefile
+    echo ''                                                                                                                                             >> Makefile
+    echo '%.o: %.cc'                                                                                                                                    >> Makefile
+    echo '	$(CC) $(CFLAGS) $< -c'                                                                                                                  >> Makefile
+    echo ''                                                                                                                                             >> Makefile
+#    echo "${MAKECLASSNAME}.cc:"                                                                                                                         >> Makefile
+#    echo "	echo remaking tree class"                                                                                                               >> Makefile
+#    echo "	sh rooutil/makeclass.sh -f -x $(TEMPLATE_TREE_PATH) ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}"                 >> Makefile
+#    echo ''                                                                                                                                             >> Makefile
+    echo 'clean:'                                                                                                                                       >> Makefile
+    echo '	rm -f *.o $(EXE)'                                                                                                                       >> Makefile
+#    echo ''                                                                                                                                             >> Makefile
+#    echo 'check-env:'                                                                                                                                   >> Makefile
+#    echo 'ifndef TEMPLATE_TREE_PATH'                                                                                                                    >> Makefile
+#    echo "  \$(error TEMPLATE_TREE_PATH is not set. Please set via '>>> export TEMPLATE_TREE_PATH=/path/to/template.root)'"                             >> Makefile
+#    echo 'endif'                                                                                                                                        >> Makefile
+
+    #echo "	sh rooutil/makeclass.sh -f -x TEMPLATE_TREE_PATH ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}  > /dev/null 2>&1"  >> Makefile
 
     e_arrow "RooUtil:: "
     e_arrow "RooUtil:: Contact Philip Chang <philip@ucsd.edu> for any questions."
     e_arrow "RooUtil:: "
     e_arrow "RooUtil:: Happy Coding!"
+    e_arrow "RooUtil:: "
+    e_arrow "RooUtil:: Compile via 'make'"
 
 else
 
@@ -212,3 +316,4 @@ else
 
 fi
 #eof
+
