@@ -104,6 +104,60 @@ void TTreeX::sortVecBranchesByPt(TString p4_bn, std::vector<TString> aux_float_b
 }
 
 //_________________________________________________________________________________________________
+void TTreeX::createFlatBranch(std::vector<TString> p4_bns, std::vector<TString> float_bns, std::vector<TString> int_bns, std::vector<TString> bool_bns, int multiplicity)
+{
+    for ( auto& p4_bn : p4_bns )
+    {
+        for (int i = 0; i < multiplicity; ++i)
+            createBranch<LV>(TString::Format("%s_%d", p4_bn.Data(), i));
+    }
+    for ( auto& float_bn : float_bns )
+    {
+        for (int i = 0; i < multiplicity; ++i)
+            createBranch<float>(TString::Format("%s_%d", float_bn.Data(), i));
+    }
+    for ( auto& int_bn : int_bns )
+    {
+        for (int i = 0; i < multiplicity; ++i)
+            createBranch<int>(TString::Format("%s_%d", int_bn.Data(), i));
+    }
+    for ( auto& bool_bn : bool_bns )
+    {
+        for (bool i = 0; i < multiplicity; ++i)
+            createBranch<bool>(TString::Format("%s_%d", bool_bn.Data(), i));
+    }
+}
+
+//_________________________________________________________________________________________________
+void TTreeX::setFlatBranch(std::vector<TString> p4_bns, std::vector<TString> float_bns, std::vector<TString> int_bns, std::vector<TString> bool_bns, int multiplicity)
+{
+    for ( auto& p4_bn : p4_bns )
+    {
+        const std::vector<LV>& vec = getBranch<std::vector<LV>>(p4_bn, false);
+        for (int i = 0; i < multiplicity && i < (int) vec.size(); ++i)
+            setBranch<LV>(TString::Format("%s_%d", p4_bn.Data(), i), vec[i]);
+    }
+    for ( auto& float_bn : float_bns )
+    {
+        const std::vector<float>& vec = getBranch<std::vector<float>>(float_bn, false);
+        for (int i = 0; i < multiplicity && i < (int) vec.size(); ++i)
+            setBranch<float>(TString::Format("%s_%d", float_bn.Data(), i), vec[i]);
+    }
+    for ( auto& int_bn : int_bns )
+    {
+        const std::vector<int>& vec = getBranch<std::vector<int>>(int_bn, false);
+        for (int i = 0; i < multiplicity && i < (int) vec.size(); ++i)
+            setBranch<int>(TString::Format("%s_%d", int_bn.Data(), i), vec[i]);
+    }
+    for ( auto& bool_bn : bool_bns )
+    {
+        const std::vector<bool>& vec = getBranch<std::vector<bool>>(bool_bn, false);
+        for (bool i = 0; i < multiplicity && i < (int) vec.size(); ++i)
+            setBranch<bool>(TString::Format("%s_%d", bool_bn.Data(), i), vec[i]);
+    }
+}
+
+//_________________________________________________________________________________________________
 template <> void TTreeX::setBranch<Int_t               >(TString bn, Int_t                val) { if (mapInt_t     .find(bn) != mapInt_t     .end()) {mapInt_t     [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
 template <> void TTreeX::setBranch<Bool_t              >(TString bn, Bool_t               val) { if (mapBool_t    .find(bn) != mapBool_t    .end()) {mapBool_t    [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }
 template <> void TTreeX::setBranch<Float_t             >(TString bn, Float_t              val) { if (mapFloat_t   .find(bn) != mapFloat_t   .end()) {mapFloat_t   [bn] = val; mapIsBranchSet[bn] = true;} else {error(TString::Format("branch doesn't exist bn = %s", bn.Data()));} }

@@ -133,6 +133,8 @@ namespace RooUtil
                 return (*(a.second)).pt() > (*(b.second)).pt();
             }
         };
+        void createFlatBranch(std::vector<TString>, std::vector<TString>, std::vector<TString>, std::vector<TString>, int);
+        void setFlatBranch(std::vector<TString>, std::vector<TString>, std::vector<TString>, std::vector<TString>, int);
 
         void clear();
         void save(TFile*);

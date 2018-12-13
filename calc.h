@@ -9,6 +9,7 @@
 // ROOT
 #include "TLorentzVector.h"
 #include "TVector3.h"
+#include "TVector2.h"
 #include "Math/LorentzVector.h"
 #include "Math/VectorUtil.h"
 
@@ -28,6 +29,10 @@ namespace RooUtil
         float DeltaR(const LV& a, const LV& b);
         float DeltaEta(const LV& a, const LV& b);
         float DeltaPhi(const LV& a, const LV& b);
+        LV getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool invertpz=false);
+        float getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false);
+        float getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385);
+        TVector2 getEtaPhiVecRotated(const LV& target, const LV& ref, const LV& axis_ref);
     }
 }
 
