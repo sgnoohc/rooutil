@@ -22,6 +22,14 @@ LV RooUtil::Calc::getLV(const TLorentzVector& a)
 }
 
 //_________________________________________________________________________________________________
+LV RooUtil::Calc::getLV(float pt, float eta, float phi, float m)
+{
+    TLorentzVector tmp;
+    tmp.SetPtEtaPhiM(pt, eta, phi, m);
+    return getLV(tmp);
+}
+
+//_________________________________________________________________________________________________
 TVector3 RooUtil::Calc::boostVector(const LV& a)
 {
     return getTLV(a).BoostVector();
@@ -122,6 +130,7 @@ float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const flo
         return ans;
 }
 
+/*
 //_________________________________________________________________________________________________
 //
 //            axis_ref
@@ -150,6 +159,7 @@ float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const flo
 // The function rotates the axis_ref to be directly above ref and return target's TVector2
 //
 //
+*/
 TVector2 RooUtil::Calc::getEtaPhiVecRotated(const LV& target, const LV& ref, const LV& axis_ref)
 {
     float deta = RooUtil::Calc::DeltaEta(axis_ref, ref);
@@ -162,6 +172,24 @@ TVector2 RooUtil::Calc::getEtaPhiVecRotated(const LV& target, const LV& ref, con
 
     // The rotation can be thought of as "rotate it to align with +x axis, then add 90 degrees"
     return target_vec.Rotate(-ref_vec.Phi() + TMath::Pi() / 2.);
+}
+
+float RooUtil::Calc::getRho(const LV& ref, const LV& target)
+{
+/*
+            phi
+             ^
+             | target
+             |   /
+             |  /
+             | / "rho"
+            ref-------------> eta
+
+*/
+
+    float dy = DeltaPhi(ref, target);
+    float dx = DeltaEta(ref, target);
+    return TMath::ATan(dy / dx);
 }
 
 void RooUtil::Calc::printTLV(const TLorentzVector& a)
