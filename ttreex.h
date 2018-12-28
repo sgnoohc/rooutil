@@ -120,6 +120,8 @@ namespace RooUtil
         template <class T>
         const T& getBranch(TString, bool=true);
         template <class T>
+        const T& getBranchLazy(TString);
+        template <class T>
         bool isBranchSet(TString);
         template <class T>
         T* getBranchAddress(TString);
@@ -185,6 +187,22 @@ namespace RooUtil
     template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(TString bn, bool check);
     // functor
     template <> const std::function<float()>& TTreeX::getBranch<std::function<float()>>(TString bn, bool check);
+
+    //_________________________________________________________________________________________________
+    template <> const Int_t               & TTreeX::getBranchLazy<Int_t               >(TString bn);
+    template <> const Bool_t              & TTreeX::getBranchLazy<Bool_t              >(TString bn);
+    template <> const Float_t             & TTreeX::getBranchLazy<Float_t             >(TString bn);
+    template <> const TString             & TTreeX::getBranchLazy<TString             >(TString bn);
+    template <> const LV                  & TTreeX::getBranchLazy<LV                  >(TString bn);
+    template <> const TBits               & TTreeX::getBranchLazy<TBits               >(TString bn);
+    template <> const unsigned long long  & TTreeX::getBranchLazy<unsigned long long  >(TString bn);
+    template <> const std::vector<Int_t  >& TTreeX::getBranchLazy<std::vector<Int_t  >>(TString bn);
+    template <> const std::vector<Bool_t >& TTreeX::getBranchLazy<std::vector<Bool_t >>(TString bn);
+    template <> const std::vector<Float_t>& TTreeX::getBranchLazy<std::vector<Float_t>>(TString bn);
+    template <> const std::vector<TString>& TTreeX::getBranchLazy<std::vector<TString>>(TString bn);
+    template <> const std::vector<LV     >& TTreeX::getBranchLazy<std::vector<LV     >>(TString bn);
+    // functor
+    template <> const std::function<float()>& TTreeX::getBranchLazy<std::function<float()>>(TString bn);
 
     //_________________________________________________________________________________________________
     template <> bool TTreeX::isBranchSet<Int_t               >(TString bn);

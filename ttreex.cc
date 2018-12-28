@@ -195,6 +195,22 @@ template <> const std::vector<LV     >& TTreeX::getBranch<std::vector<LV     >>(
 template <> const std::function<float()>& TTreeX::getBranch<std::function<float()>>(TString bn, bool check) { if (check) if (!mapIsBranchSet[bn.Data()]) error(TString::Format("branch hasn't been set yet bn = %s", bn.Data())); return mapFloatFunc_t[bn.Data()]; }
 
 //_________________________________________________________________________________________________
+template <> const Int_t               & TTreeX::getBranchLazy<Int_t               >(TString bn) { return getBranch<Int_t               >(bn, false); }
+template <> const Bool_t              & TTreeX::getBranchLazy<Bool_t              >(TString bn) { return getBranch<Bool_t              >(bn, false); }
+template <> const Float_t             & TTreeX::getBranchLazy<Float_t             >(TString bn) { return getBranch<Float_t             >(bn, false); }
+template <> const TString             & TTreeX::getBranchLazy<TString             >(TString bn) { return getBranch<TString             >(bn, false); }
+template <> const LV                  & TTreeX::getBranchLazy<LV                  >(TString bn) { return getBranch<LV                  >(bn, false); }
+template <> const TBits               & TTreeX::getBranchLazy<TBits               >(TString bn) { return getBranch<TBits               >(bn, false); }
+template <> const unsigned long long  & TTreeX::getBranchLazy<unsigned long long  >(TString bn) { return getBranch<unsigned long long  >(bn, false); }
+template <> const std::vector<Int_t  >& TTreeX::getBranchLazy<std::vector<Int_t  >>(TString bn) { return getBranch<std::vector<Int_t  >>(bn, false); }
+template <> const std::vector<Bool_t >& TTreeX::getBranchLazy<std::vector<Bool_t >>(TString bn) { return getBranch<std::vector<Bool_t >>(bn, false); }
+template <> const std::vector<Float_t>& TTreeX::getBranchLazy<std::vector<Float_t>>(TString bn) { return getBranch<std::vector<Float_t>>(bn, false); }
+template <> const std::vector<TString>& TTreeX::getBranchLazy<std::vector<TString>>(TString bn) { return getBranch<std::vector<TString>>(bn, false); }
+template <> const std::vector<LV     >& TTreeX::getBranchLazy<std::vector<LV     >>(TString bn) { return getBranch<std::vector<LV     >>(bn, false); }
+// functors
+template <> const std::function<float()>& TTreeX::getBranchLazy<std::function<float()>>(TString bn) { return getBranch<std::function<float()>>(bn, false); }
+
+//_________________________________________________________________________________________________
 template <> bool TTreeX::isBranchSet<Int_t               >(TString bn) { return mapIsBranchSet[bn.Data()]; }
 template <> bool TTreeX::isBranchSet<Bool_t              >(TString bn) { return mapIsBranchSet[bn.Data()]; }
 template <> bool TTreeX::isBranchSet<Float_t             >(TString bn) { return mapIsBranchSet[bn.Data()]; }
