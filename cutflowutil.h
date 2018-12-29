@@ -42,12 +42,12 @@ namespace RooUtil
             std::vector<TString> cutlist;
             CutNameList& operator[] (TString name) { return cutlists[name]; }
             void clear() { cutlists.clear(); }
-            void print() { for (auto& cutlist : cutlists) { std::cout << "CutNameList - " << cutlist.first << std::endl; cutlist.second.print(); } }
+            void print() { for (auto& cl : cutlists) { std::cout << "CutNameList - " << cl.first << std::endl; cl.second.print(); } }
             std::map<TString, std::vector<TString>> getStdVersion()
             {
                 std::map<TString, std::vector<TString>> obj_cutlists;
-                for (auto& cutlist : cutlists)
-                    obj_cutlists[cutlist.first] = cutlist.second.cutlist;
+                for (auto& cl : cutlists)
+                    obj_cutlists[cl.first] = cl.second.cutlist;
                 return obj_cutlists;
             }
         };

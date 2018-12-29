@@ -156,10 +156,10 @@ void RooUtil::Cutflow::bookCutflowHistograms_v2()
         h_raw->SetDirectory(0);
         std::vector<int*> passes;
         std::vector<float*> weights;
-        for (auto& cuttree : cuttreelist.second)
+        for (auto& ct : cuttreelist.second)
         {
-            passes.push_back(&(cuttree->pass));
-            weights.push_back(&(cuttree->weight));
+            passes.push_back(&(ct->pass));
+            weights.push_back(&(ct->weight));
         }
         cutflow_histograms_v2   .push_back(std::make_tuple(h    , passes, weights, UNITY));
         rawcutflow_histograms_v2.push_back(std::make_tuple(h_raw, passes));
@@ -178,10 +178,10 @@ void RooUtil::Cutflow::bookCutflowHistograms_v2()
             h_raw->SetDirectory(0);
             std::vector<int*> passes;
             std::vector<float*> weights;
-            for (auto& cuttree : cuttreelist.second)
+            for (auto& ct : cuttreelist.second)
             {
-                passes.push_back(&(cuttree->pass));
-                weights.push_back(&(cuttree->weight));
+                passes.push_back(&(ct->pass));
+                weights.push_back(&(ct->weight));
             }
             cutflow_histograms_v2   .push_back(std::make_tuple(h    , passes, weights, systs_funcs[syst]));
             rawcutflow_histograms_v2.push_back(std::make_tuple(h_raw, passes));
@@ -202,10 +202,10 @@ void RooUtil::Cutflow::bookCutflowHistograms_v2()
             h_raw->SetDirectory(0);
             std::vector<int*> passes;
             std::vector<float*> weights;
-            for (auto& cuttree : cuttreelist.second)
+            for (auto& ct : cuttreelist.second)
             {
-                passes.push_back(&(cuttree->systpasses[i]));
-                weights.push_back(&(cuttree->systweights[i]));
+                passes.push_back(&(ct->systpasses[i]));
+                weights.push_back(&(ct->systweights[i]));
             }
             cutflow_histograms_v2   .push_back(std::make_tuple(h    , passes, weights, UNITY));
             rawcutflow_histograms_v2.push_back(std::make_tuple(h_raw, passes));
@@ -552,11 +552,11 @@ void RooUtil::Cutflow::fillCutflow_v2(std::vector<CutTree*>& cuttreelist, TH1F* 
 {
     for (unsigned int i = 0; i < cuttreelist.size(); ++i)
     {
-        CutTree* cuttree = cuttreelist[i];
-        int& pass = cuttree->pass;
+        CutTree* ct = cuttreelist[i];
+        int& pass = ct->pass;
         if (pass)
         {
-            float& weight = cuttree->weight;
+            float& weight = ct->weight;
             h->Fill(i, weight * wgtsyst);
             hraw->Fill(i, 1);
         }
@@ -839,9 +839,9 @@ void RooUtil::Cutflow::bookHistogramsForCut(Histograms& histograms, TString cut)
 void RooUtil::Cutflow::bookHistogramsForCutAndBelow(Histograms& histograms, TString cut)
 {
     std::vector<TString> cutlist = cuttree.getCutListBelow(cut);
-    for (auto& cut : cutlist)
+    for (auto& c : cutlist)
     {
-        bookHistogramsForCut(histograms, cut);
+        bookHistogramsForCut(histograms, c);
     }
 }
 

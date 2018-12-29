@@ -15,3 +15,4 @@
 #include "eventlist.cc"
 #include "anautil.cc"
 #include "histmap.cc"
+#include "module.cc"

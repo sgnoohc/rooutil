@@ -15,3 +15,4 @@
 #include "eventlist.h"
 #include "anautil.h"
 #include "histmap.h"
+#include "rooutil.h"
