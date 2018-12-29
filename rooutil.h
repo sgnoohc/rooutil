@@ -15,4 +15,4 @@
 #include "eventlist.h"
 #include "anautil.h"
 #include "histmap.h"
-#include "module.cc"
+#include "module.h"
