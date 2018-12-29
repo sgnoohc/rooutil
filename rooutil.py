@@ -537,6 +537,22 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
     os.chdir(main_dir)
 
 #______________________________________________________________________________
+def merge_rootfiles_in_dir(dir_path, output_dirpath, treename="", nevents=50000, output_file_name="output.root", globber="*.root"):
+
+    import glob
+    merged_dir_path = "{}/".format(output_dirpath)
+    os.system("mkdir -p {}".format(merged_dir_path))
+    merged_file_path = "{}/{}".format(merged_dir_path, output_file_name)
+    source_files = glob.glob("{}/*.root".format(dir_path))
+    if treename:
+        from hadd import hadd
+        if not os.path.isfile(merged_file_path):
+            hadd(source_files, treename, merged_file_path, nevents)
+    else:
+        if not os.path.isfile(merged_file_path):
+            os.system("hadd {} {}" .format(merged_file_path, " ".join(source_files)))
+
+#______________________________________________________________________________
 def write_shape_fit_datacard(sig=None, bgs=[], data=None, datacard_filename="datacard.txt", region_name="SR", hist_filename="hist.root", systs={}):
 
     # Checking arguments
