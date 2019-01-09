@@ -26,7 +26,7 @@ else
 fi
 
 # run the job in parallel
-xargs --arg-file=/tmp/jobs.txt \
+xargs --arg-file=${MACRO} \
       --max-procs=$cores  \
       --replace \
       --verbose \
