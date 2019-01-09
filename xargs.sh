@@ -17,6 +17,7 @@ JOBTXTFILE=$1
 
 MACRONAME=$(mktemp stupid_numbers_XXXXXXXXX)
 MACRO=/tmp/${MACRONAME}.txt
+rm $MACRONAME
 
 # filter some jobs
 if [ "x${2}" != "x" ]; then
