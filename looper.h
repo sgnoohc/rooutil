@@ -131,6 +131,7 @@ namespace RooUtil
         void setFastMode( bool f=true ) { fastmode = f; }
         void addCount() { ncounter++; }
         void resetCounter() { ncounter = 0; }
+        bool doesBranchExist(TString bname);
         private:
         void setFileList();
         void setNEventsToProcess();
@@ -892,6 +893,17 @@ void RooUtil::Looper<TREECLASS>::printSkippedBadEventStatus()
     {
         cout << "RooUtil:Looper [CheckCorrupt] Skipped " << nskipped << " events out of " << tchain->GetEntries() << " [" << float(nskipped) / float(tchain->GetEntries()) * 100 << "% loss]" << " POSSIBLE BADFILES = " << getListOfFileNames() << endl;
     }
+}
+
+//_________________________________________________________________________________________________
+template <class TREECLASS>
+bool RooUtil::Looper<TREECLASS>::doesBranchExist(TString bname)
+{
+    if (ttree->GetBranch(bname))
+        return true;
+    if (ttree->GetBranch(ttree->GetAlias(bname)))
+        return true;
+    return false;
 }
 
 #endif

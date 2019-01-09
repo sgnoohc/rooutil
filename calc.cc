@@ -22,6 +22,14 @@ LV RooUtil::Calc::getLV(const TLorentzVector& a)
 }
 
 //_________________________________________________________________________________________________
+LV RooUtil::Calc::getLV(float pt, float eta, float phi, float m)
+{
+    TLorentzVector tmp;
+    tmp.SetPtEtaPhiM(pt, eta, phi, m);
+    return getLV(tmp);
+}
+
+//_________________________________________________________________________________________________
 TVector3 RooUtil::Calc::boostVector(const LV& a)
 {
     return getTLV(a).BoostVector();
@@ -62,6 +70,128 @@ float RooUtil::Calc::DeltaPhi(const LV& a, const LV& b)
 }
 
 //_________________________________________________________________________________________________
+LV RooUtil::Calc::getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2, bool invertpz)
+{
+    float pz = getNeutrinoPz(lep, met_pt, met_phi, mw, getsol2);
+    if (invertpz)
+        pz = -pz;
+    LV neutrino;
+    using namespace TMath;
+    float E = Sqrt(Power(met_pt*Cos(met_phi),2) + Power(met_pt*Sin(met_phi),2) + pz*pz);
+    neutrino.SetPxPyPzE(met_pt*TMath::Cos(met_phi), met_pt*TMath::Sin(met_phi), pz, E);
+    return neutrino;
+}
+
+//_________________________________________________________________________________________________
+float RooUtil::Calc::getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw)
+{
+    // Pz reconstruction for WW->lvjj from https://arxiv.org/pdf/1503.04677.pdf
+    float lx = lep.px();
+    float ly = lep.py();
+    float lz = lep.pz();
+    TLorentzVector met;
+    met.SetPtEtaPhiM(met_pt, 0, met_phi, 0);
+    float vx = met.Px();
+    float vy = met.Py();
+
+    using namespace TMath;
+    float det = (Power(lx,2) + Power(ly,2) + Power(lz,2))* (Power(mw,4) - 4*Power(ly*vx - lx*vy,2) + 4*Power(mw,2)*(lx*vx + ly*vy));
+
+    return det;
+}
+
+//_________________________________________________________________________________________________
+float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2)
+{
+    // Pz reconstruction for WW->lvjj from https://arxiv.org/pdf/1503.04677.pdf
+    float lx = lep.px();
+    float ly = lep.py();
+    float lz = lep.pz();
+    TLorentzVector met;
+    met.SetPtEtaPhiM(met_pt, 0, met_phi, 0);
+    float vx = met.Px();
+    float vy = met.Py();
+
+    using namespace TMath;
+    float det = getNeutrinoPzDet(lep, met_pt, met_phi, mw);
+
+    // If imaginary then ignore imaginary component and take the real value only
+    if (det < 0)
+        det = 0;
+    float sol1 = (lz*(Power(mw,2) + 2*lx*vx + 2*ly*vy) - Sqrt(det))/(2.*(Power(lx,2) + Power(ly,2)));
+    float sol2 = (lz*(Power(mw,2) + 2*lx*vx + 2*ly*vy) + Sqrt(det))/(2.*(Power(lx,2) + Power(ly,2)));
+
+    float ans  = fabs(sol1) < fabs(sol2) ? sol1 : sol2;
+    float ans2 = fabs(sol1) < fabs(sol2) ? sol2 : sol1;
+
+    if (getsol2)
+        return ans2;
+    else
+        return ans;
+}
+
+/*
+//_________________________________________________________________________________________________
+//
+//            axis_ref
+//                /
+//               /  ref_vec.Phi()
+//              /
+//            ref=============>  +x
+//              \
+//               \
+//                \
+//                 \
+//               target
+//
+//  ================================
+//
+//         axis_ref
+//             |
+//             |
+//             |
+//            ref
+//              \__
+//                 \__
+//                    target
+//
+//
+// The function rotates the axis_ref to be directly above ref and return target's TVector2
+//
+//
+*/
+TVector2 RooUtil::Calc::getEtaPhiVecRotated(const LV& target, const LV& ref, const LV& axis_ref)
+{
+    float deta = RooUtil::Calc::DeltaEta(axis_ref, ref);
+    float dphi = RooUtil::Calc::DeltaPhi(axis_ref, ref);
+    TVector2 ref_vec(deta, dphi);
+
+    float target_deta = RooUtil::Calc::DeltaEta(target, ref);
+    float target_dphi = RooUtil::Calc::DeltaEta(target, ref);
+    TVector2 target_vec(target_deta, target_dphi);
+
+    // The rotation can be thought of as "rotate it to align with +x axis, then add 90 degrees"
+    return target_vec.Rotate(-ref_vec.Phi() + TMath::Pi() / 2.);
+}
+
+float RooUtil::Calc::getRho(const LV& ref, const LV& target)
+{
+/*
+            phi
+             ^
+             | target
+             |   /
+             |  /
+             | / "rho"
+            ref-------------> eta
+
+*/
+
+    float dy = DeltaPhi(ref, target);
+    float dx = DeltaEta(ref, target);
+    return TMath::ATan(dy / dx);
+}
+
 void RooUtil::Calc::printTLV(const TLorentzVector& a)
 {
     std::cout <<  " a.Pt(): " << a.Pt() <<  " a.Eta(): " << a.Eta() <<  " a.Phi(): " << a.Phi() <<  " a.M(): " << a.M() <<  " a.E(): " << a.E() <<  std::endl;

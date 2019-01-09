@@ -114,11 +114,15 @@ namespace RooUtil
         void write() { ttree->Write(); }
 
         template <class T>
-        void createBranch(TString);
+        void createBranch(TString, bool=true);
         template <class T>
         void setBranch(TString, T, bool=false, bool=false);
         template <class T>
         const T& getBranch(TString, bool=true);
+        template <class T>
+        const T& getBranchLazy(TString);
+        template <class T>
+        bool isBranchSet(TString);
         template <class T>
         T* getBranchAddress(TString);
         template <class T>
@@ -140,6 +144,8 @@ namespace RooUtil
                 return (*(a.second)).pt() > (*(b.second)).pt();
             }
         };
+        void createFlatBranch(std::vector<TString>, std::vector<TString>, std::vector<TString>, std::vector<TString>, int);
+        void setFlatBranch(std::vector<TString>, std::vector<TString>, std::vector<TString>, std::vector<TString>, int);
 
         void clear();
         void save(TFile*);
@@ -183,25 +189,57 @@ namespace RooUtil
     template <> const std::function<float()>& TTreeX::getBranch<std::function<float()>>(TString bn, bool check);
 
     //_________________________________________________________________________________________________
+    template <> const Int_t               & TTreeX::getBranchLazy<Int_t               >(TString bn);
+    template <> const Bool_t              & TTreeX::getBranchLazy<Bool_t              >(TString bn);
+    template <> const Float_t             & TTreeX::getBranchLazy<Float_t             >(TString bn);
+    template <> const TString             & TTreeX::getBranchLazy<TString             >(TString bn);
+    template <> const LV                  & TTreeX::getBranchLazy<LV                  >(TString bn);
+    template <> const TBits               & TTreeX::getBranchLazy<TBits               >(TString bn);
+    template <> const unsigned long long  & TTreeX::getBranchLazy<unsigned long long  >(TString bn);
+    template <> const std::vector<Int_t  >& TTreeX::getBranchLazy<std::vector<Int_t  >>(TString bn);
+    template <> const std::vector<Bool_t >& TTreeX::getBranchLazy<std::vector<Bool_t >>(TString bn);
+    template <> const std::vector<Float_t>& TTreeX::getBranchLazy<std::vector<Float_t>>(TString bn);
+    template <> const std::vector<TString>& TTreeX::getBranchLazy<std::vector<TString>>(TString bn);
+    template <> const std::vector<LV     >& TTreeX::getBranchLazy<std::vector<LV     >>(TString bn);
+    // functor
+    template <> const std::function<float()>& TTreeX::getBranchLazy<std::function<float()>>(TString bn);
+
+    //_________________________________________________________________________________________________
+    template <> bool TTreeX::isBranchSet<Int_t               >(TString bn);
+    template <> bool TTreeX::isBranchSet<Bool_t              >(TString bn);
+    template <> bool TTreeX::isBranchSet<Float_t             >(TString bn);
+    template <> bool TTreeX::isBranchSet<TString             >(TString bn);
+    template <> bool TTreeX::isBranchSet<LV                  >(TString bn);
+    template <> bool TTreeX::isBranchSet<TBits               >(TString bn);
+    template <> bool TTreeX::isBranchSet<unsigned long long  >(TString bn);
+    template <> bool TTreeX::isBranchSet<std::vector<Int_t  >>(TString bn);
+    template <> bool TTreeX::isBranchSet<std::vector<Bool_t >>(TString bn);
+    template <> bool TTreeX::isBranchSet<std::vector<Float_t>>(TString bn);
+    template <> bool TTreeX::isBranchSet<std::vector<TString>>(TString bn);
+    template <> bool TTreeX::isBranchSet<std::vector<LV     >>(TString bn);
+    // functors
+    template <> bool TTreeX::isBranchSet<std::function<float()>>(TString bn);
+
+    //_________________________________________________________________________________________________
     template <> Int_t*   TTreeX::getBranchAddress<Int_t  >(TString bn);
     template <> Bool_t*  TTreeX::getBranchAddress<Bool_t >(TString bn);
     template <> Float_t* TTreeX::getBranchAddress<Float_t>(TString bn);
 
     //_________________________________________________________________________________________________
-    template <> void TTreeX::createBranch<Int_t               >(TString bn);
-    template <> void TTreeX::createBranch<Bool_t              >(TString bn);
-    template <> void TTreeX::createBranch<Float_t             >(TString bn);
-    template <> void TTreeX::createBranch<TString             >(TString bn);
-    template <> void TTreeX::createBranch<LV                  >(TString bn);
-    template <> void TTreeX::createBranch<TBits               >(TString bn);
-    template <> void TTreeX::createBranch<unsigned long long  >(TString bn);
-    template <> void TTreeX::createBranch<std::vector<Int_t  >>(TString bn);
-    template <> void TTreeX::createBranch<std::vector<Bool_t >>(TString bn);
-    template <> void TTreeX::createBranch<std::vector<Float_t>>(TString bn);
-    template <> void TTreeX::createBranch<std::vector<TString>>(TString bn);
-    template <> void TTreeX::createBranch<std::vector<LV     >>(TString bn);
+    template <> void TTreeX::createBranch<Int_t               >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<Bool_t              >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<Float_t             >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<TString             >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<LV                  >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<TBits               >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<unsigned long long  >(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<std::vector<Int_t  >>(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<std::vector<Bool_t >>(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<std::vector<Float_t>>(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<std::vector<TString>>(TString bn, bool writeToTree);
+    template <> void TTreeX::createBranch<std::vector<LV     >>(TString bn, bool writeToTree);
     // functors
-    template <> void TTreeX::createBranch<std::function<float()>>(TString bn);
+    template <> void TTreeX::createBranch<std::function<float()>>(TString bn, bool writeToTree); // writeToTree in this specification does not matter it will never write a std::function to TTree
 
     //_________________________________________________________________________________________________
     template <> bool TTreeX::hasBranch<Int_t               >(TString bn);
