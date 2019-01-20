@@ -20,7 +20,8 @@ def hadd(files, treename, output, neventsperfile):
     nevents_in_current_cluster = 0
     for fn in files:
         if nevents_in_current_cluster + nevents[fn] > neventsperfile:
-            clusters.append(cluster)
+            if len(cluster) > 0:
+                clusters.append(cluster)
             nevents_in_current_cluster = nevents[fn]
             cluster = [fn]
         else:
@@ -49,6 +50,7 @@ def hadd(files, treename, output, neventsperfile):
         output_path_without_dot_root = output_path_without_dot_root_full
 
     # Run the commands
+    print clusters
     for index, cluster in enumerate(clusters):
 
         command = "hadd -f {}_{}.root {}".format(output_path_without_dot_root, index+1, " ".join(cluster))
