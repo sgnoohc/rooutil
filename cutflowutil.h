@@ -88,7 +88,9 @@ namespace RooUtil
 //            std::vector<std::tuple<TString, TString>> hists2d;
 #ifdef USE_CUTLAMBDA
             std::map<TString, std::vector<std::tuple<TH1F*, std::function<float()>>>> hists1d;
+            std::map<TString, std::vector<std::tuple<TH1F*, std::function<std::vector<float>()>, std::function<std::vector<float>()>>>> hists1dvec;
             std::map<TString, std::vector<std::tuple<TH2F*, std::function<float()>, std::function<float()>>>> hists2d;
+            std::map<TString, std::vector<std::tuple<TH2F*, std::function<std::vector<float>()>, std::function<std::vector<float>()>, std::function<std::vector<float>()>>>> hists2dvec;
 #else
             std::map<TString, std::vector<std::tuple<TH1F*, TString>>> hists1d;
             std::map<TString, std::vector<std::tuple<TH2F*, TString, TString>>> hists2d;
@@ -193,12 +195,26 @@ namespace RooUtil
                 else
                     hists1d[syst].push_back(std::make_tuple(h, var));
             }
+            void addHist1DVec(TH1F* h, std::function<std::vector<float>()> var, std::function<std::vector<float>()> wgt, TString syst)
+            {
+                if (syst.IsNull())
+                    hists1dvec["Nominal"].push_back(std::make_tuple(h, var, wgt));
+                else
+                    hists1dvec[syst].push_back(std::make_tuple(h, var, wgt));
+            }
             void addHist2D(TH2F* h, std::function<float()> varx, std::function<float()> vary, TString syst)
             {
                 if (syst.IsNull())
                     hists2d["Nominal"].push_back(std::make_tuple(h, varx, vary));
                 else
                     hists2d[syst].push_back(std::make_tuple(h, varx, vary));
+            }
+            void addHist2DVec(TH2F* h, std::function<std::vector<float>()> varx, std::function<std::vector<float>()> vary, std::function<std::vector<float>()> elemwgt, TString syst)
+            {
+                if (syst.IsNull())
+                    hists2dvec["Nominal"].push_back(std::make_tuple(h, varx, vary, elemwgt));
+                else
+                    hists2dvec[syst].push_back(std::make_tuple(h, varx, vary, elemwgt));
             }
 #else
             void addHist1D(TH1F* h, TString var, TString syst)
@@ -541,7 +557,7 @@ namespace RooUtil
                 if (!pass)
                     return;
 
-                if (hists1d.size() != 0 or hists2d.size() != 0)
+                if (hists1d.size() != 0 or hists2d.size() != 0 or hists2dvec.size() != 0 or hists1dvec.size() != 0)
                 {
                     TString systkey = syst.IsNull() ? "Nominal" : syst;
                     for (auto& tuple : hists1d[systkey])
@@ -556,6 +572,48 @@ namespace RooUtil
                         std::function<float()> varxdef = std::get<1>(tuple);
                         std::function<float()> varydef = std::get<2>(tuple);
                         h->Fill(varxdef(), varydef(), weight * extrawgt);
+                    }
+                    for (auto& tuple : hists1dvec[systkey])
+                    {
+                        TH1F* h = std::get<0>(tuple);
+                        std::function<std::vector<float>()> vardef = std::get<1>(tuple);
+                        std::function<std::vector<float>()> wgtdef = std::get<2>(tuple);
+                        std::vector<float> varx = vardef();
+                        std::vector<float> elemwgts;
+                        if (wgtdef)
+                            elemwgts = wgtdef();
+                        for (unsigned int i = 0; i < varx.size(); ++i)
+                        {
+                            if (wgtdef)
+                                h->Fill(varx[i], weight * extrawgt * elemwgts[i]);
+                            else
+                                h->Fill(varx[i], weight * extrawgt);
+                        }
+                    }
+                    for (auto& tuple : hists2dvec[systkey])
+                    {
+                        TH2F* h = std::get<0>(tuple);
+                        std::function<std::vector<float>()> varxdef = std::get<1>(tuple);
+                        std::function<std::vector<float>()> varydef = std::get<2>(tuple);
+                        std::function<std::vector<float>()> wgtdef  = std::get<3>(tuple);
+                        std::vector<float> varx = varxdef();
+                        std::vector<float> vary = varydef();
+                        if (varx.size() != vary.size())
+                        {
+                            TString msg = "the vector input to be looped over do not have same length for x and y! check the variable definition for histogram ";
+                            msg += h->GetName();
+                            warning(msg);
+                        }
+                        std::vector<float> elemwgts;
+                        if (wgtdef)
+                            elemwgts = wgtdef();
+                        for (unsigned int i = 0; i < varx.size(); ++i)
+                        {
+                            if (wgtdef)
+                                h->Fill(varx[i], vary[i], weight * extrawgt * elemwgts[i]);
+                            else
+                                h->Fill(varx[i], vary[i], weight * extrawgt);
+                        }
                     }
                 }
                 for (auto& child : children)
