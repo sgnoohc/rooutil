@@ -1286,12 +1286,20 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
                 cuteffset = True
                 legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
                 pointpairs.append(([beff], [seff]))
-            if curval <= cutval and not cuteffset:
-                legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
-                pointpairs.append(([beff], [seff]))
-                cuteffset = True
-                if ref_seff == 0: ref_seff = seff
-                if ref_beff == 0: ref_beff = beff
+            if not doreverse:
+                if curval <= cutval and not cuteffset:
+                    legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                    pointpairs.append(([beff], [seff]))
+                    cuteffset = True
+                    if ref_seff == 0: ref_seff = seff
+                    if ref_beff == 0: ref_beff = beff
+            else:
+                if curval >= cutval and not cuteffset:
+                    legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                    pointpairs.append(([beff], [seff]))
+                    cuteffset = True
+                    if ref_seff == 0: ref_seff = seff
+                    if ref_beff == 0: ref_beff = beff
             if debug:
                 if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
                 if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)

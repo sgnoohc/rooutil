@@ -5,11 +5,33 @@
 #  .
 # ..: P. Chang, philip@physics.ucsd.edu
 
-cores=36
+usage()
+{
+  echo "Usage:"
+  echo "   sh $0 [-n NCORE=36] COMMAND_LIST.txt [PATTERN]"
+  exit
+}
+
+# Command-line opts
+while getopts ":n:xh" OPTION; do
+  case $OPTION in
+    n) CORE=${OPTARG};;
+    h) usage;;
+    :) usage;;
+  esac
+done
+
+# To shift away the parsed options
+shift $(($OPTIND - 1))
+
+if [ -z ${CORE} ]; then CORE=36; fi
+
+cores=${CORE}
 
 # must provide the job
 if [ "x${1}" == "x" ]; then
-  echo "Must provide the job commands txt file"
+  echo "Error: Must provide the job commands txt file"
+  usage
   exit
 fi
 
