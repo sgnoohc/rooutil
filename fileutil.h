@@ -7,6 +7,11 @@
 #include <vector>
 #include <map>
 #include <dirent.h>
+#include <glob.h> // glob(), globfree()
+#include <string.h> // memset()
+#include <stdexcept>
+#include <string>
+#include <sstream>
 
 #include "TChain.h"
 #include "TDirectory.h"
@@ -31,6 +36,7 @@ namespace RooUtil
         void saveJson(json& j, TFile*, TString="json");
         json getJson(TFile*, TString="json");
         std::vector<TString> getFilePathsInDirectory(TString dirpath);
+        std::vector<TString> glob(const std::string& pattern);
     }
 }
 

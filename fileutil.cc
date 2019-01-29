@@ -7,7 +7,7 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
 {
     using namespace std;
 
-    // hadoopmap
+    // hadoopmap to bypass some of the broken files
     ifstream infile("hadoopmap.txt");
     std::map<TString, TString> _map;
     if (infile.good())
@@ -22,6 +22,15 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
             TString newpath_tstr = newpath.c_str();
             _map[oldpath_tstr] = newpath_tstr;
         }
+    }
+
+    // globbing if the provided path is only a directory
+    // It will check via looking at the last character == "/"
+    if (inputs.EndsWith("/"))
+    {
+        std::cout << "here FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFf" << std::endl;
+        std::string pattern = TString::Format("%s/*.root", inputs.Data()).Data();
+        inputs = RooUtil::StringUtil::join(glob(pattern));
     }
 
     TChain* chain = new TChain(name);
@@ -114,4 +123,35 @@ std::vector<TString> RooUtil::FileUtil::getFilePathsInDirectory(TString dirpath)
         error(TString::Format("Could not open directory = %s", dirpath.Data()));
         return rtn;
     }
+}
+
+//https://stackoverflow.com/questions/8401777/simple-glob-in-c-on-unix-system
+
+std::vector<TString> RooUtil::FileUtil::glob(const std::string& pattern) {
+    using namespace std;
+
+    // glob struct resides on the stack
+    glob_t glob_result;
+    memset(&glob_result, 0, sizeof(glob_result));
+
+    // do the glob operation
+    int return_value = glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
+    if(return_value != 0) {
+        globfree(&glob_result);
+        stringstream ss;
+        ss << "glob() failed with return_value " << return_value << endl;
+        throw std::runtime_error(ss.str());
+    }
+
+    // collect all the filenames into a std::list<std::string>
+    vector<TString> filenames;
+    for(size_t i = 0; i < glob_result.gl_pathc; ++i) {
+        filenames.push_back(string(glob_result.gl_pathv[i]));
+    }
+
+    // cleanup
+    globfree(&glob_result);
+
+    // done
+    return filenames;
 }
