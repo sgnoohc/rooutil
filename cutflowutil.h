@@ -109,7 +109,7 @@ namespace RooUtil
             {
                 struct winsize w;
                 ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-                int colsize = std::min(w.ws_col - 50, 600);
+                int colsize = std::min(w.ws_col - 100, 600);
                 if (indent == 0)
                 {
                     TString header = "Cut name";
