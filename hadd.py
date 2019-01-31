@@ -81,5 +81,5 @@ if __name__ == "__main__":
     parser.add_argument('files', metavar='FILE.csv', type=str, nargs='+', help='input files')
     args = parser.parse_args()
 
-    hadd(files, treename, output, neventsperfile)
+    hadd(args.files, args.treename, args.output, args.nevents)
 
