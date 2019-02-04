@@ -85,6 +85,9 @@ class DataCardConverter:
         for proc in self.process_names:
             self.rates[proc] = self.get_rate(proc)
 
+        """ Get data rates too"""
+        self.rates["data_obs"] = self.get_rate("data_obs")
+
     def get_rate(self, proc, syst=""):
         """ From the histograms, retrieve the yields."""
         if syst:
@@ -153,7 +156,7 @@ class DataCardConverter:
         header += "kmax *  number of nuisance parameters (sources of systematical uncertainties)\n"
         header += "{}\n".format(self.get_delimiter())
         header += "bin            {}\n".format(self.bin_name)
-        header += "observation    0\n"
+        header += "observation    {}\n".format(self.rates["data_obs"])
         header += "{}\n".format(self.get_delimiter())
         return header
 
