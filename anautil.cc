@@ -4,7 +4,7 @@ bool PASS() { return true; }
 float UNITY() { return 1; }
 
 //_______________________________________________________________________________________________________
-RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0) { cuttreemap["Root"] = &cuttree; }
+RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0), dosavettreex(0) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
 RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
@@ -272,6 +272,7 @@ void RooUtil::Cutflow::saveOutput()
 {
     saveCutflows();
     saveHistograms();
+    saveTTreeX();
     TString filename = ofile->GetName();
     TString msg = "Wrote output to " + filename;
     print(msg);
@@ -293,6 +294,16 @@ void RooUtil::Cutflow::saveHistograms()
         pair.second->Write();
     for (auto& pair : booked_2dhistograms)
         pair.second->Write();
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::saveTTreeX()
+{
+    if (dosavettreex)
+    {
+        ofile->cd();
+        tx->save(ofile);
+    }
 }
 
 #ifdef USE_CUTLAMBDA
@@ -479,7 +490,8 @@ void RooUtil::Cutflow::fill()
             fillHistograms(cutsyst, false);
     }
 
-//    tx->fill(); // TODO if i want to save this...
+    if (dosavettreex)
+        tx->fill();
 
     tx->clear();
 }
@@ -921,6 +933,12 @@ void RooUtil::Cutflow::bookHistogramsForEndCuts(Histograms& histograms)
 void RooUtil::Cutflow::setSkipSystematicHistograms(bool v)
 {
     doskipsysthist = v;
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setSaveTTreeX(bool v)
+{
+    dosavettreex = v;
 }
 
 //_______________________________________________________________________________________________________

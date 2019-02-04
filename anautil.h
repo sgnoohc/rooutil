@@ -72,6 +72,7 @@ namespace RooUtil
             bool iseventlistbooked;
             int seterrorcount;
             bool doskipsysthist;
+            bool dosavettreex;
             Cutflow(TFile* o);
             ~Cutflow();
             void addToCutTreeMap(TString n);
@@ -97,9 +98,11 @@ namespace RooUtil
             void bookCutflowsForRegions(std::vector<TString> regions);
             void bookCutflows();
             void setSkipSystematicHistograms(bool=true);
+            void setSaveTTreeX(bool=true);
             void saveOutput();
             void saveCutflows();
             void saveHistograms();
+            void saveTTreeX();
 #ifdef USE_CUTLAMBDA
             void setCut    (TString cutname, std::function<bool()> pass, std::function<float()> weight);
             void setCutSyst(TString cutname, TString syst, std::function<bool()> pass, std::function<float()> weight);

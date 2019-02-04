@@ -164,6 +164,18 @@ namespace RooUtil
                     std::cout << msg << std::endl;
                 }
             }
+            void writeEventList(TString ofilename)
+            {
+                std::ofstream outFile(ofilename);
+                for (auto& tuple : eventlist)
+                {
+                    int run = std::get<0>(tuple);
+                    int lumi = std::get<1>(tuple);
+                    unsigned long long evt = std::get<2>(tuple);
+                    outFile << run << ":" << lumi << ":" << evt << std::endl;
+                }
+                outFile.close();
+            }
             void addCut(TString n)
             {
                 CutTree* obj = new CutTree(n);
@@ -431,7 +443,7 @@ namespace RooUtil
                         }
                     }
                 }
-                if (doeventlist and pass)
+                if (doeventlist and pass and cutsystname.IsNull())
                 {
                     if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
                     {
@@ -476,7 +488,7 @@ namespace RooUtil
                         }
                     }
                 }
-                if (doeventlist and pass)
+                if (doeventlist and pass and cutsystname.IsNull())
                 {
                     if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
                     {
@@ -520,7 +532,7 @@ namespace RooUtil
                         }
                     }
                 }
-                if (doeventlist and pass)
+                if (doeventlist and pass and cutsystname.IsNull())
                 {
                     if (tx.hasBranch<int>("run") && tx.hasBranch<int>("lumi") && tx.hasBranch<unsigned long long>("evt"))
                     {
