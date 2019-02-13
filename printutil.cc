@@ -156,4 +156,13 @@ void RooUtil::jsoncheck(json& j, TString field)
     }
 }
 
+//_________________________________________________________________________________________________
+std::string RooUtil::getstr(const LV& lv)
+{
+    TString str = TString::Format(
+            "(pt, eta, phi, m, e) = %7.2f %5.2f %5.2f %7.2f %7.2f",
+            lv.pt(), lv.eta(), lv.phi(), lv.mass(), lv.e());
+    return str.Data();
+}
+
 //eof

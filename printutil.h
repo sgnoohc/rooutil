@@ -36,6 +36,8 @@
 #include "TLorentzVector.h"
 #include "Math/LorentzVector.h"
 
+typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LV;
+
 #include "json.h"
 
 using json = nlohmann::json;
@@ -56,6 +58,8 @@ namespace RooUtil
     void start    (int quiet=0, int sleep_time=0);
     void end      (int quiet=0);
     void jsoncheck(json& j, TString field);
+
+    std::string getstr(const LV& lv);
 }
 
 #endif
