@@ -58,6 +58,24 @@ float RooUtil::Calc::DeltaR(const LV& a, const LV& b)
 }
 
 //_________________________________________________________________________________________________
+float RooUtil::Calc::alpha(const LV& p1, const LV& p2)
+{
+    double phi = p2.phi() - p1.phi();
+    if (abs(phi) > TMath::Pi())
+        phi = p2.phi() + p1.phi();
+    double eta = p2.eta() - p1.eta();
+    return TMath::ATan2(eta, phi);
+}
+
+//_________________________________________________________________________________________________
+float RooUtil::Calc::pPRel(const LV& pCand, const LV& pLep)
+{
+    if (pLep.pt()<=0.) return 0.;
+    double dot = pCand.Vect().Dot( pLep.Vect() );
+    return sqrt((dot*dot)/pLep.P2());
+}
+
+//_________________________________________________________________________________________________
 float RooUtil::Calc::DeltaEta(const LV& a, const LV& b)
 {
     return a.eta() - b.eta();

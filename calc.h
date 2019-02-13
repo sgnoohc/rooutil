@@ -10,6 +10,7 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TVector2.h"
+#include "TMath.h"
 #include "Math/LorentzVector.h"
 #include "Math/VectorUtil.h"
 
@@ -28,6 +29,8 @@ namespace RooUtil
         LV getBoosted(const LV& a, const TVector3& b);
         void boost(LV& a, const TVector3& b);
         float DeltaR(const LV& a, const LV& b);
+        float alpha(const LV& a, const LV& b);
+        float pPRel(const LV& a, const LV& b);
         float DeltaEta(const LV& a, const LV& b);
         float DeltaPhi(const LV& a, const LV& b);
         LV getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool invertpz=false);
