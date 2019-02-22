@@ -1388,3 +1388,75 @@ def plot_hist_2d(hist,options={}):
     options["output_name"] = options["output_name"].replace("pdf","png")
     p.plot_hist_2d(hist, options)
 
+#______________________________________________________________________________________________________________________
+def dump_plot(fname, dirname="plots"):
+
+    f = r.TFile(fname)
+    
+    hists = {}
+    for key in f.GetListOfKeys():
+        hists[key.GetName()] = f.Get(key.GetName())
+    
+    fn = fname.replace(".root", "")
+    for hname in hists:
+        if hists[hname].GetDimension() == 1:
+            plot_hist(bgs=[hists[hname]], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
+        if hists[hname].GetDimension() == 2:
+            plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
+
+#______________________________________________________________________________________________________________________
+def dump_plot(fnames=[], dirname="plots", legend_labels=[], donorm=False):
+
+    # Open all files and define color schemes
+    tfs = {}
+    clrs = {}
+    for index, fname in enumerate(fnames):
+        n = fname.replace(".root", "")
+        tfs[n] = r.TFile(fname)
+        clrs[n] = default_colors[index]
+
+    # Form a complete key list
+    hist_names = []
+    for n in tfs:
+        for key in tfs[n].GetListOfKeys():
+            hist_names.append(str(key.GetName()))
+
+    # Remove duplicate names
+    hist_names = list(set(hist_names))
+
+    # Sort
+    hist_names.sort()
+
+    # Loop over hist_names
+    for hist_name in hist_names:
+        hists = []
+        colors = []
+        for n in tfs:
+            h = tfs[n].Get(hist_name)
+            if h:
+                h.SetName(n)
+                hists.append(h)
+                colors.append(clrs[n])
+        if len(hists) > 0:
+            if hists[0].GetDimension() == 1:
+                if donorm: # shape comparison so use sigs to overlay one bkg with multiple shape comparison
+                    plot_hist(bgs=[hists[0]], sigs=hists[1:], colors=colors, options={"signal_scale": "auto", "output_name": dirname + "/" + hist_name + ".pdf"}, legend_labels=legend_labels)
+                else:
+                    plot_hist(bgs=hists, colors=colors, options={"output_name": dirname + "/" + hist_name + ".pdf"}, legend_labels=legend_labels)
+            if hists[0].GetDimension() == 2:
+                if donorm:
+                    for h in hists:
+                        h.Scale(1./h.Integral())
+
+                # Compute range
+                zmax = hists[0].GetMaximum()
+                zmin = hists[0].GetMinimum()
+                for h in hists:
+                    zmax = h.GetMaximum() if h.GetMaximum() > zmax else zmax
+                    zmin = h.GetMinimum() if h.GetMinimum() > zmin else zmin
+                for h in hists:
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"lego2"})
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"lego2"})
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+
