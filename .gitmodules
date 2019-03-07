@@ -8,3 +8,7 @@
 [submodule "plottery"]
 	path = plottery
 	url = git@github.com:aminnj/plottery.git
+[submodule "cxxopts"]
+	path = cxxopts
+	url = git@github.com:jarro2783/cxxopts.git
+	branch = master
