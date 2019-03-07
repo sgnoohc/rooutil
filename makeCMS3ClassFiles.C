@@ -469,7 +469,7 @@ void makeHeaderFile(TFile *f, const string& treeName, bool paranoid, const strin
   }//if(haveTauIDInfo)
 
   headerf << "}" << endl;
-  headerf << "#include \"rooutil/rooutil.h\"" << endl;
+  headerf << "#include \"rooutil.h\"" << endl;
   headerf << "#endif" << endl;
 
 }
@@ -1062,7 +1062,7 @@ void makeCCFile(TFile *f, const string& Classname, const string& nameSpace, cons
   }//if (haveTauIDInfo)
 
   implf << endl << "}" << endl;
-  implf << endl << "#include \"rooutil/rooutil.cc\"" << endl;
+  implf << endl << "#include \"rooutil.cc\"" << endl;
 
 }
 

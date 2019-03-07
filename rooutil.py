@@ -476,13 +476,21 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
                     )
                 )
 
+    files_per_output_config_list = []
+    if isinstance(files_per_output, dict):
+        for key in sample_list:
+            files_per_output_config_list.append(files_per_output[key])
+    else:
+        for key in sample_list:
+            files_per_output_config_list.append(files_per_output)
+
     # Loop over datasets to submit
     while True:
 
         all_tasks_complete = True
 
         #for sample in sorted(samples):
-        for sample in samples_to_run:
+        for index, sample in enumerate(samples_to_run):
 
             # define the task
             maker_task = CondorTask(
@@ -493,7 +501,7 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
                     tarfile              = tar_gz_path,
                     special_dir          = hadoop_path,
                     output_name          = "output.root",
-                    files_per_output     = files_per_output,
+                    files_per_output     = files_per_output_config_list[index],
                     condor_submit_params = {"sites" : sites},
                     open_dataset         = False,
                     flush                = True,
@@ -504,7 +512,7 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
             maker_task.process()
 
             # save some information for the dashboard
-            total_summary[maker_task.get_sample().get_datasetname()] = maker_task.get_task_summary()
+            total_summary["["+job_tag+"] "+maker_task.get_sample().get_datasetname()] = maker_task.get_task_summary()
 
             # Aggregate whether all tasks are complete
             all_tasks_complete = all_tasks_complete and maker_task.complete()
@@ -514,7 +522,7 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
         StatsParser(data=total_summary, webdir=metis_dashboard_path).do()
 
         # Print msummary table so I don't have to load up website
-        os.system("msummary -r | tee summary.txt")
+        os.system("msummary -r -p {} | tee summary.txt".format(job_tag))
         os.system("chmod -R 755 {}".format(metis_dashboard_path))
         os.system("chmod 644 {}/images/*".format(metis_dashboard_path))
 

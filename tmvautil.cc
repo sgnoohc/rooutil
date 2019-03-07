@@ -4,7 +4,7 @@
 using namespace std;
 
 //_________________________________________________________________________________________________
-TMVA::Reader* RooUtil::TMVAUtil::createReader(TString methodType, TString xmlpath, RooUtil::TTreeX& tx)
+TMVA::Reader* RooUtil::TMVAUtil::createReader(TString methodType, TString xmlpath)
 {
 
     TMVA::Reader* reader = new TMVA::Reader("!Silent:!Color");
@@ -68,4 +68,17 @@ std::vector<float> RooUtil::TMVAUtil::getInputValues(TMVA::Reader* reader, RooUt
     }
 
     return rtn;
+}
+
+//_________________________________________________________________________________________________
+RooUtil::TMVAUtil::ReaderX::ReaderX(TString methodType_, TString xmlpath)
+{
+    reader = RooUtil::TMVAUtil::createReader(methodType_, xmlpath);
+    methodType = methodType_;
+}
+
+//_________________________________________________________________________________________________
+float RooUtil::TMVAUtil::ReaderX::eval(RooUtil::TTreeX& tx)
+{
+    return reader->EvaluateMVA(RooUtil::TMVAUtil::getInputValues(this->reader, tx), this->methodType);
 }

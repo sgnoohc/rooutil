@@ -9,3 +9,6 @@
 [submodule "cpptqdm"]
 	path = cpptqdm
 	url = git@github.com:aminnj/cpptqdm.git
+[submodule "plottery"]
+	path = plottery
+	url = git@github.com:aminnj/plottery.git
