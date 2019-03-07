@@ -4,6 +4,9 @@ bool PASS() { return true; }
 float UNITY() { return 1; }
 
 //_______________________________________________________________________________________________________
+RooUtil::Cutflow::Cutflow() : cuttree("Root"), last_active_cut(0), ofile(0), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0), dosavettreex(0) { cuttreemap["Root"] = &cuttree; }
+
+//_______________________________________________________________________________________________________
 RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0), dosavettreex(0) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
