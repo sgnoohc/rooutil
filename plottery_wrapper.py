@@ -85,6 +85,7 @@ default_colors = []
 default_colors.append(2005)
 default_colors.append(2001)
 default_colors.append(2003)
+default_colors.append(2007)
 default_colors.extend(range(2001, 2013))
 default_colors.extend(range(7001, 7018))
 
@@ -622,7 +623,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         if max_f < f:
             max_f = f
             max_f_cut = xmin + xwidth * (i - 1)
-    print max_f
+    # print max_f
     leftscan.SetName("#rightarrow {:.6f} ({:.6f})".format(max_f, max_f_cut))
     rightscan = cloneTH1(sig)
     rightscan.Reset()
@@ -742,9 +743,9 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     if len(hists) == 0:
         return
     # add bin column
-    x.add_column("Bin#", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    x.add_column("Bin#", ["Bin{}".format(i) for i in xrange(0, hists[0].GetNbinsX()+2)])
     for hist in hists:
-        x.add_column(hist.GetName(), [ yield_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+        x.add_column(hist.GetName(), [ yield_str(hist, i, prec) for i in xrange(0, hist.GetNbinsX()+2)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
@@ -1028,8 +1029,9 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     #yaxismin = 1000
 
     if "yaxis_log" in options:
-        if options["yaxis_log"] and "yaxis_range" not in options:
+        if options["yaxis_log"] and ("yaxis_range" not in options or options["yaxis_range"] == []):
             options["yaxis_range"] = [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
+            print [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
@@ -1222,15 +1224,19 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
     leftscan.Scale(1./leftscan.GetBinContent(1))
     rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
+    leftscan.SetFillStyle(1)
     hbgs.append(leftscan)
     hsigs.append(rightscan)
-    hsigs.append(plot_sigscan2d(sigs[0], get_total_hist(bgs)))
+    scan2d = plot_sigscan2d(sigs[0], get_total_hist(bgs))
+    scan2d.Scale(1./scan2d.GetBinContent(1))
+    hsigs.append(scan2d)
     leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs), fom_acceptance)
     hsigs.append(leftscan)
     hsigs.append(rightscan)
     options["bkg_err_fill_color"] = 0
     options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
     options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
+    options["signal_scale"] = 1
     plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
 
 #______________________________________________________________________________________________________________________
@@ -1510,7 +1516,8 @@ def dump_plot(fnames=[], sig_fnames=[], dirname="plots", legend_labels=[], donor
                         bkgs = [ sigs.pop(0) ]
                     options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
                     options.update(extraoptions)
-                    _plotter(bgs=bkgs, sigs=sigs, colors=colors, options=options, legend_labels=legend_labels)
+                    print legend_labels
+                    _plotter(bgs=bkgs, sigs=sigs, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
             if hists[0].GetDimension() == 2:
                 if donorm:
                     for h in hists:
