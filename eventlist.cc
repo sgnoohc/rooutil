@@ -40,6 +40,10 @@ void RooUtil::EventList::load( TString filename, TString delim )
 //        std::cout << evt << ":" << run << ":" << lumi << ":" << std::endl;
         TString rawline = line;
         std::vector<TString> list = RooUtil::StringUtil::split(rawline, delim);
+        // If it has # at the front skip the event
+        if (list.size() > 0)
+            if (list[0].Contains("#"))
+                continue;
         if (list.size() != 3)
             RooUtil::error(Form("[RooUtil::EventList::load()] Found a line in %s that does not have exactly three items.", filename.Data()));
         std::vector<int> evtid;

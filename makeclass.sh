@@ -87,7 +87,7 @@ e_arrow "RooUtil:: The user has provided following options"
 e_arrow "RooUtil:: $(date)"
 e_arrow "RooUtil:: =========================================="
 e_arrow "RooUtil::  ROOTFILE=$ROOTFILE"
-e_arrow "RooUtil::  TREENAME=$TREENAME"
+e_arrow "RooUtil::  TREENAME=$TTREENAME"
 e_arrow "RooUtil::  MAKECLASSNAME=$MAKECLASSNAME"
 e_arrow "RooUtil::  TREEINSTANCENAME=$TREEINSTANCENAME"
 e_arrow "RooUtil:: =========================================="
@@ -122,13 +122,12 @@ fi
 
 source $DIR/root.sh ""
 
-if [ -e rooutil/makeCMS3ClassFiles.C ]; then
+if [ -e $DIR/makeCMS3ClassFiles.C ]; then
   echo "running makeCMS3ClassFiles.C"
-  #root -l -b -q rooutil/makeCMS3ClassFiles.C
-  root -l -b -q rooutil/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\)  &> /dev/null
+  root -l -b -q $DIR/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\)  &> /dev/null
 fi
 
-if [ -e ${MAKECLASSNAME}.cc ]; then
+if [ $? -eq 0 ]; then
     e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
 else
     e_error "RooUtil:: Failed to generate ${MAKECLASSNAME}.cc/h!"
@@ -152,9 +151,9 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         # Create process.cc
         #
         echo "#include \"${MAKECLASSNAME}.h\""                                                                                                                 >  process.cc
-        echo "#include \"rooutil/rooutil.h\""                                                                                                                  >> process.cc
+        echo "#include \"rooutil.h\""                                                                                                                          >> process.cc
         echo ""                                                                                                                                                >> process.cc
-        echo "// ./process INPUTFILEPATH OUTPUTFILEPATH [NEVENTS]"                                                                                             >> process.cc
+        echo "// ./process INPUTFILEPATH OUTPUTFILE [NEVENTS]"                                                                                                 >> process.cc
         echo "int main(int argc, char** argv)"                                                                                                                 >> process.cc
         echo "{"                                                                                                                                               >> process.cc
         echo "    // Argument checking"                                                                                                                        >> process.cc
@@ -164,14 +163,14 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo "        std::cout << \"  $ ./process INPUTFILES OUTPUTFILE [NEVENTS]\" << std::endl;"                                                            >> process.cc
         echo "        std::cout << std::endl;"                                                                                                                 >> process.cc
         echo "        std::cout << \"  INPUTFILES      comma separated file list\" << std::endl;"                                                              >> process.cc
-        echo "        std::cout << \"  OUTPUTFILE      output file name\" << std::endl;"                                                                       >> process.cc
+        echo "        std::cout << \"  OUTPUTFILE      output file\" << std::endl;"                                                                            >> process.cc
         echo "        std::cout << \"  [NEVENTS=-1]    # of events to run over\" << std::endl;"                                                                >> process.cc
         echo "        std::cout << std::endl;"                                                                                                                 >> process.cc
         echo "        return 1;"                                                                                                                               >> process.cc
         echo "    }"                                                                                                                                           >> process.cc
         echo ""                                                                                                                                                >> process.cc
         echo "    // Creating output file where we will put the outputs of the processing"                                                                     >> process.cc
-        echo "    TFile* ofile = new TFile(argv[2], \"recreate\");"                                                                                            >> process.cc
+        echo "    TFile* ofile = new TFile(argv[2], \"create\");"                                                                                              >> process.cc
         echo ""                                                                                                                                                >> process.cc
         echo "    // Create a TChain of the input files"                                                                                                       >> process.cc
         echo "    // The input files can be comma separated (e.g. \"file1.root,file2.root\") or with wildcard (n.b. be sure to escape)"                        >> process.cc
@@ -244,40 +243,29 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo 'OBJECTS=$(SOURCES:.cc=.o)'                                                                                                                    >> Makefile
         echo 'HEADERS=$(SOURCES:.cc=.h)'                                                                                                                    >> Makefile
         echo ''                                                                                                                                             >> Makefile
-        echo 'CC         = g++'                                                                                                                             >> Makefile
-        echo 'CXX        = g++'                                                                                                                             >> Makefile
-        echo 'CXXFLAGS   = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                                                >> Makefile
-        echo 'LD         = g++'                                                                                                                             >> Makefile
-        echo 'LDFLAGS    = -g -O2'                                                                                                                          >> Makefile
-        echo 'SOFLAGS    = -g -shared'                                                                                                                      >> Makefile
-        echo 'CXXFLAGS   = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                                                >> Makefile
-        echo 'LDFLAGS    = -g -O2'                                                                                                                          >> Makefile
-        echo 'ROOTLIBS   = $(shell root-config --libs)'                                                                                                     >> Makefile
-        echo 'ROOTCFLAGS = $(shell root-config --cflags)'                                                                                                   >> Makefile
-        echo 'CXXFLAGS  += $(ROOTCFLAGS)'                                                                                                                   >> Makefile
-        echo 'CFLAGS     = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                                         >> Makefile
-        echo 'EXTRAFLAGS = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer'                               >> Makefile
+        echo 'CC          = g++'                                                                                                                            >> Makefile
+        echo 'CXX         = g++'                                                                                                                            >> Makefile
+        echo 'CXXFLAGS    = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                                               >> Makefile
+        echo 'LD          = g++'                                                                                                                            >> Makefile
+        echo 'LDFLAGS     = -g -O2'                                                                                                                         >> Makefile
+        echo 'SOFLAGS     = -g -shared'                                                                                                                     >> Makefile
+        echo 'CXXFLAGS    = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual'                                                                               >> Makefile
+        echo 'LDFLAGS     = -g -O2'                                                                                                                         >> Makefile
+        echo 'ROOTLIBS    = $(shell root-config --libs)'                                                                                                    >> Makefile
+        echo 'ROOTCFLAGS  = $(shell root-config --cflags)'                                                                                                  >> Makefile
+        echo 'CXXFLAGS   += $(ROOTCFLAGS)'                                                                                                                  >> Makefile
+        echo 'CFLAGS      = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                                        >> Makefile
+        echo 'EXTRACFLAGS = $(shell rooutil-config)'                                                                                                        >> Makefile
+        echo 'EXTRAFLAGS  = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer'                              >> Makefile
         echo ''                                                                                                                                             >> Makefile
-#        echo '.PHONY: check-env'                                                                                                                            >> Makefile
-#        echo ''                                                                                                                                             >> Makefile
-#        echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o check-env'                                                                                            >> Makefile
         echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o'                                                                                                      >> Makefile
-        echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                >> Makefile
+        echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                    >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo '%.o: %.cc'                                                                                                                                    >> Makefile
-        echo '	$(CC) $(CFLAGS) $< -c'                                                                                                                  >> Makefile
+        echo '	$(CC) $(CFLAGS) $(EXTRACFLAGS) $< -c'                                                                                                       >> Makefile
         echo ''                                                                                                                                             >> Makefile
-#        echo "${MAKECLASSNAME}.cc:"                                                                                                                         >> Makefile
-#        echo "	echo remaking tree class"                                                                                                               >> Makefile
-#        echo "	sh rooutil/makeclass.sh -f -x $(TEMPLATE_TREE_PATH) ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}"                 >> Makefile
-#        echo ''                                                                                                                                             >> Makefile
         echo 'clean:'                                                                                                                                       >> Makefile
-        echo '	rm -f *.o $(EXE)'                                                                                                                       >> Makefile
-#        echo ''                                                                                                                                             >> Makefile
-#        echo 'check-env:'                                                                                                                                   >> Makefile
-#        echo 'ifndef TEMPLATE_TREE_PATH'                                                                                                                    >> Makefile
-#        echo "  \$(error TEMPLATE_TREE_PATH is not set. Please set via '>>> export TEMPLATE_TREE_PATH=/path/to/template.root)'"                             >> Makefile
-#        echo 'endif'                                                                                                                                        >> Makefile
+        echo '	rm -f *.o $(EXE)'                                                                                                                           >> Makefile
     fi
 
     #echo "	sh rooutil/makeclass.sh -f -x TEMPLATE_TREE_PATH ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}  > /dev/null 2>&1"  >> Makefile

@@ -73,8 +73,10 @@ namespace RooUtil
             int seterrorcount;
             bool doskipsysthist;
             bool dosavettreex;
+            Cutflow();
             Cutflow(TFile* o);
             ~Cutflow();
+            void setTFile(TFile* o) { ofile = o; }
             void addToCutTreeMap(TString n);
             void setLastActiveCut(TString n);
 #ifdef USE_CUTLAMBDA

@@ -4,6 +4,9 @@ bool PASS() { return true; }
 float UNITY() { return 1; }
 
 //_______________________________________________________________________________________________________
+RooUtil::Cutflow::Cutflow() : cuttree("Root"), last_active_cut(0), ofile(0), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0), dosavettreex(0) { cuttreemap["Root"] = &cuttree; }
+
+//_______________________________________________________________________________________________________
 RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0), dosavettreex(0) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
@@ -450,13 +453,13 @@ void RooUtil::Cutflow::bookEventLists()
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::fill()
 {
+#ifdef USE_TTREEX
     if (!tx)
     {
         TString msg = "No TTreeX object set, fill()";
         printSetFunctionError(msg);
         return;
     }
-#ifdef USE_TTREEX
     tx->setBranch<bool>("Root", 1); // Root is internally set
     tx->setBranch<float>("Root_weight", 1); // Root is internally set
 #else
@@ -490,10 +493,13 @@ void RooUtil::Cutflow::fill()
             fillHistograms(cutsyst, false);
     }
 
-    if (dosavettreex)
-        tx->fill();
+    if (tx)
+    {
+        if (dosavettreex)
+            tx->fill();
 
-    tx->clear();
+        tx->clear();
+    }
 }
 
 #ifdef USE_CUTLAMBDA

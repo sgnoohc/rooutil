@@ -82,6 +82,10 @@ mycolors.append(r.TColor(2011 , 0   / 255. , 158 / 255. , 115 / 255.)) #green
 mycolors.append(r.TColor(2012 , 204 / 255. , 121 / 255. , 167 / 255.)) #pink?
 
 default_colors = []
+default_colors.append(2005)
+default_colors.append(2001)
+default_colors.append(2003)
+default_colors.append(2007)
 default_colors.extend(range(2001, 2013))
 default_colors.extend(range(7001, 7018))
 
@@ -147,6 +151,19 @@ def get_total_err_hist(hists):
     for i in xrange(0, totalhist.GetNbinsX() + 2):
         errhist.SetBinContent(i, totalhist.GetBinError(i))
     return errhist
+
+#______________________________________________________________________________________________________________________
+def normalize_by_first_bin(hists):
+    def func(hist):
+        norm = hist.GetBinContent(1)
+        if norm != 0:
+            hist.Scale(1./norm)
+    if isinstance(hists, list):
+        for hist in hists:
+            func(hist)
+    else:
+        func(hists)
+    return hists
 
 #______________________________________________________________________________________________________________________
 def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
@@ -215,14 +232,14 @@ def getYaxisRange(hist):
 def getYaxisNonZeroMin(hist):
     minimum = 999999999999999999
     if hist:
-        for ibin in xrange(0, hist.GetNbinsX()+2):
+        for ibin in xrange(1, hist.GetNbinsX()+1):
         #for ibin in xrange(1, hist.GetNbinsX()+1):
             c = hist.GetBinContent(ibin)
             e = hist.GetBinError(ibin)
             v = c + e
-            if float(c) != float(0):
-                if v < minimum:
-                    minimum = v
+            if float(v) != float(0):
+                if abs(v) < minimum:
+                    minimum = abs(v)
     if minimum == 999999999999999999:
         minimum = 0.1
     return minimum
@@ -511,6 +528,14 @@ def apply_nf_w_error_2d(hists, nfs):
 
 #______________________________________________________________________________________________________________________
 # S / sqrt(B) fom
+def fom_SoverB(s, serr, b, berr, totals, totalb):
+    if b > 0:
+        return s / b, 0
+    else:
+        return 0, 0
+
+#______________________________________________________________________________________________________________________
+# S / sqrt(B) fom
 def fom_SoverSqrtB(s, serr, b, berr, totals, totalb):
     if b > 0:
         return s / math.sqrt(b), 0
@@ -536,7 +561,8 @@ def fom_acceptance(s, serr, b, berr, totals, totalb):
 
 #______________________________________________________________________________________________________________________
 # For each signal and total background return scan from left/right of fom (figure of merit) func.
-def plot_sigscan2d(sig, bkg, fom=fom_SoverSqrtB):
+#def plot_sigscan2d(sig, bkg, fom=fom_SoverSqrtB):
+def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
         print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
@@ -574,6 +600,7 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverSqrtB):
 #______________________________________________________________________________________________________________________
 # For each signal and total background return scan from left/right of fom (figure of merit) func.
 def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+#def plot_sigscan(sig, bkg, fom=fom_SoverB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
         print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
@@ -596,7 +623,8 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         if max_f < f:
             max_f = f
             max_f_cut = xmin + xwidth * (i - 1)
-    leftscan.SetName("#rightarrow {:.4f} ({:.4f})".format(max_f, max_f_cut))
+    # print max_f
+    leftscan.SetName("#rightarrow {:.6f} ({:.6f})".format(max_f, max_f_cut))
     rightscan = cloneTH1(sig)
     rightscan.Reset()
     max_f = 0
@@ -612,7 +640,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         if max_f < f:
             max_f = f
             max_f_cut = xmin + xwidth * i
-    rightscan.SetName("#leftarrow {:.4f} ({:.4f})".format(max_f, max_f_cut))
+    rightscan.SetName("#leftarrow {:.6f} ({:.6f})".format(max_f, max_f_cut))
     return leftscan, rightscan
 
 #______________________________________________________________________________________________________________________
@@ -715,9 +743,9 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     if len(hists) == 0:
         return
     # add bin column
-    x.add_column("Bin#", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+    x.add_column("Bin#", ["Bin{}".format(i) for i in xrange(0, hists[0].GetNbinsX()+2)])
     for hist in hists:
-        x.add_column(hist.GetName(), [ yield_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+        x.add_column(hist.GetName(), [ yield_str(hist, i, prec) for i in xrange(0, hist.GetNbinsX()+2)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
@@ -827,6 +855,7 @@ def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
     os.system("cp {}/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+    os.system("chmod 755 {}/index.php".format(plotdir))
 #    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 def copy_nice_plot(plotdir):
@@ -954,6 +983,14 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                 remove_underflow([data])
         del options["remove_underflow"]
 
+    if "divide_by_first_bin" in options:
+        if options["divide_by_first_bin"]:
+            normalize_by_first_bin(sigs)
+            normalize_by_first_bin(bgs)
+            if data:
+                normalize_by_first_bin([data])
+        del options["divide_by_first_bin"]
+
     # If data is none clone one hist and fill with 0
     didnothaveanydata = False
     if not data:
@@ -974,7 +1011,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if len(colors) == 0:
         for index, hbg in enumerate(bgs):
             hcolors.append(default_colors[index])
-    hlegend_labels = []
+    hlegend_labels = legend_labels
     if len(legend_labels) == 0:
         for hbg in bgs:
             hlegend_labels.append(hbg.GetName())
@@ -989,11 +1026,12 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         del options["ymax_scale"]
     yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * maxmult)
     yaxismin = get_nonzeromin_yaxis_range(bgs)
-    yaxismin = 1000
+    #yaxismin = 1000
 
     if "yaxis_log" in options:
-        if options["yaxis_log"] and "yaxis_range" not in options:
+        if options["yaxis_log"] and ("yaxis_range" not in options or options["yaxis_range"] == []):
             options["yaxis_range"] = [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
+            print [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
 
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
@@ -1184,15 +1222,21 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
+    leftscan.Scale(1./leftscan.GetBinContent(1))
+    rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
+    leftscan.SetFillStyle(1)
     hbgs.append(leftscan)
     hsigs.append(rightscan)
-    hsigs.append(plot_sigscan2d(sigs[0], get_total_hist(bgs)))
+    scan2d = plot_sigscan2d(sigs[0], get_total_hist(bgs))
+    scan2d.Scale(1./scan2d.GetBinContent(1))
+    hsigs.append(scan2d)
     leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs), fom_acceptance)
     hsigs.append(leftscan)
     hsigs.append(rightscan)
     options["bkg_err_fill_color"] = 0
     options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
     options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
+    options["signal_scale"] = 1
     plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
 
 #______________________________________________________________________________________________________________________
@@ -1387,4 +1431,111 @@ def plot_hist_2d(hist,options={}):
     p.plot_hist_2d(hist, options)
     options["output_name"] = options["output_name"].replace("pdf","png")
     p.plot_hist_2d(hist, options)
+
+#______________________________________________________________________________________________________________________
+def dump_plot_v1(fname, dirname="plots"):
+
+    f = r.TFile(fname)
+    
+    hists = {}
+    for key in f.GetListOfKeys():
+        hists[key.GetName()] = f.Get(key.GetName())
+    
+    fn = fname.replace(".root", "")
+    for hname in hists:
+        if hists[hname].GetDimension() == 1:
+            plot_hist(bgs=[hists[hname]], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
+        if hists[hname].GetDimension() == 2:
+            plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
+
+#______________________________________________________________________________________________________________________
+def dump_plot(fnames=[], sig_fnames=[], dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, _plotter=plot_hist):
+
+    # Open all files and define color schemes
+    sample_names = []
+    tfs = {}
+    clrs = {}
+    for index, fname in enumerate(fnames + sig_fnames):
+        n = os.path.basename(fname.replace(".root", ""))
+        tfs[n] = r.TFile(fname)
+        clrs[n] = default_colors[index]
+        sample_names.append(n)
+
+    # Aggregate a list of signal samples
+    issig = []
+    for index, fname in enumerate(sig_fnames):
+        n = os.path.basename(fname.replace(".root", ""))
+        issig.append(n)
+
+    # Form a complete key list
+    hist_names = []
+    for n in tfs:
+        for key in tfs[n].GetListOfKeys():
+            hist_names.append(str(key.GetName()))
+
+    # Remove duplicate names
+    hist_names = list(set(hist_names))
+
+    # Sort
+    hist_names.sort()
+
+    # Loop over hist_names
+    for hist_name in hist_names:
+        
+        # If to filter certain histograms
+        if filter_pattern:
+            doskip = False
+            for item in filter_pattern.split(","):
+                if item not in hist_name:
+                    doskip = True
+                    break
+            if doskip:
+                continue
+
+        hists = []
+        colors = []
+        for n in sample_names:
+            h = tfs[n].Get(hist_name)
+            if h:
+                h.SetName(n)
+                hists.append(h)
+                colors.append(clrs[n])
+        if len(hists) > 0:
+            if hists[0].GetDimension() == 1:
+                if donorm: # shape comparison so use sigs to overlay one bkg with multiple shape comparison
+                    options = {"signal_scale": "auto", "output_name": dirname + "/" + hist_name + ".pdf"}
+                    options.update(extraoptions)
+                    _plotter(bgs=[hists[0]], sigs=hists[1:], colors=colors, options=options, legend_labels=legend_labels)
+                else:
+                    # Get the list of histograms and put them in either bkg or signals
+                    sigs = [ hists[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
+                    bkgs = [ hists[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg histograms
+                    colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
+                    # But check if bkgs is at least 1
+                    if len(bkgs) == 0:
+                        bkgs = [ sigs.pop(0) ]
+                    options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
+                    options.update(extraoptions)
+                    print legend_labels
+                    _plotter(bgs=bkgs, sigs=sigs, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
+            if hists[0].GetDimension() == 2:
+                if donorm:
+                    for h in hists:
+                        h.Scale(1./h.Integral())
+
+                # Compute range
+                zmax = hists[0].GetMaximum()
+                zmin = hists[0].GetMinimum()
+                for h in hists:
+                    zmax = h.GetMaximum() if h.GetMaximum() > zmax else zmax
+                    zmin = h.GetMinimum() if h.GetMinimum() > zmin else zmin
+                for h in hists:
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"lego2"})
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"lego2"})
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"colz"})
+                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
+                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
 
