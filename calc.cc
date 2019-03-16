@@ -87,6 +87,37 @@ float RooUtil::Calc::DeltaPhi(const LV& a, const LV& b)
     return ROOT::Math::VectorUtil::DeltaPhi(a, b);
 }
 
+//*************************************************************************************************
+//
+// Math for solving neutrino momentum based on parent particle mass (e.g. W -> lv)
+//
+// def pv = (sqrt(vpt^2 + vz^2), vpt, vz), pl = (|pl|, lpt, lz)
+// def vpt = (vx, vy), lpt = (lx, ly)
+//
+// mw^2 = 2 pv pl (assuming lepton is massless)
+// mw^2 = 2 |pl| sqrt(vpt^2 + vz^2) - vpt . lpt - vz lz
+//
+// def k = mw^2 / 2 + vpt . lpt
+//
+// re-arrange and square both sides...
+//
+// (k + vz lz)^2 = |pl|^2 (vpt^2 + vz^2)
+//
+// Expand both sides and cancel the term lz^2 vz^2 that shows up in both sides
+// after expanding |pl|^2 = lpt^2 + lz^2
+// 
+// k^2 + 2k vz lz = |pl|^2 vpt^2 + lpt^2 vz^2
+//
+// Re-arrange into quadratic form
+//
+// lpt^2 vz^2 - 2k lz vz + |pl|^2 vpt^2 -k^2 = 0
+// ^^^^^      ^^^^^^^      ^^^^^^^^^^^^^^^^^
+//   a           b                 c
+//
+// define "det" = b^2 - 4ac ("determinant" to check whether the solution is imaginary or real)
+//
+//*************************************************************************************************
+
 //_________________________________________________________________________________________________
 LV RooUtil::Calc::getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2, bool invertpz)
 {
@@ -103,17 +134,25 @@ LV RooUtil::Calc::getNeutrinoP4(const LV& lep, const float& met_pt, const float&
 //_________________________________________________________________________________________________
 float RooUtil::Calc::getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw)
 {
-    // Pz reconstruction for WW->lvjj from https://arxiv.org/pdf/1503.04677.pdf
+    // Not ideal to call twice but... OK
     float lx = lep.px();
     float ly = lep.py();
     float lz = lep.pz();
+    float lpt = lep.pt(); // |lpt|
+    float pl2 = (lx * lx + ly * ly + lz * lz); // |pl|^2
     TLorentzVector met;
     met.SetPtEtaPhiM(met_pt, 0, met_phi, 0);
     float vx = met.Px();
     float vy = met.Py();
+    float vpt = met_pt;
 
-    using namespace TMath;
-    float det = (Power(lx,2) + Power(ly,2) + Power(lz,2))* (Power(mw,4) - 4*Power(ly*vx - lx*vy,2) + 4*Power(mw,2)*(lx*vx + ly*vy));
+    float k = mw * mw / 2. + vx * lx + vy * ly;
+    float b = -2. * k * lz;
+    float b2 = b * b;
+    float ac = (lpt * lpt) * (pl2 * vpt * vpt - k * k);
+    //         ^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^
+    //             a                     c
+    float det = b2 - 4 * ac;
 
     return det;
 }
@@ -121,14 +160,17 @@ float RooUtil::Calc::getNeutrinoPzDet(const LV& lep, const float& met_pt, const 
 //_________________________________________________________________________________________________
 float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2)
 {
-    // Pz reconstruction for WW->lvjj from https://arxiv.org/pdf/1503.04677.pdf
+    // Not ideal to call twice but... OK
     float lx = lep.px();
     float ly = lep.py();
     float lz = lep.pz();
+    float lpt = lep.pt(); // |lpt|
+    float pl2 = (lx * lx + ly * ly + lz * lz); // |pl|^2
     TLorentzVector met;
     met.SetPtEtaPhiM(met_pt, 0, met_phi, 0);
     float vx = met.Px();
     float vy = met.Py();
+    float vpt = met_pt;
 
     using namespace TMath;
     float det = getNeutrinoPzDet(lep, met_pt, met_phi, mw);
@@ -136,8 +178,13 @@ float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const flo
     // If imaginary then ignore imaginary component and take the real value only
     if (det < 0)
         det = 0;
-    float sol1 = (lz*(Power(mw,2) + 2*lx*vx + 2*ly*vy) - Sqrt(det))/(2.*(Power(lx,2) + Power(ly,2)));
-    float sol2 = (lz*(Power(mw,2) + 2*lx*vx + 2*ly*vy) + Sqrt(det))/(2.*(Power(lx,2) + Power(ly,2)));
+
+    float k = mw * mw / 2. + vx * lx + vy * ly;
+    float a = lpt * lpt;
+    float b = -2. * k * lz;
+
+    float sol1 = (-b -Sqrt(det))/(2. * a);
+    float sol2 = (-b +Sqrt(det))/(2. * a);
 
     float ans  = fabs(sol1) < fabs(sol2) ? sol1 : sol2;
     float ans2 = fabs(sol1) < fabs(sol2) ? sol2 : sol1;
