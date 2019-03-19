@@ -1222,13 +1222,16 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
-    leftscan.Scale(1./leftscan.GetBinContent(1))
-    rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
+    if leftscan.GetBinContent(1) != 0:
+        leftscan.Scale(1./leftscan.GetBinContent(1))
+    if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
+        rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
     leftscan.SetFillStyle(1)
     hbgs.append(leftscan)
     hsigs.append(rightscan)
     scan2d = plot_sigscan2d(sigs[0], get_total_hist(bgs))
-    scan2d.Scale(1./scan2d.GetBinContent(1))
+    if scan2d.GetBinContent(1) != 0:
+        scan2d.Scale(1./scan2d.GetBinContent(1))
     hsigs.append(scan2d)
     leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs), fom_acceptance)
     hsigs.append(leftscan)
