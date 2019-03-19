@@ -1522,8 +1522,8 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                 else:
                     # Get the list of histograms and put them in either bkg or signals
                     sigs = [ hists[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
-                    bkgs = [ hists[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg histograms
-                    data = hists[data_sample_name] if data_sample_name else None
+                    bkgs = [ hists[index] for index, n in enumerate(sample_names) if (n not in issig) and n != data_sample_name ] # list of bkg histograms
+                    data = [ hists[index] for index, n in enumerate(sample_names) if n == data_sample_name ][0] if data_sample_name else None
                     colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
                     # But check if bkgs is at least 1
                     if len(bkgs) == 0:
