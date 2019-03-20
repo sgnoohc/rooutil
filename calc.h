@@ -33,9 +33,9 @@ namespace RooUtil
         float pPRel(const LV& a, const LV& b);
         float DeltaEta(const LV& a, const LV& b);
         float DeltaPhi(const LV& a, const LV& b);
-        LV getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool invertpz=false);
-        float getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false);
-        float getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385);
+        LV getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool invertpz=false, bool debug=false);
+        float getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool debug=false);
+        float getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool debug=false);
         TVector2 getEtaPhiVecRotated(const LV& target, const LV& ref, const LV& axis_ref);
         float getRho(const LV& ref, const LV& target);
         void printTLV(const TLorentzVector& a);
