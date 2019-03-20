@@ -116,54 +116,84 @@ float RooUtil::Calc::DeltaPhi(const LV& a, const LV& b)
 //
 // define "det" = b^2 - 4ac ("determinant" to check whether the solution is imaginary or real)
 //
+// --------------------------
+//
+// More general version where the mass of the "lepton" system is not massless
+//
+// (H->WW->lvjj)
+//
+// def k = (mw^2 - ml^2)  / 2 + vpt . lpt
+//
+// Re-arrange into quadratic form
+//
+// (lpt^2 + ml^2) vz^2 - 2k lz vz + El^2 vpt^2 -k^2 = 0
+// ^^^^^^^^^^^^^^      ^^^^^^^      ^^^^^^^^^^^^^^^
+//       a                b                c
+//
+// If ml = 0 it's the same as above
+//
 //*************************************************************************************************
 
 //_________________________________________________________________________________________________
-LV RooUtil::Calc::getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2, bool invertpz)
+LV RooUtil::Calc::getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2, bool invertpz, bool debug)
 {
-    float pz = getNeutrinoPz(lep, met_pt, met_phi, mw, getsol2);
+    float pz = getNeutrinoPz(lep, met_pt, met_phi, mw, getsol2, debug);
     if (invertpz)
         pz = -pz;
     LV neutrino;
     using namespace TMath;
     float E = Sqrt(Power(met_pt*Cos(met_phi),2) + Power(met_pt*Sin(met_phi),2) + pz*pz);
     neutrino.SetPxPyPzE(met_pt*TMath::Cos(met_phi), met_pt*TMath::Sin(met_phi), pz, E);
+    LV W = lep + neutrino;
+    if (debug)
+        std::cout <<  " W.mass(): " << W.mass() <<  " mw: " << mw <<  std::endl;
     return neutrino;
 }
 
 //_________________________________________________________________________________________________
-float RooUtil::Calc::getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw)
+float RooUtil::Calc::getNeutrinoPzDet(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool debug)
 {
     // Not ideal to call twice but... OK
     float lx = lep.px();
     float ly = lep.py();
     float lz = lep.pz();
+    float ml = lep.mass();
     float lpt = lep.pt(); // |lpt|
-    float pl2 = (lx * lx + ly * ly + lz * lz); // |pl|^2
+    float pl2 = (lx * lx + ly * ly + lz * lz) + ml * ml; // El^2
     TLorentzVector met;
     met.SetPtEtaPhiM(met_pt, 0, met_phi, 0);
     float vx = met.Px();
     float vy = met.Py();
     float vpt = met_pt;
 
-    float k = mw * mw / 2. + vx * lx + vy * ly;
+    if (debug)
+        std::cout <<  " mw: " << mw <<  " ml: " << ml <<  std::endl;
+
+    if (debug)
+        std::cout <<  " lx: " << lx <<  " ly: " << ly <<  " lz: " << lz <<  " lpt: " << lpt <<  " pl2: " << pl2 <<  " vx: " << vx <<  " vy: " << vy <<  " vpt: " << vpt <<  std::endl;
+
+    float k = (mw * mw - ml * ml) / 2. + vx * lx + vy * ly;
     float b = -2. * k * lz;
     float b2 = b * b;
-    float ac = (lpt * lpt) * (pl2 * vpt * vpt - k * k);
-    //         ^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^
-    //             a                     c
+    float ac = (lpt * lpt + ml * ml) * (pl2 * vpt * vpt - k * k);
+    //         ^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^
+    //                   a                          c
     float det = b2 - 4 * ac;
+
+    if (debug)
+        std::cout <<  " k: " << k <<  " b: " << b <<  " b2: " << b2 <<  " ac: " << ac <<  " det: " << det <<  std::endl;
 
     return det;
 }
 
 //_________________________________________________________________________________________________
-float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2)
+float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw, bool getsol2, bool debug)
 {
     // Not ideal to call twice but... OK
     float lx = lep.px();
     float ly = lep.py();
     float lz = lep.pz();
+    float ml = lep.mass();
     float lpt = lep.pt(); // |lpt|
     // float pl2 = (lx * lx + ly * ly + lz * lz); // |pl|^2
     TLorentzVector met;
@@ -173,18 +203,21 @@ float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const flo
     // float vpt = met_pt;
 
     using namespace TMath;
-    float det = getNeutrinoPzDet(lep, met_pt, met_phi, mw);
+    float det = getNeutrinoPzDet(lep, met_pt, met_phi, mw, debug);
 
     // If imaginary then ignore imaginary component and take the real value only
     if (det < 0)
         det = 0;
 
-    float k = mw * mw / 2. + vx * lx + vy * ly;
-    float a = lpt * lpt;
+    float k = (mw * mw - ml * ml) / 2. + vx * lx + vy * ly;
+    float a = (lpt * lpt + ml * ml);
     float b = -2. * k * lz;
 
     float sol1 = (-b -Sqrt(det))/(2. * a);
     float sol2 = (-b +Sqrt(det))/(2. * a);
+
+    if (debug)
+        std::cout <<  " sol1: " << sol1 <<  " sol2: " << sol2 <<  std::endl;
 
     float ans  = fabs(sol1) < fabs(sol2) ? sol1 : sol2;
     float ans2 = fabs(sol1) < fabs(sol2) ? sol2 : sol1;
