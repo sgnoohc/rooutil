@@ -19,6 +19,7 @@ from pytable import *
 import tabletex
 from errors import E
 import errno    
+import rooutil as ru
 
 # ================================================================
 # New TColors
@@ -1555,4 +1556,58 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+
+def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, _plotter=plot_hist):
+
+    # Open all files and define color schemes
+    sample_names = []
+    tfs = {}
+    fns = {}
+    clrs = {}
+    for index, fname in enumerate(fnames + sig_fnames):
+        n = os.path.basename(fname.replace(".root", ""))
+        tfs[n] = r.TFile(fname)
+        fns[n] = fname
+        clrs[n] = default_colors[index]
+        sample_names.append(n)
+
+    if data_fname:
+        n = os.path.basename(data_fname.replace(".root", ""))
+        tfs[n] = r.TFile(data_fname)
+        fns[n] = data_fname
+        clrs[n] = default_colors[index]
+        sample_names.append(n)
+
+    # Aggregate a list of signal samples
+    issig = []
+    for index, fname in enumerate(sig_fnames):
+        n = os.path.basename(fname.replace(".root", ""))
+        issig.append(n)
+
+    # Tag the data sample names
+    data_sample_name = None
+    if data_fname:
+        n = os.path.basename(data_fname.replace(".root", ""))
+        data_sample_name = n
+
+    yield_hs = []
+    for sn in sample_names:
+        yield_hs.append(ru.get_yield_histogram( list_of_file_names=[ fns[sn] ], regions=regions, labels=binlabels))
+
+    colors = []
+    for n in sample_names:
+        colors.append(clrs[n])
+
+    # Get the list of histograms and put them in either bkg or signals
+    sigs = [ yield_hs[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
+    bkgs = [ yield_hs[index] for index, n in enumerate(sample_names) if (n not in issig) and n != data_sample_name ] # list of bkg histograms
+    data = [ yield_hs[index] for index, n in enumerate(sample_names) if n == data_sample_name ][0] if data_sample_name else None
+    colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
+    # But check if bkgs is at least 1
+    if len(bkgs) == 0:
+        bkgs = [ sigs.pop(0) ]
+    options = {"output_name": dirname + "/" + output_name + ".pdf", "signal_scale": signal_scale}
+    options.update(extraoptions)
+    print legend_labels
+    _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
 
