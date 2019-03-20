@@ -195,12 +195,12 @@ float RooUtil::Calc::getNeutrinoPz(const LV& lep, const float& met_pt, const flo
     float lz = lep.pz();
     float ml = lep.mass();
     float lpt = lep.pt(); // |lpt|
-    float pl2 = (lx * lx + ly * ly + lz * lz) + ml * ml; // El^2
+    // float pl2 = (lx * lx + ly * ly + lz * lz); // |pl|^2
     TLorentzVector met;
     met.SetPtEtaPhiM(met_pt, 0, met_phi, 0);
     float vx = met.Px();
     float vy = met.Py();
-    float vpt = met_pt;
+    // float vpt = met_pt;
 
     using namespace TMath;
     float det = getNeutrinoPzDet(lep, met_pt, met_phi, mw, debug);

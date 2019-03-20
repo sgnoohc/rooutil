@@ -86,6 +86,7 @@ default_colors.append(2005)
 default_colors.append(2001)
 default_colors.append(2003)
 default_colors.append(2007)
+default_colors.append(920)
 default_colors.extend(range(2001, 2013))
 default_colors.extend(range(7001, 7018))
 
@@ -1222,13 +1223,16 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
-    leftscan.Scale(1./leftscan.GetBinContent(1))
-    rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
+    if leftscan.GetBinContent(1) != 0:
+        leftscan.Scale(1./leftscan.GetBinContent(1))
+    if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
+        rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
     leftscan.SetFillStyle(1)
     hbgs.append(leftscan)
     hsigs.append(rightscan)
     scan2d = plot_sigscan2d(sigs[0], get_total_hist(bgs))
-    scan2d.Scale(1./scan2d.GetBinContent(1))
+    if scan2d.GetBinContent(1) != 0:
+        scan2d.Scale(1./scan2d.GetBinContent(1))
     hsigs.append(scan2d)
     leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs), fom_acceptance)
     hsigs.append(leftscan)
@@ -1449,7 +1453,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, _plotter=plot_hist):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, _plotter=plot_hist):
 
     # Open all files and define color schemes
     sample_names = []
@@ -1461,11 +1465,23 @@ def dump_plot(fnames=[], sig_fnames=[], dirname="plots", legend_labels=[], donor
         clrs[n] = default_colors[index]
         sample_names.append(n)
 
+    if data_fname:
+        n = os.path.basename(data_fname.replace(".root", ""))
+        tfs[n] = r.TFile(data_fname)
+        clrs[n] = default_colors[index]
+        sample_names.append(n)
+
     # Aggregate a list of signal samples
     issig = []
     for index, fname in enumerate(sig_fnames):
         n = os.path.basename(fname.replace(".root", ""))
         issig.append(n)
+
+    # Tag the data sample names
+    data_sample_name = None
+    if data_fname:
+        n = os.path.basename(data_fname.replace(".root", ""))
+        data_sample_name = n
 
     # Form a complete key list
     hist_names = []
@@ -1509,7 +1525,8 @@ def dump_plot(fnames=[], sig_fnames=[], dirname="plots", legend_labels=[], donor
                 else:
                     # Get the list of histograms and put them in either bkg or signals
                     sigs = [ hists[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
-                    bkgs = [ hists[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg histograms
+                    bkgs = [ hists[index] for index, n in enumerate(sample_names) if (n not in issig) and n != data_sample_name ] # list of bkg histograms
+                    data = [ hists[index] for index, n in enumerate(sample_names) if n == data_sample_name ][0] if data_sample_name else None
                     colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
                     # But check if bkgs is at least 1
                     if len(bkgs) == 0:
@@ -1517,7 +1534,7 @@ def dump_plot(fnames=[], sig_fnames=[], dirname="plots", legend_labels=[], donor
                     options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
                     options.update(extraoptions)
                     print legend_labels
-                    _plotter(bgs=bkgs, sigs=sigs, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
+                    _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
             if hists[0].GetDimension() == 2:
                 if donorm:
                     for h in hists:
