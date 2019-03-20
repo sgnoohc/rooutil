@@ -1534,7 +1534,6 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         bkgs = [ sigs.pop(0) ]
                     options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
                     options.update(extraoptions)
-                    print legend_labels
                     _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
             if hists[0].GetDimension() == 2:
                 if donorm:
@@ -1608,6 +1607,5 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
         bkgs = [ sigs.pop(0) ]
     options = {"output_name": dirname + "/" + output_name + ".pdf", "signal_scale": signal_scale}
     options.update(extraoptions)
-    print legend_labels
     _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
 

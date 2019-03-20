@@ -73,6 +73,7 @@ namespace RooUtil
             int seterrorcount;
             bool doskipsysthist;
             bool dosavettreex;
+            bool cutflow_booked;
             Cutflow();
             Cutflow(TFile* o);
             ~Cutflow();
