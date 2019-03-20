@@ -1454,7 +1454,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
 
     # color_pallete
     colors_ = default_colors
@@ -1519,7 +1519,13 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         for n in sample_names:
             h = tfs[n].Get(hist_name)
             if h:
-                h.SetName(n)
+                if signal_labels:
+                    if n in issig:
+                        h.SetName(signal_labels[issig.index(n)])
+                    else:
+                        h.SetName(n)
+                else:
+                    h.SetName(n)
                 hists.append(h)
                 colors.append(clrs[n])
         if len(hists) > 0:
@@ -1561,7 +1567,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
 
-def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
+def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
 
     # color_pallete
     colors_ = default_colors
@@ -1602,7 +1608,13 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
     yield_hs = []
     for sn in sample_names:
         yield_hs.append(ru.get_yield_histogram( list_of_file_names=[ fns[sn] ], regions=regions, labels=binlabels))
-        yield_hs[-1].SetName(sn)
+        if signal_labels:
+            if sn in issig:
+                yield_hs[-1].SetName(signal_labels[issig.index(sn)])
+            else:
+                yield_hs[-1].SetName(sn)
+        else:
+            yield_hs[-1].SetName(sn)
 
     colors = []
     for n in sample_names:
