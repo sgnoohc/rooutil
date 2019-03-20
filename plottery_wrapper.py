@@ -1454,7 +1454,12 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, _plotter=plot_hist):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
+
+    # color_pallete
+    colors_ = default_colors
+    if usercolors:
+        colors_ = usercolors + default_colors
 
     # Open all files and define color schemes
     sample_names = []
@@ -1463,13 +1468,13 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     for index, fname in enumerate(fnames + sig_fnames):
         n = os.path.basename(fname.replace(".root", ""))
         tfs[n] = r.TFile(fname)
-        clrs[n] = default_colors[index]
+        clrs[n] = colors_[index]
         sample_names.append(n)
 
     if data_fname:
         n = os.path.basename(data_fname.replace(".root", ""))
         tfs[n] = r.TFile(data_fname)
-        clrs[n] = default_colors[index]
+        clrs[n] = colors_[index]
         sample_names.append(n)
 
     # Aggregate a list of signal samples
@@ -1556,7 +1561,12 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                     # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
 
-def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, _plotter=plot_hist):
+def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
+
+    # color_pallete
+    colors_ = default_colors
+    if usercolors:
+        colors_ = usercolors + default_colors
 
     # Open all files and define color schemes
     sample_names = []
@@ -1567,14 +1577,14 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
         n = os.path.basename(fname.replace(".root", ""))
         tfs[n] = r.TFile(fname)
         fns[n] = fname
-        clrs[n] = default_colors[index]
+        clrs[n] = colors_[index]
         sample_names.append(n)
 
     if data_fname:
         n = os.path.basename(data_fname.replace(".root", ""))
         tfs[n] = r.TFile(data_fname)
         fns[n] = data_fname
-        clrs[n] = default_colors[index]
+        clrs[n] = colors_[index]
         sample_names.append(n)
 
     # Aggregate a list of signal samples
