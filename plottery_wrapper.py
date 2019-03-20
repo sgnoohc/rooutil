@@ -1592,6 +1592,7 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
     yield_hs = []
     for sn in sample_names:
         yield_hs.append(ru.get_yield_histogram( list_of_file_names=[ fns[sn] ], regions=regions, labels=binlabels))
+        yield_hs[-1].SetName(sn)
 
     colors = []
     for n in sample_names:
