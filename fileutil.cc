@@ -28,7 +28,6 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     // It will check via looking at the last character == "/"
     if (inputs.EndsWith("/"))
     {
-        std::cout << "here FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFf" << std::endl;
         std::string pattern = TString::Format("%s/*.root", inputs.Data()).Data();
         inputs = RooUtil::StringUtil::join(glob(pattern));
     }

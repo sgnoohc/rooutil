@@ -1454,7 +1454,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, do_sum=False, output_name=None, _plotter=plot_hist):
 
     # color_pallete
     colors_ = default_colors
@@ -1501,15 +1501,18 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     # Sort
     hist_names.sort()
 
+    # summed_hist if do_sum is true
+    summed_hist = []
+
     # Loop over hist_names
     for hist_name in hist_names:
         
         # If to filter certain histograms
         if filter_pattern:
-            doskip = False
+            doskip = True
             for item in filter_pattern.split(","):
-                if item not in hist_name:
-                    doskip = True
+                if hist_name in item:
+                    doskip = False
                     break
             if doskip:
                 continue
@@ -1528,44 +1531,111 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                     h.SetName(n)
                 hists.append(h)
                 colors.append(clrs[n])
-        if len(hists) > 0:
-            if hists[0].GetDimension() == 1:
-                if donorm: # shape comparison so use sigs to overlay one bkg with multiple shape comparison
-                    options = {"signal_scale": "auto", "output_name": dirname + "/" + hist_name + ".pdf"}
-                    options.update(extraoptions)
-                    _plotter(bgs=[hists[0]], sigs=hists[1:], colors=colors, options=options, legend_labels=legend_labels)
-                else:
-                    # Get the list of histograms and put them in either bkg or signals
-                    sigs = [ hists[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
-                    bkgs = [ hists[index] for index, n in enumerate(sample_names) if (n not in issig) and n != data_sample_name ] # list of bkg histograms
-                    data = [ hists[index] for index, n in enumerate(sample_names) if n == data_sample_name ][0] if data_sample_name else None
-                    colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
-                    # But check if bkgs is at least 1
-                    if len(bkgs) == 0:
-                        bkgs = [ sigs.pop(0) ]
-                    options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
-                    options.update(extraoptions)
-                    _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
-            if hists[0].GetDimension() == 2:
-                if donorm:
-                    for h in hists:
-                        h.Scale(1./h.Integral())
 
-                # Compute range
-                zmax = hists[0].GetMaximum()
-                zmin = hists[0].GetMinimum()
+        if do_sum:
+
+            if len(summed_hist) > 0:
+
+                for index, h in enumerate(hists):
+
+                    summed_hist[index].Add(h)
+
+            else:
+
                 for h in hists:
-                    zmax = h.GetMaximum() if h.GetMaximum() > zmax else zmax
-                    zmin = h.GetMinimum() if h.GetMinimum() > zmin else zmin
+
+                    summed_hist.append(h.Clone())
+
+        else:
+
+            if output_name:
+                hist_name = output_name
+
+            if len(hists) > 0:
+                if hists[0].GetDimension() == 1:
+                    if donorm: # shape comparison so use sigs to overlay one bkg with multiple shape comparison
+                        options = {"signal_scale": "auto", "output_name": dirname + "/" + hist_name + ".pdf"}
+                        options.update(extraoptions)
+                        _plotter(bgs=[hists[0]], sigs=hists[1:], colors=colors, options=options, legend_labels=legend_labels)
+                    else:
+                        # Get the list of histograms and put them in either bkg or signals
+                        sigs = [ hists[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
+                        bkgs = [ hists[index] for index, n in enumerate(sample_names) if (n not in issig) and n != data_sample_name ] # list of bkg histograms
+                        data = [ hists[index] for index, n in enumerate(sample_names) if n == data_sample_name ][0] if data_sample_name else None
+                        colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
+                        # But check if bkgs is at least 1
+                        if len(bkgs) == 0:
+                            bkgs = [ sigs.pop(0) ]
+                        options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
+                        options.update(extraoptions)
+                        _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
+                if hists[0].GetDimension() == 2:
+                    if donorm:
+                        for h in hists:
+                            h.Scale(1./h.Integral())
+
+                    # Compute range
+                    zmax = hists[0].GetMaximum()
+                    zmin = hists[0].GetMinimum()
+                    for h in hists:
+                        zmax = h.GetMaximum() if h.GetMaximum() > zmax else zmax
+                        zmin = h.GetMinimum() if h.GetMinimum() > zmin else zmin
+                    for h in hists:
+                        plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"lego2"})
+                        plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"lego2"})
+                        plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                        plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                        # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"colz"})
+                        # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
+                        # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+                        # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+
+    if do_sum:
+
+        hists = summed_hist
+
+        if output_name:
+            hist_name = output_name
+        else:
+            hist_name = hists[0].GetName()
+
+        if hists[0].GetDimension() == 1:
+            if donorm: # shape comparison so use sigs to overlay one bkg with multiple shape comparison
+                options = {"signal_scale": "auto", "output_name": dirname + "/" + hist_name + ".pdf"}
+                options.update(extraoptions)
+                _plotter(bgs=[hists[0]], sigs=hists[1:], colors=colors, options=options, legend_labels=legend_labels)
+            else:
+                # Get the list of histograms and put them in either bkg or signals
+                sigs = [ hists[index] for index, n in enumerate(sample_names) if n in issig ] # list of signal histograms
+                bkgs = [ hists[index] for index, n in enumerate(sample_names) if (n not in issig) and n != data_sample_name ] # list of bkg histograms
+                data = [ hists[index] for index, n in enumerate(sample_names) if n == data_sample_name ][0] if data_sample_name else None
+                colors = [ colors[index] for index, n in enumerate(sample_names) if n not in issig ] # list of bkg colors
+                # But check if bkgs is at least 1
+                if len(bkgs) == 0:
+                    bkgs = [ sigs.pop(0) ]
+                options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
+                options.update(extraoptions)
+                _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
+        if hists[0].GetDimension() == 2:
+            if donorm:
                 for h in hists:
-                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"lego2"})
-                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"lego2"})
-                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
-                    plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
-                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"colz"})
-                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
-                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
-                    # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+                    h.Scale(1./h.Integral())
+
+            # Compute range
+            zmax = hists[0].GetMaximum()
+            zmin = hists[0].GetMinimum()
+            for h in hists:
+                zmax = h.GetMaximum() if h.GetMaximum() > zmax else zmax
+                zmin = h.GetMinimum() if h.GetMinimum() > zmin else zmin
+            for h in hists:
+                plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"lego2"})
+                plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"lego2"})
+                plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"lego2"})
+                # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_log.pdf", "zaxis_log":True, "draw_option_2d":"colz"})
+                # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
+                # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+                # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
 
 def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
 
