@@ -1115,7 +1115,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "legend_border"                  in options: options["legend_border"]                  = False
     if not "legend_rounded"                 in options: options["legend_rounded"]                 = False
     if not "legend_percentageinbox"         in options: options["legend_percentageinbox"]         = False
-    if not "hist_line_none"                 in options: options["hist_line_none"]                 = True
+    if not "hist_line_none"                 in options: options["hist_line_none"]                 = False
+    if not "hist_line_black"                in options: options["hist_line_black"]                = True
     if not "show_bkg_errors"                in options: options["show_bkg_errors"]                = False
     if not "ratio_range"                    in options: options["ratio_range"]                    = [0.7, 1.3]
     if not "ratio_name_size"                in options: options["ratio_name_size"]                = 0.13
