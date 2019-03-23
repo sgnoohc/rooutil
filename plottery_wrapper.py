@@ -1466,24 +1466,22 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     sample_names = []
     tfs = {}
     clrs = {}
+    issig = [] # Aggregate a list of signal samples
     for index, fname in enumerate(fnames + sig_fnames):
         n = os.path.basename(fname.replace(".root", ""))
+        n += str(index)
         tfs[n] = r.TFile(fname)
         clrs[n] = colors_[index]
         sample_names.append(n)
+        if index >= len(fnames):
+            issig.append(n)
 
     if data_fname:
         n = os.path.basename(data_fname.replace(".root", ""))
         tfs[n] = r.TFile(data_fname)
         clrs[n] = colors_[index]
         sample_names.append(n)
-
-    # Aggregate a list of signal samples
-    issig = []
-    for index, fname in enumerate(sig_fnames):
-        n = os.path.basename(fname.replace(".root", ""))
-        issig.append(n)
-
+    
     # Tag the data sample names
     data_sample_name = None
     if data_fname:
@@ -1638,7 +1636,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
 
-def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, _plotter=plot_hist):
+def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, signal_scale="", extraoptions={}, usercolors=None, hsuffix="_cutflow", _plotter=plot_hist):
 
     # color_pallete
     colors_ = default_colors
@@ -1650,12 +1648,16 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
     tfs = {}
     fns = {}
     clrs = {}
+    issig = [] # Aggregate a list of signal samples
     for index, fname in enumerate(fnames + sig_fnames):
         n = os.path.basename(fname.replace(".root", ""))
+        n += str(index)
         tfs[n] = r.TFile(fname)
         fns[n] = fname
         clrs[n] = colors_[index]
         sample_names.append(n)
+        if index >= len(fnames):
+            issig.append(n)
 
     if data_fname:
         n = os.path.basename(data_fname.replace(".root", ""))
@@ -1663,12 +1665,6 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
         fns[n] = data_fname
         clrs[n] = colors_[index]
         sample_names.append(n)
-
-    # Aggregate a list of signal samples
-    issig = []
-    for index, fname in enumerate(sig_fnames):
-        n = os.path.basename(fname.replace(".root", ""))
-        issig.append(n)
 
     # Tag the data sample names
     data_sample_name = None
@@ -1678,7 +1674,7 @@ def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels
 
     yield_hs = []
     for sn in sample_names:
-        yield_hs.append(ru.get_yield_histogram( list_of_file_names=[ fns[sn] ], regions=regions, labels=binlabels))
+        yield_hs.append(ru.get_yield_histogram( list_of_file_names=[ fns[sn] ], regions=regions, labels=binlabels, hsuffix=hsuffix))
         if signal_labels:
             if sn in issig:
                 yield_hs[-1].SetName(signal_labels[issig.index(sn)])
