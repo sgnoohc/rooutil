@@ -1512,7 +1512,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         if filter_pattern:
             doskip = True
             for item in filter_pattern.split(","):
-                if hist_name in item:
+                if hist_name == item:
                     doskip = False
                     break
             if doskip:
