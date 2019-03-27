@@ -1530,6 +1530,9 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                     h.SetName(n)
                 hists.append(h)
                 colors.append(clrs[n])
+            else:
+                print "ERROR: did not find histogram", hist_name, "for the file", tfs[n].GetName()
+                sys.exit(1)
 
         if do_sum:
 

@@ -235,7 +235,10 @@ class DataCardWriter:
                     rtn += "{:.4f}/{:.4f}    ".format(systval[0]/self.rates[index], systval[1]/self.rates[index])
                 elif isinstance(systval[0], r.TH1):
                     """ Case 1"""
-                    rtn += "{:.4f}/{:.4f}    ".format(systval[0].GetBinContent(self.bin_number)/self.rates[index], systval[1].GetBinContent(self.bin_number)/self.rates[index])
+                    if self.rates[index] == 0:
+                        rtn += "{:.4f}/{:.4f}    ".format(1,1)
+                    else:
+                        rtn += "{:.4f}/{:.4f}    ".format(systval[0].GetBinContent(self.bin_number)/self.rates[index], systval[1].GetBinContent(self.bin_number)/self.rates[index])
             elif isinstance(systval, float):
                 """ Case 4"""
                 rtn += "{:<17.4f}".format(systval/self.rates[index])
