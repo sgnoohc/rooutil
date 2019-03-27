@@ -985,6 +985,14 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                 remove_underflow([data])
         del options["remove_underflow"]
 
+    if "remove_overflow" in options:
+        if options["remove_overflow"]:
+            remove_overflow(sigs)
+            remove_overflow(bgs)
+            if data:
+                remove_overflow([data])
+        del options["remove_overflow"]
+
     if "divide_by_first_bin" in options:
         if options["divide_by_first_bin"]:
             normalize_by_first_bin(sigs)
@@ -1455,7 +1463,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, do_sum=False, output_name=None, _plotter=plot_hist):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist):
 
     # color_pallete
     colors_ = default_colors
@@ -1508,13 +1516,22 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         
         # If to filter certain histograms
         if filter_pattern:
-            doskip = True
-            for item in filter_pattern.split(","):
-                if hist_name == item:
-                    doskip = False
-                    break
-            if doskip:
-                continue
+            if dogrep:
+                doskip = True
+                for item in filter_pattern.split(","):
+                    if item in hist_name:
+                        doskip = False
+                        break
+                if doskip:
+                    continue
+            else:
+                doskip = True
+                for item in filter_pattern.split(","):
+                    if hist_name == item:
+                        doskip = False
+                        break
+                if doskip:
+                    continue
 
         hists = []
         colors = []
