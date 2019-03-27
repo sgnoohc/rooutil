@@ -2,9 +2,6 @@
 	path = syncfiles
 	url = git@github.com:Amarang/syncfiles.git
 	branch = master
-[submodule "cpptqdm"]
-	path = cpptqdm
-	url = git@github.com:aminnj/cpptqdm.git
 [submodule "plottery"]
 	path = plottery
 	url = git@github.com:aminnj/plottery.git
