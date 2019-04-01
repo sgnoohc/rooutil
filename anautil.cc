@@ -973,6 +973,13 @@ void RooUtil::Cutflow::printSetFunctionError(TString msg)
 }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setHistsAxesExtendable()
+{
+    for (auto& pair : booked_histograms)
+        pair.second->SetCanExtend(TH1::kAllAxes);
+}
+
+//_______________________________________________________________________________________________________
 RooUtil::Histograms::Histograms()
 {
 }

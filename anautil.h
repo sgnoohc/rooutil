@@ -149,6 +149,7 @@ namespace RooUtil
             void bookHistogramsForCutAndAbove(Histograms& histograms, TString);
             void bookHistogramsForEndCuts(Histograms& histograms);
             void printSetFunctionError(TString msg);
+            void setHistsAxesExtendable();
     };
 }
 
