@@ -19,7 +19,7 @@ from pytable import *
 import tabletex
 from errors import E
 import errno    
-import rooutil as ru
+import pyrootutil as ru
 
 # ================================================================
 # New TColors
