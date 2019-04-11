@@ -16,3 +16,4 @@
 #include "anautil.cc"
 #include "histmap.cc"
 #include "module.cc"
+#include "varmap.cc"

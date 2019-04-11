@@ -32,6 +32,7 @@ void RooUtil::VarMap::load( TString filename, TString delim, int nkeys )
     ifstream ifile;
     ifile.open( filename.Data() );
     std::string line;
+    filename_ = filename;
 
     while ( std::getline( ifile, line ) )
     {
@@ -54,5 +55,16 @@ void RooUtil::VarMap::load( TString filename, TString delim, int nkeys )
 //_________________________________________________________________________________________________
 std::vector<float> RooUtil::VarMap::get( std::vector<int> key )
 {
-    return varmap_.at(key);
+    try
+    {
+        return varmap_.at(key);
+    }
+    catch (const std::out_of_range& oor)
+    {
+        std::cout << "Key not found in map: " << filename_ << std::endl;
+        std::cout << "keys:" << std::endl;
+        for (auto& k : key)
+            std::cout << k <<  std::endl;
+        exit(-1);
+    }
 }

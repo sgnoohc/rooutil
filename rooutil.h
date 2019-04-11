@@ -16,3 +16,4 @@
 #include "anautil.h"
 #include "histmap.h"
 #include "module.h"
+#include "varmap.h"

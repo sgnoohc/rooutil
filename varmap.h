@@ -51,6 +51,8 @@ namespace RooUtil
     ///////////////////////////////////////////////////////////////////////////////////////////////
     class VarMap
     {
+        private:
+            TString filename_;
         public:
             std::map<std::vector<int>, std::vector<float>> varmap_;
             VarMap();
@@ -62,4 +64,4 @@ namespace RooUtil
 
 }
 
-
+#endif

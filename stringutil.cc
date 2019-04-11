@@ -193,7 +193,6 @@ TString RooUtil::StringUtil::format(TString tmp, std::vector<TString> tokens)
     return tmp;
 }
 
-
 //std::string RooUtil::StringUtil::parser(std::string _input, int loc_){
 //
 //    using namespace std;
