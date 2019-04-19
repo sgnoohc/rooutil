@@ -43,7 +43,7 @@ void RooUtil::VarMap::load( TString filename, TString delim, int nkeys )
             if (list[0].Contains("#"))
                 continue;
         std::vector<int> keys;
-        for (unsigned int ii = 0; ii < nkeys; ++ii)
+        for (unsigned int ii = 0; (int) ii < nkeys; ++ii)
             keys.push_back( list[ii].Atoi() );
         std::vector<float> data;
         for (unsigned int ii = nkeys; ii < list.size(); ++ii)

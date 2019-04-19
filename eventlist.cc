@@ -44,11 +44,12 @@ void RooUtil::EventList::load( TString filename, TString delim )
         if (list.size() > 0)
             if (list[0].Contains("#"))
                 continue;
-        if (list.size() != 3)
-            RooUtil::error(Form("[RooUtil::EventList::load()] Found a line in %s that does not have exactly three items.", filename.Data()));
+        if (list.size() < 3)
+            RooUtil::error(Form("[RooUtil::EventList::load()] Found a line in %s that does not have more than or equal to three items.", filename.Data()));
         std::vector<int> evtid;
-        for (auto& item : RooUtil::StringUtil::split(rawline, delim))
-            evtid.push_back( item.Atoi() );
+        evtid.push_back( list[0].Atoi() );
+        evtid.push_back( list[1].Atoi() );
+        evtid.push_back( list[2].Atoi() );
         event_list.push_back( evtid );
     }
 }
