@@ -1,69 +1,70 @@
 //  .
 // ..: P. Chang, philip@physics.ucsd.edu
 
-#include "eventlist.h"
+#include "varmap.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
-// Event List class
+// Variable Map class
 //
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //_________________________________________________________________________________________________
-RooUtil::EventList::EventList()
+RooUtil::VarMap::VarMap()
 {
 }
 
 //_________________________________________________________________________________________________
-RooUtil::EventList::EventList( TString filename, TString delim )
+RooUtil::VarMap::VarMap( TString filename, TString delim, int nkeys )
 {
-    load( filename, delim );
+    load(filename, delim, nkeys);
 }
 
 //_________________________________________________________________________________________________
-RooUtil::EventList::~EventList() {}
+RooUtil::VarMap::~VarMap() {}
 
 //_________________________________________________________________________________________________
-void RooUtil::EventList::load( TString filename, TString delim )
+void RooUtil::VarMap::load( TString filename, TString delim, int nkeys )
 {
-    event_list.clear();
+    varmap_.clear();
     ifstream ifile;
     ifile.open( filename.Data() );
     std::string line;
+    filename_ = filename;
 
     while ( std::getline( ifile, line ) )
     {
-//        std::stringstream ss( line );
-//        ss >> evt >> run >> lumi;
-//        std::cout << evt << ":" << run << ":" << lumi << ":" << std::endl;
         TString rawline = line;
         std::vector<TString> list = RooUtil::StringUtil::split(rawline, delim);
         // If it has # at the front skip the event
         if (list.size() > 0)
             if (list[0].Contains("#"))
                 continue;
-        if (list.size() < 3)
-            RooUtil::error(Form("[RooUtil::EventList::load()] Found a line in %s that does not have more than or equal to three items.", filename.Data()));
-        std::vector<int> evtid;
-        evtid.push_back( list[0].Atoi() );
-        evtid.push_back( list[1].Atoi() );
-        evtid.push_back( list[2].Atoi() );
-        event_list.push_back( evtid );
+        std::vector<int> keys;
+        for (unsigned int ii = 0; (int) ii < nkeys; ++ii)
+            keys.push_back( list[ii].Atoi() );
+        std::vector<float> data;
+        for (unsigned int ii = nkeys; ii < list.size(); ++ii)
+            data.push_back( list[ii].Atof() );
+        varmap_[keys] = data;
     }
 }
 
 //_________________________________________________________________________________________________
-bool RooUtil::EventList::has( int event, int run, int lumi )
+std::vector<float> RooUtil::VarMap::get( std::vector<int> key )
 {
-    std::vector<int> evtid;
-    evtid.push_back( event );
-    evtid.push_back( run );
-    evtid.push_back( lumi );
-
-    if ( std::find( event_list.begin(), event_list.end(), evtid ) != event_list.end() )
-        return true;
-    else
-        return false;
+    try
+    {
+        return varmap_.at(key);
+    }
+    catch (const std::out_of_range& oor)
+    {
+        std::cout << "Key not found in map: " << filename_ << std::endl;
+        std::cout << "keys:" << std::endl;
+        for (auto& k : key)
+            std::cout << k <<  std::endl;
+        exit(-1);
+    }
 }
