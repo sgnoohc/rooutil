@@ -749,6 +749,30 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
 }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::bookVecHistogram(TString cut, std::pair<TString, std::tuple<std::vector<float>, std::function<std::vector<float>()>, std::function<std::vector<float>()>>> key, TString syst)
+{
+    TString varname = key.first;
+    std::vector<float> boundaries = std::get<0>(key.second);
+    std::function<std::vector<float>()> vardef = std::get<1>(key.second);
+    std::function<std::vector<float>()> wgtdef = std::get<2>(key.second);
+    TString histname = cut + syst + "__" + varname;
+    if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
+    {
+        Float_t bounds[boundaries.size()];
+        for (unsigned int i = 0; i < boundaries.size(); ++i)
+            bounds[i] = boundaries[i];
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
+        if (syst.IsNull())
+        {
+            booked_histograms_nominal_keys.push_back(std::make_tuple(cut.Data(), syst.Data(), varname.Data()));
+        }
+        cuttreemap[cut.Data()]->addHist1DVec(booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())], vardef, wgtdef, syst);
+    }
+}
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float, std::function<float()>, std::function<float()>>> key, TString syst)
 {
     TString varname = key.first.first;
@@ -888,28 +912,31 @@ void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString,
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::bookHistogramsForCut(Histograms& histograms, TString cut)
 {
-    for (auto& key : histograms.th1fs)        bookHistogram     (cut, key);
-    for (auto& key : histograms.th1fs_varbin) bookHistogram     (cut, key);
-    for (auto& key : histograms.th1vecfs)     bookVecHistogram  (cut, key);
-    for (auto& key : histograms.th2fs)        book2DHistogram   (cut, key);
-    for (auto& key : histograms.th2vecfs)     book2DVecHistogram(cut, key);
+    for (auto& key : histograms.th1fs)          bookHistogram     (cut, key);
+    for (auto& key : histograms.th1fs_varbin)   bookHistogram     (cut, key);
+    for (auto& key : histograms.th1vecfs)       bookVecHistogram  (cut, key);
+    for (auto& key : histograms.th1vecfs_varbin)bookVecHistogram  (cut, key);
+    for (auto& key : histograms.th2fs)          book2DHistogram   (cut, key);
+    for (auto& key : histograms.th2vecfs)       book2DVecHistogram(cut, key);
     if (not doskipsysthist)
     {
         for (auto& syst : systs)
         {
-            for (auto& key : histograms.th1fs)        bookHistogram     (cut, key, syst);
-            for (auto& key : histograms.th1fs_varbin) bookHistogram     (cut, key, syst);
-            for (auto& key : histograms.th1vecfs)     bookVecHistogram  (cut, key, syst);
-            for (auto& key : histograms.th2fs)        book2DHistogram   (cut, key, syst);
-            for (auto& key : histograms.th2vecfs)     book2DVecHistogram(cut, key, syst);
+            for (auto& key : histograms.th1fs)          bookHistogram     (cut, key, syst);
+            for (auto& key : histograms.th1fs_varbin)   bookHistogram     (cut, key, syst);
+            for (auto& key : histograms.th1vecfs)       bookVecHistogram  (cut, key, syst);
+            for (auto& key : histograms.th1vecfs_varbin)bookVecHistogram  (cut, key, syst);
+            for (auto& key : histograms.th2fs)          book2DHistogram   (cut, key, syst);
+            for (auto& key : histograms.th2vecfs)       book2DVecHistogram(cut, key, syst);
         }
         for (auto& cutsyst : cutsysts)
         {
-            for (auto& key : histograms.th1fs)        bookHistogram     (cut, key, cutsyst);
-            for (auto& key : histograms.th1fs_varbin) bookHistogram     (cut, key, cutsyst);
-            for (auto& key : histograms.th1vecfs)     bookVecHistogram  (cut, key, cutsyst);
-            for (auto& key : histograms.th2fs)        book2DHistogram   (cut, key, cutsyst);
-            for (auto& key : histograms.th2vecfs)     book2DVecHistogram(cut, key, cutsyst);
+            for (auto& key : histograms.th1fs)          bookHistogram     (cut, key, cutsyst);
+            for (auto& key : histograms.th1fs_varbin)   bookHistogram     (cut, key, cutsyst);
+            for (auto& key : histograms.th1vecfs)       bookVecHistogram  (cut, key, cutsyst);
+            for (auto& key : histograms.th1vecfs_varbin)bookVecHistogram  (cut, key, cutsyst);
+            for (auto& key : histograms.th2fs)          book2DHistogram   (cut, key, cutsyst);
+            for (auto& key : histograms.th2vecfs)       book2DVecHistogram(cut, key, cutsyst);
         }
     }
 }
@@ -1028,6 +1055,20 @@ void RooUtil::Histograms::addHistogram(TString name, std::vector<float> boundari
         error(TString::Format("histogram already exists name = %s", name.Data()));
     }
 }
+
+//_______________________________________________________________________________________________________
+void RooUtil::Histograms::addVecHistogram(TString name, std::vector<float> boundaries, std::function<std::vector<float>()> vardef, std::function<std::vector<float>()> wgt)
+{
+    if (th1vecfs_varbin.find(name) == th1vecfs_varbin.end())
+    {
+        th1vecfs_varbin[name] = std::make_tuple(boundaries, vardef, wgt);
+    }
+    else
+    {
+        error(TString::Format("histogram already exists name = %s", name.Data()));
+    }
+}
+
 //_______________________________________________________________________________________________________
 void RooUtil::Histograms::add2DHistogram(TString name, unsigned int n, float min, float max, TString namey, unsigned int ny, float miny, float maxy, std::function<float()> varxdef, std::function<float()> varydef)
 {

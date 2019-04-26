@@ -24,6 +24,7 @@ namespace RooUtil
 #ifdef USE_CUTLAMBDA
             std::map<TString, std::tuple<std::vector<float>, std::function<float()>>> th1fs_varbin;
             std::map<TString, std::tuple<unsigned int, float, float, std::function<float()>>> th1fs;
+            std::map<TString, std::tuple<std::vector<float>, std::function<std::vector<float>()>, std::function<std::vector<float>()>>> th1vecfs_varbin;
             std::map<TString, std::tuple<unsigned int, float, float, std::function<std::vector<float>()>, std::function<std::vector<float>()>>> th1vecfs;
             std::map<std::pair<TString, TString>, std::tuple<unsigned int, float, float, unsigned int, float, float, std::function<float()>, std::function<float()>>> th2fs;
             std::map<std::pair<TString, TString>, std::tuple<unsigned int, float, float, unsigned int, float, float, std::function<std::vector<float>()>, std::function<std::vector<float>()>, std::function<std::vector<float>()>>> th2vecfs;
@@ -38,6 +39,7 @@ namespace RooUtil
             void addHistogram(TString, unsigned int, float, float, std::function<float()>);
             void addVecHistogram(TString, unsigned int, float, float, std::function<vector<float>()>, std::function<vector<float>()> wgt=nullptr);
             void addHistogram(TString, std::vector<float>, std::function<float()>);
+            void addVecHistogram(TString, std::vector<float>, std::function<vector<float>()>, std::function<vector<float>()> wgt=nullptr);
             void add2DHistogram(TString, unsigned int, float, float, TString, unsigned int, float, float, std::function<float()>, std::function<float()>);
             void add2DVecHistogram(TString, unsigned int, float, float, TString, unsigned int, float, float, std::function<std::vector<float>()>, std::function<std::vector<float>()>, std::function<std::vector<float>()> wgt=nullptr);
 #else
@@ -135,6 +137,7 @@ namespace RooUtil
             void bookHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float, std::function<float()>>>, TString="");
             void bookVecHistogram(TString, std::pair<TString, std::tuple<unsigned, float, float, std::function<vector<float>()>, std::function<vector<float>()>>>, TString="");
             void bookHistogram(TString, std::pair<TString, std::tuple<std::vector<float>, std::function<float()>>>, TString="");
+            void bookVecHistogram(TString, std::pair<TString, std::tuple<std::vector<float>, std::function<vector<float>()>, std::function<vector<float>()>>>, TString="");
             void book2DHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float, std::function<float()>, std::function<float()>>>, TString="");
             void book2DVecHistogram(TString, std::pair<std::pair<TString, TString>, std::tuple<unsigned, float, float, unsigned, float, float, std::function<std::vector<float>()>, std::function<std::vector<float>()>, std::function<std::vector<float>()>>>, TString="");
 #else
