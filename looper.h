@@ -122,6 +122,7 @@ namespace RooUtil
         TString getCurrentFileName() { return TString(tfile->GetName()); }
         TString getListOfFileNames();
         TString getCurrentFileTitle() { return TString(tfile->GetTitle()); }
+        unsigned int getNEventsTotalInChain() { return nEventsTotalInChain; }
         void setNbatchToSkip(unsigned int n) { nbatch_to_skip = n; }
         void setNbadEventThreshold(unsigned int n) { nskipped_threshold = n; }
         void setNbadEventThresholdToTriggerBatchSkip(unsigned int n) { nbatch_skip_threshold = n; }
