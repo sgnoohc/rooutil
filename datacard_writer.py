@@ -2,6 +2,7 @@
 
 import sys
 import ROOT as r
+import os
 
 ##########################################################
 #
@@ -301,6 +302,8 @@ class DataCardWriter:
 
     def write(self, output_name=""):
         if output_name:
+            if not os.path.isdir(os.path.dirname(output_name)):
+                os.makedirs(os.path.dirname(output_name))
             f = open(output_name, "w")
         else:
             f = open(self.datacard_filename, "w")
