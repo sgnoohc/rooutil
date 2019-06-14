@@ -347,7 +347,7 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
             tfile->Close();
 
         // Open up a new file
-        tfile = new TFile( chainelement->GetTitle() );
+        tfile = TFile::Open( chainelement->GetTitle() );
         // Get the ttree
         ttree = ( TTree* ) tfile->Get( tchain->GetName() );
 
