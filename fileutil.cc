@@ -36,7 +36,7 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     inputs = inputs.ReplaceAll("\"",""); // In case some rogue " or ' is left over
     inputs = inputs.ReplaceAll("\'",""); // In case some rogue " or ' is left over
     char hostnamestupid[100];
-    int res = gethostname(hostnamestupid, 100);
+    gethostname(hostnamestupid, 100);
     TString hostname(hostnamestupid);
     std::cout << ">>> Hostname is " << hostname << std::endl;  
     bool useXrootd = !(hostname.Contains("t2.ucsd.edu"));
