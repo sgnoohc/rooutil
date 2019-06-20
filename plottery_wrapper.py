@@ -1519,9 +1519,19 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
             if dogrep:
                 doskip = True
                 for item in filter_pattern.split(","):
-                    if item in hist_name:
-                        doskip = False
-                        break
+                    if "*" in item:
+                        match = True
+                        for token in item.split("*"):
+                            if token not in hist_name:
+                                match = False
+                                break
+                        if match:
+                            doskip = False
+                            break
+                    else:
+                        if item in hist_name:
+                            doskip = False
+                            break
                 if doskip:
                     continue
             else:
