@@ -659,23 +659,23 @@ if __name__ == "__main__":
 
     d.set_bin(1)
     d.set_region_name("bin1")
-    d.write("test_datacard_bin1.txt")
+    d.write("test/datacard_bin1.txt")
 
     d.set_bin(2)
     d.set_region_name("bin2")
-    d.write("test_datacard_bin2.txt")
+    d.write("test/datacard_bin2.txt")
 
     d.set_bin(3)
     d.set_region_name("bin3")
-    d.write("test_datacard_bin3.txt")
+    d.write("test/datacard_bin3.txt")
 
     d.set_bin(4)
     d.set_region_name("bin4")
-    d.write("test_datacard_bin4.txt")
+    d.write("test/datacard_bin4.txt")
 
     d.set_bin(5)
     d.set_region_name("bin5")
-    d.write("test_datacard_bin5.txt")
+    d.write("test/datacard_bin5.txt")
 
     #  # Testing
     #  # A Shape-based datacard -> text based datacard converter
