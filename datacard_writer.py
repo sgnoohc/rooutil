@@ -150,7 +150,7 @@ class DataCardWriter:
         rtn  = "bin                                     {}\n".format("{:17s}".format(self.region_name) * len(self.hists))
         rtn += "process                                 {}\n".format("".join(["{:<17d}".format(i) for i in xrange(len(self.hists))]))
         rtn += "process                                 {}\n".format("".join(["{:17s}".format(i) for i in self.proc_names]))
-        rtn += "rate                                    {}\n".format("".join(["{:<17.3f}".format(i) for i in self.rates]))
+        rtn += "rate                                    {}\n".format("".join([("{:<17.3f}".format(i) if i != 0 else "{:<17s}".format("1e-6")) for i in self.rates]))
         rtn += "{}\n".format(self.get_delimiter())
         return rtn
 
@@ -233,13 +233,21 @@ class DataCardWriter:
                         raise ValueError("A systematic variation provided is not up/down variation. i.e. len(systval) == 0")
                 if isinstance(systval[0], float):
                     """ Case 3"""
-                    rtn += "{:.4f}/{:.4f}    ".format(systval[0]/self.rates[index], systval[1]/self.rates[index])
+                    dn = systval[0]/self.rates[index]
+                    up = systval[1]/self.rates[index]
+                    if dn <= 0: dn = 0.0001
+                    if up <= 0: up = 0.0001
+                    rtn += "{:.4f}/{:.4f}    ".format(dn, up)
                 elif isinstance(systval[0], r.TH1):
                     """ Case 1"""
                     if self.rates[index] == 0:
                         rtn += "{:.4f}/{:.4f}    ".format(1,1)
                     else:
-                        rtn += "{:.4f}/{:.4f}    ".format(systval[0].GetBinContent(self.bin_number)/self.rates[index], systval[1].GetBinContent(self.bin_number)/self.rates[index])
+                        dn = systval[0].GetBinContent(self.bin_number)/self.rates[index]
+                        up = systval[1].GetBinContent(self.bin_number)/self.rates[index]
+                        if dn <= 0: dn = 0.0001
+                        if up <= 0: up = 0.0001
+                        rtn += "{:.4f}/{:.4f}    ".format(dn, up)
             elif isinstance(systval, float):
                 """ Case 4"""
                 rtn += "{:<17.4f}".format(systval/self.rates[index])
