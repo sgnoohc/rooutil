@@ -65,6 +65,7 @@ namespace RooUtil
             std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_2dhistograms_nominal_keys; // key is <cutname, syst="", varname, varnamey>
             std::vector<std::tuple<TH1F*, std::vector<int*>, std::vector<float*>, std::function<float()>>> cutflow_histograms_v2;
             std::vector<std::tuple<TH1F*, std::vector<int*>>> rawcutflow_histograms_v2;
+            std::vector<TString> cutflow_nofill_cut_list;
             TFile* ofile;
             TTree* t;
             TTreeX* tx;
@@ -98,6 +99,7 @@ namespace RooUtil
             void filterCuts(TString n);
             void filterCuts(std::vector<TString> ns);
             void setCutLists(std::vector<TString> regions);
+            void addCutToSkipCutflowList(TString n);
             void bookCutflowTree();
             void bookCutflowHistograms();
             void bookCutflowHistograms_v1();

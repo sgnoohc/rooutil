@@ -119,6 +119,13 @@ void RooUtil::Cutflow::setCutLists(std::vector<TString> regions)
 }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::addCutToSkipCutflowList(TString n)
+{
+    if (std::find(cutflow_nofill_cut_list.begin(), cutflow_nofill_cut_list.end(), n) == cutflow_nofill_cut_list.end())
+        cutflow_nofill_cut_list.push_back(n);
+}
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::bookCutflowTree()
 {
     if (!t)
@@ -576,6 +583,8 @@ void RooUtil::Cutflow::fillCutflow_v2(std::vector<CutTree*>& cuttreelist, TH1F* 
     for (unsigned int i = 0; i < cuttreelist.size(); ++i)
     {
         CutTree* ct = cuttreelist[i];
+        // if (std::find(cutflow_nofill_cut_list.begin(), cutflow_nofill_cut_list.end(), ct->name) != cutflow_nofill_cut_list.end())
+        //     continue;
         int& pass = ct->pass;
         if (pass)
         {
