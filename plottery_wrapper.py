@@ -615,6 +615,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
     max_f_cut = 0
     totalsig = sig.Integral(0, nbin + 1)
     totalbkg = bkg.Integral(0, nbin + 1)
+    print totalsig, totalbkg
     for i in xrange(1, nbin + 1):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
@@ -1234,6 +1235,7 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
+    leftscan.Print("all")
     if leftscan.GetBinContent(1) != 0:
         leftscan.Scale(1./leftscan.GetBinContent(1))
     if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:

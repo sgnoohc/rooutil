@@ -277,6 +277,12 @@ def get_sf(h_proc, h_data, h_sub):
     return h_ddproc
 
 #______________________________________________________________________________
+def get_integral_as_E(h):
+    err = r.Double(0)
+    integral = h.IntegralAndError(0, h.GetNbinsX()+1, err)
+    return E(integral, err)
+
+#______________________________________________________________________________
 def longestSubstringFinder(string1, string2):
     from difflib import SequenceMatcher
     match = SequenceMatcher(None, string1, string2).find_longest_match(0, len(string1), 0, len(string2))
