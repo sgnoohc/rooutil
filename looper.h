@@ -38,6 +38,7 @@
 #include "Math/LorentzVector.h"
 
 #include "printutil.h"
+#include "eventindexmap.h"
 
 //#include "cpptqdm/tqdm.h"
 
@@ -92,6 +93,8 @@ namespace RooUtil
         unsigned int nskipped_threshold;
         unsigned int ncounter;
 //        tqdm bar;
+        EventIndexMap eventindexmap;
+        TEventList* teventlist;
         public:
         // Functions
         Looper();
@@ -102,6 +105,7 @@ namespace RooUtil
         void setTreeClass( TREECLASS* t );
         void printCurrentEventIndex();
         void setSilent(bool s=true) { silent = s; }
+        void setEventIndexMap(TString file) { eventindexmap.load(file); }
         bool allEventsInTreeProcessed();
         bool allEventsInChainProcessed();
         bool nextEvent();
@@ -178,6 +182,7 @@ RooUtil::Looper<TREECLASS>::Looper() :
     skimfilename( "" ),
     skimfile( 0 ),
     skimtree( 0 ),
+    teventlist( 0 ),
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
@@ -216,6 +221,7 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     skimfilename( "" ),
     skimfile( 0 ),
     skimtree( 0 ),
+    teventlist( 0 ),
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
@@ -351,6 +357,20 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
         // Get the ttree
         ttree = ( TTree* ) tfile->Get( tchain->GetName() );
 
+        // If an eventindexmap has a key for this file then set the TEventList for this TTree
+        // std::cout <<  " chainelement->GetTitle(): " << chainelement->GetTitle() <<  std::endl;
+        // std::cout <<  " eventindexmap.hasEventList(chainelement->GetTitle()): " << eventindexmap.hasEventList(chainelement->GetTitle()) <<  std::endl;
+        if ( eventindexmap.hasEventList( chainelement->GetTitle() ) )
+        {
+            // std::cout << chainelement->GetTitle() << std::endl;
+            teventlist = eventindexmap.getEventList( chainelement->GetTitle() );
+            ttree->SetEventList( teventlist );
+        }
+        else
+        {
+            teventlist = 0;
+        }
+
         if ( !ttree )
             error( "TTree is null!??", __FUNCTION__ );
 
@@ -407,10 +427,27 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
 template <class TREECLASS>
 bool RooUtil::Looper<TREECLASS>::allEventsInTreeProcessed()
 {
-    if ( indexOfEventInTTree >= nEventsTotalInTree )
-        return true;
+    if ( teventlist )
+    {
+        if ( indexOfEventInTTree >= teventlist->GetN() )
+        {
+            unsigned int curindex = teventlist->GetEntry(indexOfEventInTTree-1); // since I just increased by one a few lines before
+            unsigned int previndex = indexOfEventInTTree >= 2 ? teventlist->GetEntry(indexOfEventInTTree-2) : 0;
+            nEventsToProcess += (curindex - previndex);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     else
-        return false;
+    {
+        if ( indexOfEventInTTree >= nEventsTotalInTree )
+            return true;
+        else
+            return false;
+    }
 }
 
 //_________________________________________________________________________________________________
@@ -447,14 +484,24 @@ bool RooUtil::Looper<TREECLASS>::nextEventInTree()
 
     // if fast mode do some extra
     if ( fastmode )
-        ttree->LoadTree( indexOfEventInTTree );
+        ttree->LoadTree( teventlist ? teventlist->GetEntry(indexOfEventInTTree) : indexOfEventInTTree );
 
     // Set the event index in TREECLASS
-    treeclass->GetEntry( indexOfEventInTTree );
+    treeclass->GetEntry( teventlist ? teventlist->GetEntry(indexOfEventInTTree) : indexOfEventInTTree );
     // Increment the counter for this ttree
     ++indexOfEventInTTree;
     // Increment the counter for the entire tchain
-    ++nEventsProcessed;
+    // If there is teventlist set then the skipping is a bit more complex...
+    if (teventlist)
+    {
+        unsigned int curindex = teventlist->GetEntry(indexOfEventInTTree-1); // since I just increased by one a few lines before
+        unsigned int previndex = indexOfEventInTTree >= 2 ? teventlist->GetEntry(indexOfEventInTTree-2) : 0;
+        nEventsToProcess += (curindex - previndex);
+    }
+    else
+    {
+        ++nEventsProcessed;
+    }
     // Print progress
     printProgressBar();
     // If all fine return true
