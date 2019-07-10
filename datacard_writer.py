@@ -2,6 +2,7 @@
 
 import sys
 import ROOT as r
+import os
 
 ##########################################################
 #
@@ -149,7 +150,7 @@ class DataCardWriter:
         rtn  = "bin                                     {}\n".format("{:17s}".format(self.region_name) * len(self.hists))
         rtn += "process                                 {}\n".format("".join(["{:<17d}".format(i) for i in xrange(len(self.hists))]))
         rtn += "process                                 {}\n".format("".join(["{:17s}".format(i) for i in self.proc_names]))
-        rtn += "rate                                    {}\n".format("".join(["{:<17.3f}".format(i) for i in self.rates]))
+        rtn += "rate                                    {}\n".format("".join([("{:<17.3f}".format(i) if i != 0 else "{:<17s}".format("1e-6")) for i in self.rates]))
         rtn += "{}\n".format(self.get_delimiter())
         return rtn
 
@@ -232,13 +233,21 @@ class DataCardWriter:
                         raise ValueError("A systematic variation provided is not up/down variation. i.e. len(systval) == 0")
                 if isinstance(systval[0], float):
                     """ Case 3"""
-                    rtn += "{:.4f}/{:.4f}    ".format(systval[0]/self.rates[index], systval[1]/self.rates[index])
+                    dn = systval[0]/self.rates[index]
+                    up = systval[1]/self.rates[index]
+                    if dn <= 0: dn = 0.0001
+                    if up <= 0: up = 0.0001
+                    rtn += "{:.4f}/{:.4f}    ".format(dn, up)
                 elif isinstance(systval[0], r.TH1):
                     """ Case 1"""
                     if self.rates[index] == 0:
                         rtn += "{:.4f}/{:.4f}    ".format(1,1)
                     else:
-                        rtn += "{:.4f}/{:.4f}    ".format(systval[0].GetBinContent(self.bin_number)/self.rates[index], systval[1].GetBinContent(self.bin_number)/self.rates[index])
+                        dn = systval[0].GetBinContent(self.bin_number)/self.rates[index]
+                        up = systval[1].GetBinContent(self.bin_number)/self.rates[index]
+                        if dn <= 0: dn = 0.0001
+                        if up <= 0: up = 0.0001
+                        rtn += "{:.4f}/{:.4f}    ".format(dn, up)
             elif isinstance(systval, float):
                 """ Case 4"""
                 rtn += "{:<17.4f}".format(systval/self.rates[index])
@@ -301,6 +310,8 @@ class DataCardWriter:
 
     def write(self, output_name=""):
         if output_name:
+            if not os.path.isdir(os.path.dirname(output_name)):
+                os.makedirs(os.path.dirname(output_name))
             f = open(output_name, "w")
         else:
             f = open(self.datacard_filename, "w")
@@ -656,23 +667,23 @@ if __name__ == "__main__":
 
     d.set_bin(1)
     d.set_region_name("bin1")
-    d.write("test_datacard_bin1.txt")
+    d.write("test/datacard_bin1.txt")
 
     d.set_bin(2)
     d.set_region_name("bin2")
-    d.write("test_datacard_bin2.txt")
+    d.write("test/datacard_bin2.txt")
 
     d.set_bin(3)
     d.set_region_name("bin3")
-    d.write("test_datacard_bin3.txt")
+    d.write("test/datacard_bin3.txt")
 
     d.set_bin(4)
     d.set_region_name("bin4")
-    d.write("test_datacard_bin4.txt")
+    d.write("test/datacard_bin4.txt")
 
     d.set_bin(5)
     d.set_region_name("bin5")
-    d.write("test_datacard_bin5.txt")
+    d.write("test/datacard_bin5.txt")
 
     #  # Testing
     #  # A Shape-based datacard -> text based datacard converter

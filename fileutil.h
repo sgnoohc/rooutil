@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <unistd.h>
 
 #include "TChain.h"
 #include "TDirectory.h"

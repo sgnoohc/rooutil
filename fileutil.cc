@@ -35,12 +35,19 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     TChain* chain = new TChain(name);
     inputs = inputs.ReplaceAll("\"",""); // In case some rogue " or ' is left over
     inputs = inputs.ReplaceAll("\'",""); // In case some rogue " or ' is left over
+    char hostnamestupid[100];
+    gethostname(hostnamestupid, 100);
+    TString hostname(hostnamestupid);
+    std::cout << ">>> Hostname is " << hostname << std::endl;  
+    bool useXrootd = !(hostname.Contains("t2.ucsd.edu"));
+    if (useXrootd)
+        inputs.ReplaceAll("/hadoop/cms", "root://cmsxrootd.fnal.gov/");
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
     {
-        RooUtil::print(Form("Adding %s", ff.Data()));
         TString filepath = ff;
         if ( _map.find( ff ) != _map.end() )
             filepath = _map[ff];
+        RooUtil::print(Form("Adding %s", filepath.Data()));
         chain->Add(filepath);
     }
     return chain;

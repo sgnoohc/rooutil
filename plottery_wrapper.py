@@ -540,7 +540,8 @@ def fom_SoverB(s, serr, b, berr, totals, totalb):
 # S / sqrt(B) fom
 def fom_SoverSqrtB(s, serr, b, berr, totals, totalb):
     if b > 0:
-        return s / math.sqrt(b), 0
+        # return s / math.sqrt(b), 0
+        return math.sqrt(2 * ((s + b) * math.log(1 + s / b) - s)), 0
     else:
         return 0, 0
 
@@ -614,6 +615,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
     max_f_cut = 0
     totalsig = sig.Integral(0, nbin + 1)
     totalbkg = bkg.Integral(0, nbin + 1)
+    print totalsig, totalbkg
     for i in xrange(1, nbin + 1):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
@@ -1233,6 +1235,7 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
+    leftscan.Print("all")
     if leftscan.GetBinContent(1) != 0:
         leftscan.Scale(1./leftscan.GetBinContent(1))
     if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
@@ -1519,9 +1522,19 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
             if dogrep:
                 doskip = True
                 for item in filter_pattern.split(","):
-                    if item in hist_name:
-                        doskip = False
-                        break
+                    if "*" in item:
+                        match = True
+                        for token in item.split("*"):
+                            if token not in hist_name:
+                                match = False
+                                break
+                        if match:
+                            doskip = False
+                            break
+                    else:
+                        if item in hist_name:
+                            doskip = False
+                            break
                 if doskip:
                     continue
             else:

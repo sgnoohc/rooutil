@@ -17,3 +17,4 @@
 #include "histmap.h"
 #include "module.h"
 #include "varmap.h"
+#include "eventindexmap.h"
