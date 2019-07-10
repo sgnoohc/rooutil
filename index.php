@@ -11,13 +11,21 @@ echo $folder;
 </title>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+<script defer src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js"></script>
+<link defer rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.min.css">
+<link defer rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
 <link rel="icon" type="image/png" href="../trashcan.png" />
 
 <style>
+
+mark {
+  padding: 0px;
+  color: #f00;
+  background: none;
+  box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.25), 0 3px 2px 0 rgba(0, 0, 0, 0.25);
+}
 
 #bintablecontainer {
     position: fixed;
@@ -35,16 +43,31 @@ echo $folder;
 
 body {
     font-family: sans-serif;
+    background-color: #fff;
+}
+body.dark-mode {
+    background-color: #000;
+}
+
+.noborder {
+    border: none;
+    padding: 0px;
+    /* to take up full width without showing horizontal scrollbar */
+    width:90vw;
+}
+
+fieldset {
+border:2px solid #000;
+border-radius: 8px;
+}
+fieldset.dark-mode {
+border-color: #fff;
 }
 
 #custom-handle {
     width: 3em;
     font-family: sans-serif;
-    /* height: 1.6em; */
-    /* top: 50%; */
-    /* margin-top: -.8em; */
     text-align: center;
-    /* line-height: 1.6em; */
   }
 
 #slider {
@@ -56,40 +79,54 @@ top: 5px;
 
 .box {
 float:left;
-padding: 5px; /* space between image and border */
-border-radius: 5px;
+padding: 3px; /* space between image and border */
 }
 
-/* /1* can remove if you don't want hover zoom *1/ */
-/* .box:hover */
-/* /1* if only hovering on the inner image is what matters, do .innerimg:hover *1/ */
-/* { */
-/*     box-shadow: 0px 0px 25px #555; */
-/*     z-index: 2; */
-/*     background-color: #fff; */
-/*     -moz-transition:-moz-transform 0.5s ease-out; */ 
-/*     -webkit-transition:-webkit-transform 0.5s ease-out; */ 
-/*     -o-transition:-o-transform 0.5s ease-out; */
-/*     transition:transform 0.5s ease-out; */
-/*     -webkit-transition-delay: 1.0s; */
-/*     -moz-transition-delay: 1.0s; */
-/*     -o-transition-delay: 1.0s; */
-/*     transition-delay: 1.0s; */
-/*     transform: scale(2.3); */
-/*     /1* transform: scale(1.0); *1/ */
-/*     -moz-transform-origin: 0 0; */
-/*     -webkit-transform-origin: 0 0; */
-/*     -o-transform-origin: 0 0; */
-/*     transform-origin: 0 0; */
-/* } */
+.plot {
+  color: #070;
+  text-decoration: none;
+  border-bottom: 2px solid #bdb;
+}
 
 #images {
 position:relative;
 top: 30px;
 }
 
+.innerimg {
+}
+.innerimg.dark-mode {
+filter: hue-rotate(180deg) invert(1);
+-webkit-filter: hue-rotate(180deg) invert(1);
+}
+.innerimg.super-saturate {
+filter: saturate(2.5);
+-webkit-filter: saturate(2.5);
+}
+.innerimg.dark-mode-super-saturate {
+filter: hue-rotate(180deg) invert(1) saturate(2.5);
+-webkit-filter: hue-rotate(180deg) invert(1) saturate(2.5);
+}
+
+
 legend {
 font-weight: bold;
+}
+legend.dark-mode {
+color: #fff;
+}
+
+a {
+}
+a.dark-mode {
+    color: #55f;
+}
+
+#message {
+    color: #000;
+}
+#message.dark-mode {
+    color: #fff;
 }
 
 </style>
@@ -157,17 +194,14 @@ function draw_objects(file_objects) {
         var pdf = fo["pdf"] || fo["name"];
         if (path) pdf = path+pdf;
         var txt_str = (fo["txt"].length > 0) ? " <a href='"+fo["txt"]+"' id='"+"text_"+fo["name_noext"]+"'>[text]</a>" : "";
-        var tex_str = (fo["tex"].length > 0) ? " <a href='"+fo["tex"]+"' id='"+"tex_"+fo["name_noext"]+"'>[tex]</a>" : "";
         var extra_str = (fo["extra"].length > 0) ? " <a href='"+fo["extra"]+"' id='"+"extra_"+fo["name_noext"]+"'>[extra]</a>" : "";
         var json_str = (fo["json"].length > 0) ? " <a href='"+jsrootbase+fo["json"]+"' id='"+"json_"+fo["name_noext"]+"'>[js]</a>" : "";
-        // var popout_str = " <a href='#/' id='popout_"+fo["name_noext"]+"'>[popout]</a>";
-        var popout_str = "";
         $("#images").append(
             "<div class='box' id='"+name_noext+"'>"+
-                "    <fieldset style='border:2px solid "+color+"'>"+
-                "        <legend>"+name_noext+txt_str+tex_str+extra_str+json_str+popout_str+"</legend>"+
+                "    <fieldset class='has-dark'>"+
+                "        <legend class='has-dark'>"+name_noext+txt_str+extra_str+json_str+"</legend>"+
                 "        <a href='"+pdf+"'>"+
-                "            <img class='innerimg' src='"+path+"/"+name+"' height='300px' />"+
+                "            <img class='innerimg has-dark' name='"+name_noext+"' src='"+path+"/"+name+"' height='300px' />"+
                 "        </a>"+
                 "    </fieldset>"+
                 "</div>"
@@ -189,17 +223,13 @@ function make_objects(filelist) {
     for (var i = 0; i < filelist.length; i++) {
         var f = filelist[i];
         var ext = f.split('.').pop();
-        if (ext != "png") continue;
+        if ((ext != "png") && (ext != "svg") && (ext != "gif")) continue;
         var color = "";
-        if (f.indexOf("HH") != -1) color = "#B03A2E";
-        else if (f.indexOf("HL") != -1) color = "#2874A6";
-        else if (f.indexOf("LL") != -1) color = "#32CD32";
         var name = f.split('/').reverse()[0];
         var path = f.replace(name, "");
         var name_noext = name.replace("."+ext,"");
         var pdf = (filelist.indexOf(path+name_noext + ".pdf") != -1) ? path+name_noext+".pdf" : "";
         var txt = (filelist.indexOf(path+name_noext + ".txt") != -1) ? name_noext+".txt" : "";
-        var tex = (filelist.indexOf(path+name_noext + ".tex") != -1) ? name_noext+".tex" : "";
         var extra = (filelist.indexOf(path+name_noext + ".extra") != -1) ? name_noext+".extra" : "";
         var json = (filelist.indexOf(path+name_noext + ".json") != -1) ? name_noext+".json" : "";
         file_objects.push({
@@ -210,12 +240,13 @@ function make_objects(filelist) {
             "ext": ext,
             "pdf": pdf,
             "txt": txt,
-            "tex": tex,
             "extra": extra,
             "json": json,
             "color": color,
         });
     }
+    // sort by name
+    file_objects.sort(function(a,b) { return a["name"] > b["name"]; });
     return file_objects;
 }
 
@@ -242,15 +273,97 @@ function register_hover() {
         } 
     );
 
-    $("[id^=popout_]").click( function(){
-        console.log("here");
-        $('#modal').dialog({
-        closeOnEscape: true,
-            width: 'auto',
-            height: 'auto',
-        });
-        $("#modal").html("<img height=700px src='"+ $(this).parent().parent().children("a").children("img").attr("src") + "' />");
+    if (!binInfo) return;
+
+    $("img").mousemove(function(event) {
+        /* console.log(event.offsetX + " " + event.offsetY + " " + event.currentTarget.height + " " + event.currentTarget.name); */
+        var name = event.currentTarget.name;
+        /* var width = event.currentTarget.width; */
+        /* var height = event.currentTarget.height; */
+        var xfrac = event.offsetX / event.currentTarget.width;
+        var yfrac = 1.0 - event.offsetY / event.currentTarget.height;
+        /* $("#message").html(event.offsetX + " " + event.offsetY + " " + event.currentTarget.height + " " + event.currentTarget.width + " " + event.currentTarget.name); */
+        /* $("#message").html(xfrac + " " + yfrac + " " + event.currentTarget.name); */
+        var index = -1;
+        if (name in binInfo) {
+            index = binInfo[name]["xedges"].findIndex(function(x) { return x[0] < xfrac && x[1] > xfrac });
+            if (index >= 0) {
+                var ypair = (binInfo[name]["yedges"][index]);
+                /* console.log(ypair); */
+                if (ypair[0]-0.01 > yfrac || ypair[1]+0.01 < yfrac) index = -1;
+            }
+        }
+        /* $("#message").html(xfrac + " " + yfrac + " " + event.currentTarget.name + " " + index); */
+        /* $("#message").html(event.currentTarget.name + ": Bin " + index + " | yfrac: " + yfrac); */
+        /* console.log(index); */
+        if (index < 0) {
+            $("#bintable").hide();
+            $("#hovercanvas").hide();
+            return;
+        }
+        var table = binInfo[name]["table"]["header"] + "<br>" + binInfo[name]["table"]["bins"][index] + "<br>" + binInfo[name]["table"]["total"];
+        table = table.replace(/\n/g,"<br>\n");
+        table = table.replace(/ /g,"&nbsp;");
+        /* console.log(table); */
+        /* $("#messagebottom").html("<span style='color:red'>"+table+"</span>"); */
+        $("#bintable").show();
+        $("#hovercanvas").show();
+        $("#bintable").html(table);
+
+        var xpair = (binInfo[name]["xedges"][index]);
+        var ypair = (binInfo[name]["yedges"][index]);
+        var img = $('[name="' + name + '"]')[0];
+        var c = document.getElementById("hovercanvas");
+        var x = xpair[0] * event.currentTarget.width;
+        var y = (1.0 - ypair[1]) * event.currentTarget.height;
+        var w = (xpair[1] - xpair[0]) * event.currentTarget.width;
+        var h = (ypair[1] - ypair[0]) * event.currentTarget.height;
+        var bc = img.getBoundingClientRect();
+        c.style.position = "absolute";
+        c.style.left = bc.left + x + window.scrollX;
+        c.style.top = bc.top + y + window.scrollY;
+        c.width = w;
+        c.height = h;
+        var ctx = c.getContext("2d");
+        ctx.clearRect(0, 0, c.width, c.height);
+        ctx.strokeStyle="rgba(0,0,0,0.3)";
+        ctx.lineWidth=1;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.fillRect(0,0,w,h);
+        ctx.rect(1,1,w-2,h-2);
+        ctx.stroke();
     });
+}
+
+function register_description_hover() {
+
+    console.log("registering hover");
+    console.log($("[class^=plot]"));
+    $("[class^=plot]").hover(
+        function() {
+            console.log("fading in hover");
+            var plotname = $(this).text();
+            var plotselector = "#" + plotname;
+            console.log(plotname);
+            console.log($(plotselector));
+            $(plotselector).effect('highlight',{"color":"9d9"},500);
+            $(plotselector).finish();
+        },function() {
+        } 
+    );
+
+}
+
+function add_links_to_description(objects) {
+    console.log(objects);
+    var desc_src = $("#description").html();
+    console.log(desc_src);
+    for (var i = 0; i < objects.length; i++) {
+        var plotname = objects[i]["name_noext"];
+        desc_src = desc_src.split(plotname).join("<a href=\"#"+plotname+"\" class=\"plot\">"+plotname+"</a>");
+    }
+    console.log(desc_src);
+    $("#description").html(desc_src);
 }
 
 // ultimately this will be a master filelist with all files recursively in this directory
@@ -259,9 +372,14 @@ var obj = <?php echo json_encode($data); ?>;
 var filelist = <?php echo json_encode($paths); ?>;
 
 
+var binInfo;
 $(function() {
 
-    if (<?php echo $num_directories?> > 0) {
+    $.getJSON("binInfo.json", function(json) {
+        binInfo = json;
+        console.log(json); // this will show the info it in firebug console
+    });
+    if (<?php echo $num_directories ?> > 0) {
         $('#jstree_demo_div')
             .on('changed.jstree', function(e,data) {
                 draw_filtered(data.selected);
@@ -274,19 +392,79 @@ $(function() {
                     },
                     "data": 
                         obj
-                    // test_data
-                    // test_data2
-                    
                 }
             }); 
     }
+
+    var markre = function(pattern) {
+        
+        var context=$("legend");
+        $("#message").html("");
+        context.unmark();
+
+        var modifier = "";
+        if (pattern.toLowerCase() == pattern) modifier = "i"; // like :set smartcase in vim (case-sensitive if there's an uppercase char)
+
+        var regex = new RegExp(pattern,modifier);
+        context.markRegExp(regex,{
+            done: function(counter) {
+                console.log(counter);
+                if (counter > 0) {
+                    // show all matches and hide those that don't match
+                    context.not(":has(mark)").parent().parent().hide();
+                    var toshow = context.has("mark").parent().parent();
+                    var nmatches = toshow.length;
+                    toshow.show();
+                    console.log(toshow.length);
+                    if (nmatches == 1) {
+                        $("#message").html(`${nmatches} match`);
+                    } else {
+                        $("#message").html(`${nmatches} matches`);
+                    }
+                    register_hover();
+                } else {
+                    context.parent().parent().show();
+                    // $("#message").html("No matching images!");
+                    if (pattern.length > 0) {
+                        $("#message").html("0 matches!");
+                    }
+                }
+            },
+        });
+    };
+
+    // $( "input[id='filter']" ).on('keyup', function() {
+    //     var pattern = $(this).val();
+    //     markre(pattern);
+    // });
+
+    var timer;
+    var lastPattern = "";
+    var timeoutms = 300;
+    if (obj.length < 400) {
+        timeoutms = 0;
+    }
+    $("input[id='filter']").keyup(function(e) {
+        var pattern = $(this).val();
+        if (pattern == lastPattern) return;
+        if (lastPattern == "") {
+            lastPattern = this.value;
+            return;
+        } else {
+            lastPattern = this.value;
+        }
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+            markre(lastPattern);
+        }, timeoutms);
+    });
 
     var handle = $( "#custom-handle" );
     $( "#slider" ).slider({
     value: 100,
         range: "min",
-    min: 20,
-    max: 250,
+        min: 0,
+        max: 300,
     create: function() {
         /* handle.text( $( this ).slider( "value" ) ); */
         handle.text( "100%" );
@@ -294,86 +472,72 @@ $(function() {
         slide: function( event, ui ) {
             handle.text( ui.value + "%" );
             $("img").attr("height",300*ui.value/100);
+            if ((ui.value == 0 && imagesVisible) || (ui.value != 0 && !imagesVisible)) {
+                toggleImages();
+            }
         }
     });
 
 
-        // filelist = filelist.filter(function(value) {
-            // return value.indexOf("./plots/qcdEstimateData_2016_ICHEP_SNT/f_jets_mc/HT450to575_j2toInf_b0toInf") != -1;
-        // });
         var file_objects = make_objects(filelist);
         draw_objects(file_objects);
-
-
-    // drag images and hover over others to overlay
-
-    /* $( ".box" ).draggable({ */
-    /*     opacity: 0.50, */
-    /*     helper: "clone", */
-    /*     snap: true, */
-    /*     revert: true, */
-    /* }); */
-
-    // make map from title of each plot to the html of the title
-    var titleMap = {};
-    var elems = $(".box").filter(function() {
-        var legendTitle = $(this).find("fieldset > legend");
-        titleMap[legendTitle.text()] = legendTitle.html();
-    });
-
-    $( "input[id='filter']" ).on('keyup', function() {
-        $("#message").html("");
-        var pattern = $(this).val();
-        var modifier = "";
-        if(pattern.toLowerCase() == pattern) modifier = "i"; // like :set smartcase in vim (case-sensitive if there's an uppercase char)
-        var elems = $(".box").filter(function() {
-            try {
-            var regex = new RegExp(pattern,modifier);
-            } catch(e) {
-                return [];
-            }
-            var matches = this.id.match(regex);  
-            if(matches) {
-                var legendTitle = $(this).find("fieldset > legend");
-                var to_replace =  titleMap[legendTitle.text()];
-                to_replace = to_replace.replace(matches[0],"<font style='color:#F00'>"+matches[0]+"</font>") ;
-                // console.log(to_replace);
-                legendTitle.html(to_replace);
-            }
-            return matches;
-        });
-        if(pattern.length < 1) {
-            $('.box').show();
-            return;
-        }
-        $('.box').hide();
-        if(elems.length == 0) {
-            $("#message").html("No matching images!");
-        } else {
-            elems.show();
-            register_hover();
-        }
-    });
 
     // if page was loaded with a parameter for search, then simulate a search
     // ex: http://uaf-6.t2.ucsd.edu/~namin/dump/plots_isfr_Aug26/?HH$
     if(window.location.href.indexOf("?") != -1) {
         var search = unescape(window.location.href.split("?")[1]);
         $("#filter").val(search);
-        $("#filter").trigger("keyup");
+        markre($("#filter").val());
     }
 
     register_hover();
-
+    add_links_to_description(file_objects);
+    // register hover for links in description AFTER adding them
+    register_description_hover();
 
 });
 
 // vimlike incsearch: press / to focus on search box
 $(document).keydown(function(e) {
+    // console.log($(event.target));
+    // console.log(e.keyCode);
     if(e.keyCode == 191) {
-        console.log(e.keyCode); 
+        // / focus search box
         e.preventDefault();
         $("#filter").focus().select();
+    }
+    if (!$(event.target).is(":input")) {
+        if(e.keyCode== 89) {
+            getQueryURL();
+        }
+        if(e.keyCode == 71) {
+            // G scrolls to bottom, g to top
+            if (e.shiftKey) {
+                window.scrollTo(0,document.body.scrollHeight);
+            } else {
+                window.scrollTo(0,0);
+            }
+        }
+        if(e.keyCode == 83) {
+            // s and shift S to sort a-z or z-a
+            if (e.shiftKey) {
+                $("#images").html($(".box").sort(function (a,b) { return $(a).attr("id").localeCompare($(b).attr("id")); }));
+            } else {
+                $("#images").html($(".box").sort(function (a,b) { return -$(a).attr("id").localeCompare($(b).attr("id")); }));
+            }
+        }
+        if(e.keyCode == 77) {
+            // m to toggle dark mode
+            toggleDarkMode();
+        }
+        if(e.keyCode == 66) {
+            // b to toggle super saturation mode
+            toggleSaturation();
+        }
+        if(e.keyCode == 88) {
+            // x to show and hide images
+            toggleImages();
+        }
     }
 });
 
@@ -383,6 +547,7 @@ function copyToClipboard(text) {
     $temp.val(text).select();
     document.execCommand("copy");
     $temp.remove();
+    $("#message").html("Copied to clipboard!").delay(600).queue(function(n) {$(this).html("");n();});
 }
 
 function getQueryURL() {
@@ -392,25 +557,63 @@ function getQueryURL() {
     copyToClipboard(queryURL)
 }
 
+var darkMode = false;
+function toggleDarkMode() {
+    $(".has-dark").toggleClass("dark-mode");
+    if (superSaturation) {
+        toggleSaturation();
+    }
+    darkMode ^= true;
+}
+
+var superSaturation = false;
+function toggleSaturation() {
+    if (darkMode) {
+        $(".innerimg").toggleClass("dark-mode-super-saturate");
+    } else {
+        $(".innerimg").toggleClass("super-saturate");
+    }
+    superSaturation ^= true;
+}
+var imagesVisible = true;
+function toggleImages() {
+    $("img").toggle();
+    $("fieldset").toggleClass("noborder");
+    imagesVisible ^= true;
+}
+
 </script>
 
 </head>
 
-<body>
+<body class="has-dark">
 
   <div id="jstree_demo_div"> </div>
   <div id="modal"></div>
 
 <input type="text" class="inputbar" id="filter" placeholder="Search/wildcard filter" />
-<a href="javascript:;" onClick="getQueryURL();">copy as URL</a> &nbsp; &nbsp; 
+&nbsp;
+<a href="javascript:;" class='has-dark' onClick="getQueryURL();">copy as URL</a> &nbsp; &nbsp; 
 <div id="slider"><div id="custom-handle" class="ui-slider-handle"></div></div>
-<span id="message"></span>
+&nbsp;
+<span class='has-dark' id="message"></span>
+
+<div id="description">
+<?php
+$description = @file_get_contents("description.txt");
+if( $description ) {
+    echo "<br><b>Description:</b><br>";
+    echo $description;
+}
+?>
+</div>
 <div id="images"></div>
 <div id="bintablecontainer"  style="text-align: center;">
     <div id="bintable" style="display: inline-block; text-align: left; display: none">
-    <!-- <div id="bintable" style="display: inline-block; text-align: left;"> -->
     </div>
 </div>
+
+<canvas id='hovercanvas' width="50" height="300"></canvas>
 
 
 </body>
