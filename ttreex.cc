@@ -123,7 +123,7 @@ void TTreeX::createFlatBranch(std::vector<TString> p4_bns, std::vector<TString> 
     }
     for ( auto& bool_bn : bool_bns )
     {
-        for (bool i = 0; i < multiplicity; ++i)
+        for (int i = 0; i < multiplicity; ++i)
             createBranch<bool>(TString::Format("%s_%d", bool_bn.Data(), i));
     }
 }
@@ -152,7 +152,7 @@ void TTreeX::setFlatBranch(std::vector<TString> p4_bns, std::vector<TString> flo
     for ( auto& bool_bn : bool_bns )
     {
         const std::vector<bool>& vec = getBranch<std::vector<bool>>(bool_bn, false);
-        for (bool i = 0; i < multiplicity && i < (int) vec.size(); ++i)
+        for (int i = 0; i < multiplicity && i < (int) vec.size(); ++i)
             setBranch<bool>(TString::Format("%s_%d", bool_bn.Data(), i), vec[i]);
     }
 }

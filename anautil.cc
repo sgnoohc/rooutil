@@ -10,7 +10,7 @@ RooUtil::Cutflow::Cutflow() : cuttree("Root"), last_active_cut(0), ofile(0), t(0
 RooUtil::Cutflow::Cutflow(TFile* o) : cuttree("Root"), last_active_cut(0), ofile(o), t(0), tx(0), iseventlistbooked(false), seterrorcount(0), doskipsysthist(0), dosavettreex(0), cutflow_booked(false) { cuttreemap["Root"] = &cuttree; }
 
 //_______________________________________________________________________________________________________
-RooUtil::Cutflow::~Cutflow() { delete t; delete tx; }
+RooUtil::Cutflow::~Cutflow() {}
 
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::addToCutTreeMap(TString n) { if (cuttreemap.find(n.Data()) == cuttreemap.end()) cuttreemap[n.Data()] = cuttree.getCutPointer(n); else error(TString::Format("Cut %s already exists! no duplicate cut names allowed!", n.Data())); }

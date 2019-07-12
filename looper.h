@@ -182,7 +182,6 @@ RooUtil::Looper<TREECLASS>::Looper() :
     skimfilename( "" ),
     skimfile( 0 ),
     skimtree( 0 ),
-    teventlist( 0 ),
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
@@ -193,7 +192,8 @@ RooUtil::Looper<TREECLASS>::Looper() :
     nbatch_skip_threshold( 500 ),
     nbatch_to_skip( 5000 ),
     nskipped_threshold( 100000 ),
-    ncounter( 0 )
+    ncounter( 0 ),
+    teventlist( 0 )
 {
     bmark = new TBenchmark();
 //    bar.disable_colors();
@@ -221,7 +221,6 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     skimfilename( "" ),
     skimfile( 0 ),
     skimtree( 0 ),
-    teventlist( 0 ),
     nEventsSkimmed( 0 ),
     silent( false ),
     isinit( false ),
@@ -232,7 +231,8 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
     nbatch_skip_threshold( 500 ),
     nbatch_to_skip( 5000 ),
     nskipped_threshold( 100000 ),
-    ncounter( 0 )
+    ncounter( 0 ),
+    teventlist( 0 )
 {
     bmark = new TBenchmark();
     if ( c && t )
@@ -285,7 +285,7 @@ RooUtil::Looper<TREECLASS>::~Looper()
         cout << "CPU  Time:	" << Form( "%.01f", bmark->GetCpuTime("benchmark")  ) << endl;
         cout << "Real Time:	" << Form( "%.01f", bmark->GetRealTime("benchmark") ) << endl;
         cout << endl;
-        delete bmark;
+        // delete bmark;
 
 //        if ( fileIter )
 //            delete fileIter;
@@ -348,9 +348,9 @@ bool RooUtil::Looper<TREECLASS>::nextTree()
         if ( !ttree && doskim )
             createskimtree = true;
 
-        // If there is already a TFile opened from previous iteration, close it.
-        if ( tfile )
-            tfile->Close();
+        // // If there is already a TFile opened from previous iteration, close it.
+        // if ( tfile )
+        //     tfile->Close();
 
         // Open up a new file
         tfile = TFile::Open( chainelement->GetTitle() );
@@ -429,7 +429,7 @@ bool RooUtil::Looper<TREECLASS>::allEventsInTreeProcessed()
 {
     if ( teventlist )
     {
-        if ( indexOfEventInTTree >= teventlist->GetN() )
+        if ( indexOfEventInTTree >= (unsigned int) teventlist->GetN() )
         {
             unsigned int curindex = teventlist->GetEntry(indexOfEventInTTree-1); // since I just increased by one a few lines before
             unsigned int previndex = indexOfEventInTTree >= 2 ? teventlist->GetEntry(indexOfEventInTTree-2) : 0;

@@ -320,26 +320,32 @@ class DataCardWriter:
         f.write(self.get_str())
 
     def print_yields(self, procindex):
-        print self.rates
-        systs_data = {}
+        systs_lines = []
         for syst in self.systs:
             systname = ""
             systvals = []
             if self.check_gmN(syst):
-                syst_data = self.get_syst_str(syst).split()
-                systname = syst_data[0]
-                if syst_data[1] == 'gmN':
-                    dataN = int(syst_data[2])
-                    systvals = syst_data[3:]
-                    systvals_new = []
-                    for systval in systvals:
-                        if systval != "-":
-                            systvals_new.append("{:.4f}".format(1. + 1./math.sqrt(float(dataN))))
-                        else:
-                            systvals_new.append(systval)
-                    systvals = systvals_new
-                else:
-                    systvals = syst_data[2:]
+                systs_lines.append(self.get_syst_str(syst))
+        systs_lines += self.get_stats_str().split('\n')[:-1]
+
+        systs_data = {}
+        for syst_line in systs_lines:
+            systname = ""
+            systvals = []
+            syst_data = syst_line.split()
+            systname = syst_data[0]
+            if syst_data[1] == 'gmN':
+                dataN = int(syst_data[2])
+                systvals = syst_data[3:]
+                systvals_new = []
+                for systval in systvals:
+                    if systval != "-":
+                        systvals_new.append("{:.4f}".format(1. + 1./math.sqrt(float(dataN))))
+                    else:
+                        systvals_new.append(systval)
+                systvals = systvals_new
+            else:
+                systvals = syst_data[2:]
             systvals_in_float = []
             for systval in systvals:
                 systval_in_float = 0
