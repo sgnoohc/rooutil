@@ -319,7 +319,7 @@ class DataCardWriter:
             f = open(self.datacard_filename, "w")
         f.write(self.get_str())
 
-    def print_yields(self, procindex):
+    def print_yields(self):
         systs_lines = []
         for syst in self.systs:
             systname = ""
