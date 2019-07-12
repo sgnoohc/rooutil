@@ -3,6 +3,8 @@
 import sys
 import ROOT as r
 import os
+import math
+from errors import E
 
 ##########################################################
 #
@@ -316,6 +318,51 @@ class DataCardWriter:
         else:
             f = open(self.datacard_filename, "w")
         f.write(self.get_str())
+
+    def print_yields(self, procindex):
+        print self.rates
+        systs_data = {}
+        for syst in self.systs:
+            systname = ""
+            systvals = []
+            if self.check_gmN(syst):
+                syst_data = self.get_syst_str(syst).split()
+                systname = syst_data[0]
+                if syst_data[1] == 'gmN':
+                    dataN = int(syst_data[2])
+                    systvals = syst_data[3:]
+                    systvals_new = []
+                    for systval in systvals:
+                        if systval != "-":
+                            systvals_new.append("{:.4f}".format(1. + 1./math.sqrt(float(dataN))))
+                        else:
+                            systvals_new.append(systval)
+                    systvals = systvals_new
+                else:
+                    systvals = syst_data[2:]
+            systvals_in_float = []
+            for systval in systvals:
+                systval_in_float = 0
+                if '/' in systval:
+                    up = abs(float(systval.split('/')[0]) - 1)
+                    down = abs(float(systval.split('/')[1]) - 1)
+                    systval_in_float = math.sqrt(up * down)
+                elif '-' in systval:
+                    systval_in_float = 0
+                else:
+                    systval_in_float = abs(float(systval) - 1)
+                systvals_in_float.append(systval_in_float)
+            systs_data[systname] = systvals_in_float
+
+        rates_errs = []
+        for index, _ in enumerate(self.rates):
+            rate_err = E(self.rates[index], 0)
+            for systname in systs_data:
+                rate_err *= E(1, systs_data[systname][index])
+            rates_errs.append(rate_err)
+
+        for rate_err in rates_errs:
+            print rate_err
 
 class DataCardConverter:
 
