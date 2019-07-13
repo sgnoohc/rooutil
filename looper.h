@@ -137,6 +137,8 @@ namespace RooUtil
         void addCount() { ncounter++; }
         void resetCounter() { ncounter = 0; }
         bool doesBranchExist(TString bname);
+        TString getSkimFileName() { return skimfilename; }
+        TFile* getSkimFile() { return skimfile; }
         private:
         void setFileList();
         void setNEventsToProcess();
