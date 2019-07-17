@@ -42,6 +42,8 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     bool useXrootd = !(hostname.Contains("t2.ucsd.edu"));
     if (useXrootd)
         inputs.ReplaceAll("/hadoop/cms", "root://cmsxrootd.fnal.gov/");
+    if (hostname.Contains("t2.ucsd.edu") and not hostname.Contains("uaf"))
+        inputs.ReplaceAll("/hadoop/cms", "root://redirector.t2.ucsd.edu/");
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
     {
         TString filepath = ff;
