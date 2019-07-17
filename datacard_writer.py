@@ -367,8 +367,8 @@ class DataCardWriter:
                 rate_err *= E(1, systs_data[systname][index])
             rates_errs.append(rate_err)
 
-        for rate_err in rates_errs:
-            print rate_err
+        for proc, rate_err in zip(self.proc_names, rates_errs):
+            print proc, rate_err
 
 class DataCardConverter:
 
