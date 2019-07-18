@@ -16,12 +16,12 @@ namespace RooUtil
 
         class ReaderX
         {
-            ReaderX(TString methodType, TString xmlpath);
-            ~ReaderX();
-            float eval(RooUtil::TTreeX& tx);
+            public:
+                ReaderX(TString methodType, TString xmlpath);
+                float eval(RooUtil::TTreeX& tx);
 
-            TString methodType;
-            TMVA::Reader* reader;
+                TString methodType;
+                TMVA::Reader* reader;
 
         };
     }
