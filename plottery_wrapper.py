@@ -730,26 +730,30 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
 # ====================
 
 #______________________________________________________________________________________________________________________
-def yield_str(hist, i, prec=3):
-    e = E(hist.GetBinContent(i), hist.GetBinError(i))
-    return e.round(prec)
+def yield_str(hist, i, prec=3, noerror=False):
+    if noerror:
+        return "{{:.{}f}}".format(prec).format(hist.GetBinContent(i))
+    else:
+        e = E(hist.GetBinContent(i), hist.GetBinError(i))
+        return e.round(prec)
 #______________________________________________________________________________________________________________________
-def yield_tex_str(hist, i, prec=3):
-    tmp = yield_str(hist, i, prec)
+def yield_tex_str(hist, i, prec=3, noerror=False):
+    tmp = yield_str(hist, i, prec, noerror)
     tmp = tmp.__str__()
     sep = '\xc2\xb1'
     tmp = tmp.replace(sep, "$\pm$")
     return tmp
 
 #______________________________________________________________________________________________________________________
-def print_yield_table_from_list(hists, outputname, prec=2):
+def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=False):
     x = Table()
     if len(hists) == 0:
         return
     # add bin column
-    x.add_column("Bin#", ["Bin{}".format(i) for i in xrange(0, hists[0].GetNbinsX()+2)])
+    bins = binrange if len(binrange) != 0 else range(0, hists[0].GetNbinsX()+2)
+    x.add_column("Bin#", ["Bin{}".format(i) for i in bins])
     for hist in hists:
-        x.add_column(hist.GetName(), [ yield_str(hist, i, prec) for i in xrange(0, hist.GetNbinsX()+2)])
+        x.add_column(hist.GetName(), [ yield_str(hist, i, prec, noerror) for i in bins])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
@@ -761,7 +765,7 @@ def print_yield_table_from_list(hists, outputname, prec=2):
     f.write("".join(x.get_table_string()))
 
 #______________________________________________________________________________________________________________________
-def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE"):
+def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE", noerror=False):
     x = Table()
     if len(hists) == 0:
         return
@@ -776,7 +780,7 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
         if '#' in name:
             name = name.replace("#", "\\")
             name = "$" + name + "$"
-        x.add_column(name, [ yield_tex_str(hist, i, prec) for i in xrange(1, hist.GetNbinsX()+1)])
+        x.add_column(name, [ yield_tex_str(hist, i, prec, noerror) for i in xrange(1, hist.GetNbinsX()+1)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.tex'
     x.set_theme_basic()

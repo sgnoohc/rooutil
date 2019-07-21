@@ -43,9 +43,9 @@ rm $MACRONAME
 
 # filter some jobs
 if [ "x${2}" != "x" ]; then
-  cat $1 | grep -v \# | grep $2 > ${MACRO}
+  cat $1 | grep -v '^#' | grep $2 > ${MACRO}
 else
-  cat $1 | grep -v \# > ${MACRO}
+  cat $1 | grep -v '^#' > ${MACRO}
 fi
 
 # run the job in parallel
