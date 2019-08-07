@@ -765,7 +765,7 @@ def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=
     f.write("".join(x.get_table_string()))
 
 #______________________________________________________________________________________________________________________
-def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE", noerror=False):
+def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE", noerror=False, content_only=True):
     x = Table()
     if len(hists) == 0:
         return
@@ -829,9 +829,11 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
     footer = """}
 \\end{table}
 """
-    f.write(header)
+    if not content_only:
+        f.write(header)
     f.write(content)
-    f.write(footer)
+    if not content_only:
+        f.write(footer)
 
 #______________________________________________________________________________________________________________________
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
