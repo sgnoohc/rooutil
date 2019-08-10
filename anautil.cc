@@ -395,10 +395,10 @@ void RooUtil::Cutflow::setWgtSyst(TString syst, float weight)
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::addCutSyst(TString syst, std::vector<TString> pattern)
+void RooUtil::Cutflow::addCutSyst(TString syst, std::vector<TString> pattern, std::vector<TString> vetopattern)
 {
     cutsysts.push_back(syst);
-    cuttree.addSyst(syst, pattern);
+    cuttree.addSyst(syst, pattern, vetopattern);
 }
 
 #ifdef USE_CUTLAMBDA
