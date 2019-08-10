@@ -332,6 +332,10 @@ void RooUtil::Cutflow::setCut(TString cutname, std::function<bool()> pass, std::
 //_______________________________________________________________________________________________________
 void RooUtil::Cutflow::setCutSyst(TString cutname, TString syst, std::function<bool()> pass, std::function<float()> weight)
 {
+    if (cuttreemap[cutname.Data()]->systs.find(syst) == cuttreemap[cutname.Data()]->systs.end())
+    {
+        error(TString::Format("setCutSyst():: Did not find syst=%s from the cut=%s! Did you actually book this syst for the cut properly using addCutSyst() ?", syst.Data(), cutname.Data()));
+    }
     cuttreemap[cutname.Data()]->systs[syst]->pass_this_cut_func = pass;
     cuttreemap[cutname.Data()]->systs[syst]->weight_this_cut_func = weight;
 }
