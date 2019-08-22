@@ -312,7 +312,7 @@ class DataCardWriter:
 
     def write(self, output_name=""):
         if output_name:
-            if not os.path.isdir(os.path.dirname(output_name)):
+            if not os.path.isdir(os.path.dirname(output_name)) and len(os.path.dirname(output_name)) != 0:
                 os.makedirs(os.path.dirname(output_name))
             f = open(output_name, "w")
         else:
