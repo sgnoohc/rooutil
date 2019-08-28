@@ -751,7 +751,11 @@ def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=
         return
     # add bin column
     bins = binrange if len(binrange) != 0 else range(0, hists[0].GetNbinsX()+2)
-    x.add_column("Bin#", ["Bin{}".format(i) for i in bins])
+    labels = hists[0].GetXaxis().GetLabels()
+    if labels:
+        x.add_column("Bin#", [ hists[0].GetXaxis().GetBinLabel(i) for i in bins])
+    else:
+        x.add_column("Bin#", ["Bin{}".format(i) for i in bins])
     for hist in hists:
         x.add_column(hist.GetName(), [ yield_str(hist, i, prec, noerror) for i in bins])
     fname = outputname
