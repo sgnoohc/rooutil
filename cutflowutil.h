@@ -352,13 +352,22 @@ namespace RooUtil
                 for (auto& child : children)
                     child->clear();
             }
-            void addSyst(TString syst, std::vector<TString> patterns)
+            void addSyst(TString syst, std::vector<TString> patterns, std::vector<TString> vetopatterns=std::vector<TString>())
             {
                 for (auto& pattern : patterns)
                     if (name.Contains(pattern))
-                        addSyst(syst);
+                    {
+                        bool veto = false;
+                        for (auto& vetopattern : vetopatterns)
+                        {
+                            if (name.Contains(vetopattern))
+                                veto = true;
+                        }
+                        if (not veto)
+                            addSyst(syst);
+                    }
                 for (auto& child : children)
-                    child->addSyst(syst, patterns);
+                    child->addSyst(syst, patterns, vetopatterns);
             }
             void clear_passbits()
             {

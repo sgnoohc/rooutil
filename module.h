@@ -14,7 +14,7 @@ namespace RooUtil
             TTreeX* tx;
             void SetTTreeX(RooUtil::TTreeX*);
             virtual void AddOutput();
-            virtual void FillOutput();
+            virtual void FillOutput(); // TODO rename
     };
 
     class Processor
@@ -25,7 +25,9 @@ namespace RooUtil
             Processor(RooUtil::TTreeX*);
             void AddModule(RooUtil::Module*);
             void AddOutputs();
-            void FillOutputs();
+            void SetOutputs(); // TODO rename
+            void FillTree(); // TODO rename
+            void FillOutputs(); // TODO rename
     };
 }
 

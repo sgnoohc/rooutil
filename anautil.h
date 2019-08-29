@@ -119,7 +119,7 @@ namespace RooUtil
             void setCut(TString cutname, bool pass, float weight);
             void setCutSyst(TString cutname, TString syst, bool pass, float weight);
 #endif
-            void addCutSyst(TString syst, std::vector<TString> pattern);
+            void addCutSyst(TString syst, std::vector<TString> pattern, std::vector<TString> vetopattern=std::vector<TString>());
 #ifdef USE_CUTLAMBDA
             void addWgtSyst(TString syst, std::function<float()>);
 #else

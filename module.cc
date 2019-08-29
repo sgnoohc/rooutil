@@ -24,10 +24,20 @@ void RooUtil::Processor::AddOutputs()
     tx->clear();
 }
 
-void RooUtil::Processor::FillOutputs()
+void RooUtil::Processor::SetOutputs()
 {
     for (auto& module: modules)
         module->FillOutput();
+}
+
+void RooUtil::Processor::FillTree()
+{
     tx->fill();
     tx->clear();
+}
+
+void RooUtil::Processor::FillOutputs()
+{
+    SetOutputs();
+    FillTree();
 }

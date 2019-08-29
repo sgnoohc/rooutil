@@ -137,6 +137,8 @@ namespace RooUtil
         void addCount() { ncounter++; }
         void resetCounter() { ncounter = 0; }
         bool doesBranchExist(TString bname);
+        TString getSkimFileName() { return skimfilename; }
+        TFile* getSkimFile() { return skimfile; }
         private:
         void setFileList();
         void setNEventsToProcess();
@@ -677,7 +679,7 @@ void RooUtil::Looper<TREECLASS>::printProgressBar(bool force)
     if (use_treeclass_progress)
     {
         if (force) return;  // N.B. If i am not using my own scheme i shouldn't force it.
-        treeclass->progress(nEventsProcessed, nEventsToProcess);
+        // treeclass->progress(nEventsProcessed, nEventsToProcess);
         return;
     }
 

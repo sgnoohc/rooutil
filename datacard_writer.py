@@ -312,14 +312,14 @@ class DataCardWriter:
 
     def write(self, output_name=""):
         if output_name:
-            if not os.path.isdir(os.path.dirname(output_name)):
+            if not os.path.isdir(os.path.dirname(output_name)) and len(os.path.dirname(output_name)) != 0:
                 os.makedirs(os.path.dirname(output_name))
             f = open(output_name, "w")
         else:
             f = open(self.datacard_filename, "w")
         f.write(self.get_str())
 
-    def print_yields(self):
+    def print_yields(self, detail=False):
         systs_lines = []
         for syst in self.systs:
             systname = ""
@@ -360,15 +360,53 @@ class DataCardWriter:
                 systvals_in_float.append(systval_in_float)
             systs_data[systname] = systvals_in_float
 
-        rates_errs = []
-        for index, _ in enumerate(self.rates):
-            rate_err = E(self.rates[index], 0)
-            for systname in systs_data:
-                rate_err *= E(1, systs_data[systname][index])
-            rates_errs.append(rate_err)
+        if detail:
 
-        for rate_err in rates_errs:
-            print rate_err
+            rates_errs = {}
+            print_str = "{:<40s}".format("systematics")
+            for procname in self.proc_names:
+                print_str += "& " + "{:<20s}".format(procname)
+            print print_str
+            print_str = ""
+            for systname in systs_data:
+                print_str = "{:<40s}".format(systname)
+                rates_errs[systname] = {}
+                for index, (rate, procname) in enumerate(zip(self.rates, self.proc_names)):
+                    # rates_errs[systname][procname] = E(rate, 0)
+                    rates_errs[systname][procname] = systs_data[systname][index]*100.
+                    print_str += "& " + "{:<20.1f}".format(rates_errs[systname][procname])
+                print print_str
+                print_str = ""
+
+            # rates_errs = []
+            # for index, _ in enumerate(self.rates):
+            #     rate_err = E(self.rates[index], 0)
+            #     for systname in systs_data:
+            #         rate_err *= E(1, systs_data[systname][index])
+            #     rates_errs.append(rate_err)
+
+            # for proc, rate_err in zip(self.proc_names, rates_errs):
+            #     if rate_err.val != 0:
+            #         print proc, rate_err, rate_err.err / rate_err.val
+            #     else:
+            #         print proc, rate_err, 0
+
+        else:
+
+            rates_errs = []
+            for index, _ in enumerate(self.rates):
+                rate_err = E(self.rates[index], 0)
+                for systname in systs_data:
+                    rate_err *= E(1, systs_data[systname][index])
+                rates_errs.append(rate_err)
+
+            for proc, rate_err in zip(self.proc_names, rates_errs):
+                if rate_err.val != 0:
+                    print proc, rate_err, rate_err.err / rate_err.val
+                else:
+                    print proc, rate_err, 0
+
+            return self.proc_names, rates_errs
 
 class DataCardConverter:
 

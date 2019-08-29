@@ -12,12 +12,17 @@
 #include "TVector2.h"
 #include "TMath.h"
 #include "Math/LorentzVector.h"
+#include "Math/GenVector/PtEtaPhiM4D.h"
 #include "Math/VectorUtil.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // LorentzVector typedef that we use very often
 ///////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef LorentzVectorPtEtaPhiM4D
+typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> > LV;
+#else
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LV;
+#endif
 
 namespace RooUtil
 {

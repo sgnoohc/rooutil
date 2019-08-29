@@ -20,10 +20,4 @@ fi
 echo 'Setup following ROOT'
 which root
 
-if [ -z "$1" ]; then
-    :
-else
-    root -l $1
-fi
-
 #eof
