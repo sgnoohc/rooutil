@@ -18,6 +18,7 @@
 #define TREEMAPSTRING std::string
 #define CUTFLOWMAPSTRING TString
 #define DATA c_str
+#define THist TH1F
 
 namespace RooUtil
 {
@@ -56,13 +57,13 @@ namespace RooUtil
         void createCutflowBranches(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx);
         std::tuple<std::vector<bool>, std::vector<float>> getCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
         std::pair<bool, float> passCuts(std::vector<TString> cutlist, RooUtil::TTreeX& tx);
-        void fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
-        void fillRawCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, TH1F* h);
-        std::tuple<std::map<CUTFLOWMAPSTRING, TH1F*>, std::map<CUTFLOWMAPSTRING, TH1F*>> createCutflowHistograms(CutNameListMap& cutlists, TString syst="");
-        std::tuple<std::map<CUTFLOWMAPSTRING, TH1F*>, std::map<CUTFLOWMAPSTRING, TH1F*>> createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, TString syst="");
-        void saveCutflowHistograms(std::map<CUTFLOWMAPSTRING, TH1F*>& cutflows, std::map<CUTFLOWMAPSTRING, TH1F*>& rawcutflows);
-//        void fillCutflowHistograms(CutNameListMap& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
-//        void fillCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx, std::map<TString, TH1F*>& cutflows, std::map<TString, TH1F*>& rawcutflows);
+        void fillCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, THist* h);
+        void fillRawCutflow(std::vector<TString> cutlist, RooUtil::TTreeX& tx, THist* h);
+        std::tuple<std::map<CUTFLOWMAPSTRING, THist*>, std::map<CUTFLOWMAPSTRING, THist*>> createCutflowHistograms(CutNameListMap& cutlists, TString syst="");
+        std::tuple<std::map<CUTFLOWMAPSTRING, THist*>, std::map<CUTFLOWMAPSTRING, THist*>> createCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, TString syst="");
+        void saveCutflowHistograms(std::map<CUTFLOWMAPSTRING, THist*>& cutflows, std::map<CUTFLOWMAPSTRING, THist*>& rawcutflows);
+//        void fillCutflowHistograms(CutNameListMap& cutlists, RooUtil::TTreeX& tx, std::map<TString, THist*>& cutflows, std::map<TString, THist*>& rawcutflows);
+//        void fillCutflowHistograms(std::map<TString, std::vector<TString>>& cutlists, RooUtil::TTreeX& tx, std::map<TString, THist*>& cutflows, std::map<TString, THist*>& rawcutflows);
 
     }
 
@@ -87,12 +88,12 @@ namespace RooUtil
 //            std::vector<TString> hists1d;
 //            std::vector<std::tuple<TString, TString>> hists2d;
 #ifdef USE_CUTLAMBDA
-            std::map<TString, std::vector<std::tuple<TH1F*, std::function<float()>>>> hists1d;
-            std::map<TString, std::vector<std::tuple<TH1F*, std::function<std::vector<float>()>, std::function<std::vector<float>()>>>> hists1dvec;
+            std::map<TString, std::vector<std::tuple<THist*, std::function<float()>>>> hists1d;
+            std::map<TString, std::vector<std::tuple<THist*, std::function<std::vector<float>()>, std::function<std::vector<float>()>>>> hists1dvec;
             std::map<TString, std::vector<std::tuple<TH2F*, std::function<float()>, std::function<float()>>>> hists2d;
             std::map<TString, std::vector<std::tuple<TH2F*, std::function<std::vector<float>()>, std::function<std::vector<float>()>, std::function<std::vector<float>()>>>> hists2dvec;
 #else
-            std::map<TString, std::vector<std::tuple<TH1F*, TString>>> hists1d;
+            std::map<TString, std::vector<std::tuple<THist*, TString>>> hists1d;
             std::map<TString, std::vector<std::tuple<TH2F*, TString, TString>>> hists2d;
 #endif
             std::vector<std::tuple<int, int, unsigned long long>> eventlist;
@@ -200,14 +201,14 @@ namespace RooUtil
                 obj->parent = this->parent;
             }
 #ifdef USE_CUTLAMBDA
-            void addHist1D(TH1F* h, std::function<float()> var, TString syst)
+            void addHist1D(THist* h, std::function<float()> var, TString syst)
             {
                 if (syst.IsNull())
                     hists1d["Nominal"].push_back(std::make_tuple(h, var));
                 else
                     hists1d[syst].push_back(std::make_tuple(h, var));
             }
-            void addHist1DVec(TH1F* h, std::function<std::vector<float>()> var, std::function<std::vector<float>()> wgt, TString syst)
+            void addHist1DVec(THist* h, std::function<std::vector<float>()> var, std::function<std::vector<float>()> wgt, TString syst)
             {
                 if (syst.IsNull())
                     hists1dvec["Nominal"].push_back(std::make_tuple(h, var, wgt));
@@ -229,7 +230,7 @@ namespace RooUtil
                     hists2dvec[syst].push_back(std::make_tuple(h, varx, vary, elemwgt));
             }
 #else
-            void addHist1D(TH1F* h, TString var, TString syst)
+            void addHist1D(THist* h, TString var, TString syst)
             {
                 if (syst.IsNull())
                     hists1d["Nominal"].push_back(std::make_tuple(h, var));
@@ -583,7 +584,7 @@ namespace RooUtil
                     TString systkey = syst.IsNull() ? "Nominal" : syst;
                     for (auto& tuple : hists1d[systkey])
                     {
-                        TH1F* h = std::get<0>(tuple);
+                        THist* h = std::get<0>(tuple);
                         std::function<float()> vardef = std::get<1>(tuple);
                         h->Fill(vardef(), weight * extrawgt);
                     }
@@ -596,7 +597,7 @@ namespace RooUtil
                     }
                     for (auto& tuple : hists1dvec[systkey])
                     {
-                        TH1F* h = std::get<0>(tuple);
+                        THist* h = std::get<0>(tuple);
                         std::function<std::vector<float>()> vardef = std::get<1>(tuple);
                         std::function<std::vector<float>()> wgtdef = std::get<2>(tuple);
                         std::vector<float> varx = vardef();
@@ -652,7 +653,7 @@ namespace RooUtil
                     TString systkey = syst.IsNull() ? "Nominal" : syst;
                     for (auto& tuple : hists1d[systkey])
                     {
-                        TH1F* h = std::get<0>(tuple);
+                        THist* h = std::get<0>(tuple);
                         TString varname = std::get<1>(tuple);
                         h->Fill(tx.getBranch<float>(varname), weight * extrawgt);
                     }

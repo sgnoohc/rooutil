@@ -163,8 +163,8 @@ void RooUtil::Cutflow::bookCutflowHistograms_v2()
     // Nominal
     for (auto& cuttreelist : cuttreelists)
     {
-        TH1F* h     = new TH1F(cuttreelist.first + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
-        TH1F* h_raw = new TH1F(cuttreelist.first + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+        THist* h     = new THist(cuttreelist.first + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+        THist* h_raw = new THist(cuttreelist.first + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
         h    ->Sumw2();
         h_raw->Sumw2();
         h    ->SetDirectory(0);
@@ -185,8 +185,8 @@ void RooUtil::Cutflow::bookCutflowHistograms_v2()
     {
         for (auto& cuttreelist : cuttreelists)
         {
-            TH1F* h     = new TH1F(cuttreelist.first+syst + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
-            TH1F* h_raw = new TH1F(cuttreelist.first+syst + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            THist* h     = new THist(cuttreelist.first+syst + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            THist* h_raw = new THist(cuttreelist.first+syst + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
             h    ->Sumw2();
             h_raw->Sumw2();
             h    ->SetDirectory(0);
@@ -209,8 +209,8 @@ void RooUtil::Cutflow::bookCutflowHistograms_v2()
         TString cutsyst = cutsysts[i];
         for (auto& cuttreelist : cuttreelists)
         {
-            TH1F* h     = new TH1F(cuttreelist.first+cutsyst + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
-            TH1F* h_raw = new TH1F(cuttreelist.first+cutsyst + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            THist* h     = new THist(cuttreelist.first+cutsyst + "_cutflow"   , "", cuttreelist.second.size(), 0, cuttreelist.second.size());
+            THist* h_raw = new THist(cuttreelist.first+cutsyst + "_rawcutflow", "", cuttreelist.second.size(), 0, cuttreelist.second.size());
             h    ->Sumw2();
             h_raw->Sumw2();
             h    ->SetDirectory(0);
@@ -237,8 +237,8 @@ void RooUtil::Cutflow::bookCutflowHistograms_v1()
 
     for (auto& syst : systs)
     {
-        std::map<CUTFLOWMAPSTRING, TH1F*> cutflow_histograms_tmp;
-        std::map<CUTFLOWMAPSTRING, TH1F*> rawcutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, THist*> cutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, THist*> rawcutflow_histograms_tmp;
         std::tie(cutflow_histograms_tmp, rawcutflow_histograms_tmp) = RooUtil::CutflowUtil::createCutflowHistograms(cutlists, syst);
         cutflow_histograms.insert(cutflow_histograms_tmp.begin(), cutflow_histograms_tmp.end());
         rawcutflow_histograms.insert(rawcutflow_histograms_tmp.begin(), rawcutflow_histograms_tmp.end());
@@ -246,8 +246,8 @@ void RooUtil::Cutflow::bookCutflowHistograms_v1()
 
     for (auto& cutsyst : cutsysts)
     {
-        std::map<CUTFLOWMAPSTRING, TH1F*> cutflow_histograms_tmp;
-        std::map<CUTFLOWMAPSTRING, TH1F*> rawcutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, THist*> cutflow_histograms_tmp;
+        std::map<CUTFLOWMAPSTRING, THist*> rawcutflow_histograms_tmp;
         std::tie(cutflow_histograms_tmp, rawcutflow_histograms_tmp) = RooUtil::CutflowUtil::createCutflowHistograms(cutlists, cutsyst);
         cutflow_histograms.insert(cutflow_histograms_tmp.begin(), cutflow_histograms_tmp.end());
         rawcutflow_histograms.insert(rawcutflow_histograms_tmp.begin(), rawcutflow_histograms_tmp.end());
@@ -563,7 +563,7 @@ void RooUtil::Cutflow::fillCutflows(TString syst, bool iswgtsyst)
 #endif
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst)
+void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, THist* h, THist* hraw, float wgtsyst)
 {
     for (unsigned int i = 0; i < cutlist.size(); ++i)
     {
@@ -582,7 +582,7 @@ void RooUtil::Cutflow::fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F*
 }
 
 //_______________________________________________________________________________________________________
-void RooUtil::Cutflow::fillCutflow_v2(std::vector<CutTree*>& cuttreelist, TH1F* h, TH1F* hraw, float wgtsyst)
+void RooUtil::Cutflow::fillCutflow_v2(std::vector<CutTree*>& cuttreelist, THist* h, THist* hraw, float wgtsyst)
 {
     for (unsigned int i = 0; i < cuttreelist.size(); ++i)
     {
@@ -625,7 +625,7 @@ void RooUtil::Cutflow::fillHistograms(TString syst, bool iswgtsyst)
 //            continue;
 //        float& weight = cuttreemap[cutname.Data()]->weight;
 //        float wgtsyst = (!syst.IsNull() and iswgtsyst)? tx->getBranch<float>(syst) : 1.;
-//        TH1F* h = booked_histograms[key1d];
+//        THist* h = booked_histograms[key1d];
 //        h->Fill(tx->getBranch<float>(varname), weight * wgtsyst);
 //    }
 //
@@ -649,7 +649,7 @@ void RooUtil::Cutflow::fillHistograms(TString syst, bool iswgtsyst)
 //        TString cutname = std::get<0>(pair.first);
 //        TString sysname = std::get<1>(pair.first);
 //        TString varname = std::get<2>(pair.first);
-//        TH1F* h = pair.second;
+//        THist* h = pair.second;
 //        bool& passed = cuttreemap[cutname.DATA()]->pass;
 //        float& weight = cuttreemap[cutname.DATA()]->weight;
 //        float wgtsyst = sysname.IsNull() ? 1. : tx->getBranch<float>(sysname);
@@ -704,7 +704,7 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
     TString histname = cut + syst + "__" + varname;
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
-        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", nbin, min, max);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", nbin, min, max);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
         if (syst.IsNull())
@@ -727,7 +727,7 @@ void RooUtil::Cutflow::bookVecHistogram(TString cut, std::pair<TString, std::tup
     TString histname = cut + syst + "__" + varname;
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
-        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", nbin, min, max);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", nbin, min, max);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
         if (syst.IsNull())
@@ -750,7 +750,7 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
         Float_t bounds[boundaries.size()];
         for (unsigned int i = 0; i < boundaries.size(); ++i)
             bounds[i] = boundaries[i];
-        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", boundaries.size()-1, bounds);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
         if (syst.IsNull())
@@ -774,7 +774,7 @@ void RooUtil::Cutflow::bookVecHistogram(TString cut, std::pair<TString, std::tup
         Float_t bounds[boundaries.size()];
         for (unsigned int i = 0; i < boundaries.size(); ++i)
             bounds[i] = boundaries[i];
-        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", boundaries.size()-1, bounds);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
         if (syst.IsNull())
@@ -878,7 +878,7 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
     TString histname = cut + syst + "__" + varname;
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
-        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", nbin, min, max);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", nbin, min, max);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
         if (syst.IsNull())
@@ -904,7 +904,7 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::vector
         Float_t bounds[boundaries.size()];
         for (unsigned int i = 0; i < boundaries.size(); ++i)
             bounds[i] = boundaries[i];
-        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new TH1F(histname, "", boundaries.size()-1, bounds);
+        booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", boundaries.size()-1, bounds);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->SetDirectory(0);
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())]->Sumw2();
         if (syst.IsNull())
