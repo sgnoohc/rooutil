@@ -539,7 +539,7 @@ def fom_SoverB(s, serr, b, berr, totals, totalb):
 #______________________________________________________________________________________________________________________
 # S / sqrt(B) fom
 def fom_SoverSqrtB(s, serr, b, berr, totals, totalb):
-    if b > 0:
+    if b > 0 and s > 0:
         # return s / math.sqrt(b), 0
         return math.sqrt(2 * ((s + b) * math.log(1 + s / b) - s)), 0
     else:
