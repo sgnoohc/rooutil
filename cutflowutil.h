@@ -18,7 +18,7 @@
 #define TREEMAPSTRING std::string
 #define CUTFLOWMAPSTRING TString
 #define DATA c_str
-#define THist TH1F
+#define THist TH1D
 
 namespace RooUtil
 {

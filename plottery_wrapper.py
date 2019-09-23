@@ -1115,6 +1115,15 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                 hbkg.Smooth()
         del options["do_smooth"]
 
+    if "print_mean" in options:
+        if options["print_mean"]:
+            mean = totalbkg.GetMean()
+            try:
+                options["extra_text"].append("mean={:.2f}".format(mean))
+            except:
+                options["extra_text"] = ["mean={:.2f}".format(mean)]
+        del options["print_mean"]
+
     # If syst is not provided, compute one yourself from the bkg histograms
     if not syst:
         syst = get_total_err_hist(bgs)
