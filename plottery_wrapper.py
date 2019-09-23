@@ -1099,6 +1099,22 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                 options["legend_datalabel"] = "Sig+Bkg"
         del options["inject_signal"]
 
+    # do KS test and add it to extra_text
+    if "do_ks_test" in options:
+        if options["do_ks_test"]:
+            ksval = totalbkg.KolmogorovTest(data)
+            options["extra_text"] = ["KS={:.2f}".format(ksval)]
+        del options["do_ks_test"]
+
+    # do smoothing
+    if "do_smooth" in options:
+        if options["do_smooth"]:
+            for hsig in sigs:
+                hsig.Smooth()
+            for hbkg in bgs:
+                hbkg.Smooth()
+        del options["do_smooth"]
+
     # If syst is not provided, compute one yourself from the bkg histograms
     if not syst:
         syst = get_total_err_hist(bgs)
@@ -1181,6 +1197,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if not "yaxis_exponent_vertical_offset" in options: options["yaxis_exponent_vertical_offset"] = 0.02
     if not "yaxis_ndivisions"               in options: options["yaxis_ndivisions"]               = 508
     if not "xaxis_ndivisions"               in options: options["xaxis_ndivisions"]               = 508
+    if not "ratio_ndivisions"               in options: options["ratio_ndivisions"]               = 508
     if not "max_digits"                     in options: options["max_digits"]                     = 4
     if not "xaxis_label"                    in options: options["xaxis_label"]                    = xaxis_label
     if not "ratio_xaxis_title"              in options: options["ratio_xaxis_title"]              = xaxis_label
@@ -1477,7 +1494,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale="", extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False):
 
     # color_pallete
     colors_ = default_colors
@@ -1609,7 +1626,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         # But check if bkgs is at least 1
                         if len(bkgs) == 0:
                             bkgs = [ sigs.pop(0) ]
-                        options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale}
+                        options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale, "do_ks_test":doKStest}
                         options.update(extraoptions)
                         _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
                 if hists[0].GetDimension() == 2:
