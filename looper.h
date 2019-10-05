@@ -246,6 +246,38 @@ RooUtil::Looper<TREECLASS>::Looper( TChain* c, TREECLASS* t, int nevtToProc ) :
 template <class TREECLASS>
 void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
 {
+    listOfFiles = 0;
+    if (fileIter) delete fileIter;
+    fileIter = 0;
+    tfile = 0;
+    ttree = 0;
+    ps = 0;
+    nEventsTotalInChain = 0;
+    nEventsTotalInTree = 0;
+    nEventsToProcess = nevtToProc;
+    nEventsProcessed = 0;
+    indexOfEventInTTree = 0;
+    fastmode = true;
+    treeclass = 0;
+    bar_id = 0;
+    print_rate = 432;
+    doskim = false;
+    skimfilename = "";
+    skimfile = 0;
+    skimtree = 0;
+    nEventsSkimmed = 0;
+    silent = false;
+    isinit = false;
+    use_treeclass_progress = false;
+//    use_tqdm_progress_bar( isatty(1) ),
+    nskipped_batch = 0;
+    nskipped = 0;
+    nbatch_skip_threshold = 500;
+    nbatch_to_skip = 5000;
+    nskipped_threshold = 100000;
+    ncounter = 0;
+    teventlist = 0;
+
     if ( isinit )
         error( "The Looper is already initialized! Are you calling Looper::init(TChain* c, TREECLASS* t, int nevtToProcess) for the second time?", __FUNCTION__ );
 
