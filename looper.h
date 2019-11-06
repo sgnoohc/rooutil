@@ -297,6 +297,13 @@ void RooUtil::Looper<TREECLASS>::init(TChain* c, TREECLASS* t, int nevtToProc)
         fastmode = true;
 
     c->GetEntry( 0 );
+
+    // Check tree exists
+    if ( not c->GetTree() )
+    {
+        throw std::ios_base::failure("Failed to get TTree from input ntuple");
+    }
+
     t->Init( c->GetTree() );
 
     bmark->Start("benchmark");
