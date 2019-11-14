@@ -368,7 +368,7 @@ class DataCardWriter:
                 print_str += "& " + "{:<20s}".format(procname)
             print print_str
             print_str = ""
-            for systname in systs_data:
+            for systname in sorted(systs_data.keys()):
                 print_str = "{:<40s}".format(systname)
                 rates_errs[systname] = {}
                 for index, (rate, procname) in enumerate(zip(self.rates, self.proc_names)):
