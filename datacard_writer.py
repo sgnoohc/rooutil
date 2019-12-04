@@ -374,7 +374,10 @@ class DataCardWriter:
                 for index, (rate, procname) in enumerate(zip(self.rates, self.proc_names)):
                     # rates_errs[systname][procname] = E(rate, 0)
                     rates_errs[systname][procname] = systs_data[systname][index]*100.
-                    print_str += "& " + "{:<20.1f}".format(rates_errs[systname][procname])
+                    if rates_errs[systname][procname] == 0:
+                        print_str += "& " + "{:<20s}".format("-")
+                    else:
+                        print_str += "& " + "{:<20.1f}".format(rates_errs[systname][procname])
                 print print_str
                 print_str = ""
 
