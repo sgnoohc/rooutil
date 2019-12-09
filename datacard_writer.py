@@ -226,6 +226,7 @@ class DataCardWriter:
                     if len(systval) != 0:
                         if isinstance(systval[0], str):
                             """ Case 6"""
+                            # print systname, systtype, index, proc, "Case 6"
                             rtn += "{:17s}".format(systval[self.bin_number-1]) # Becuase bin_number follows American floor system and not European
                         else:
                             print systdict
@@ -235,6 +236,7 @@ class DataCardWriter:
                         raise ValueError("A systematic variation provided is not up/down variation. i.e. len(systval) == 0")
                 if isinstance(systval[0], float):
                     """ Case 3"""
+                    # print systname, systtype, index, proc, "Case 3"
                     dn = systval[0]/self.rates[index]
                     up = systval[1]/self.rates[index]
                     if dn <= 0: dn = 0.0001
@@ -242,6 +244,7 @@ class DataCardWriter:
                     rtn += "{:.4f}/{:.4f}    ".format(dn, up)
                 elif isinstance(systval[0], r.TH1):
                     """ Case 1"""
+                    # print systname, systtype, index, proc, "Case 1"
                     if self.rates[index] == 0:
                         rtn += "{:.4f}/{:.4f}    ".format(1,1)
                     else:
@@ -250,23 +253,38 @@ class DataCardWriter:
                         if dn <= 0: dn = 0.0001
                         if up <= 0: up = 0.0001
                         rtn += "{:.4f}/{:.4f}    ".format(dn, up)
+                else:
+                    """ Check whether it is a direct [str, ... ] case."""
+                    if len(systval) != 0:
+                        if isinstance(systval[0], str):
+                            """ Case 6"""
+                            # print systname, systtype, index, proc, "Case 6"
+                            rtn += "{:17s}".format(systval[self.bin_number-1]) # Becuase bin_number follows American floor system and not European
+                        else:
+                            print systdict
+                            raise ValueError("A systematic variation provided is not up/down variation. i.e. len(systval) != 2")
             elif isinstance(systval, float):
                 """ Case 4"""
+                # print systname, systtype, index, proc, "Case 4"
                 rtn += "{:<17.4f}".format(systval/self.rates[index])
             elif isinstance(systval, r.TH1):
                 # gmN should always be with r.TH1
                 if isgmNerr:
                     if systval.GetBinContent(self.bin_number) == 0:
                         """ Case 7"""
+                        # print systname, systtype, index, proc, "Case 7"
                         rtn += "{:17s}".format("-")
                     else:
                         """ Case 2 with a twist of alpha factor"""
+                        # print systname, systtype, index, proc, "Case 2a"
                         rtn += "{:<17.4f}".format(systval.GetBinContent(self.bin_number))
                 else:
                     """ Case 2"""
+                    # print systname, systtype, index, proc, "Case 2b"
                     rtn += "{:<17.4f}".format(systval.GetBinContent(self.bin_number)/self.rates[index])
             elif isinstance(systval, str):
                 """ Case 5"""
+                # print systname, systtype, index, proc, "Case 5"
                 rtn += "{:17s}".format(systval)
             else:
                 print proc, systval, systdict
