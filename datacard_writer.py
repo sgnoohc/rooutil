@@ -292,7 +292,6 @@ class DataCardWriter:
             else:
                 print proc, systval, systdict
                 raise ValueError("Hm? I don't know how to process this")
-            print rtn
 
         if debugmode: print rtn
         return rtn
