@@ -330,7 +330,7 @@ class DataCardWriter:
 
     def write(self, output_name=""):
         if output_name:
-            if not os.path.isdir(os.path.dirname(output_name)):
+            if not os.path.isdir(os.path.dirname(output_name)) and len(os.path.dirname(output_name)) != 0:
                 os.makedirs(os.path.dirname(output_name))
             f = open(output_name, "w")
         else:
@@ -386,13 +386,16 @@ class DataCardWriter:
                 print_str += "& " + "{:<20s}".format(procname)
             print print_str
             print_str = ""
-            for systname in systs_data:
+            for systname in sorted(systs_data.keys()):
                 print_str = "{:<40s}".format(systname)
                 rates_errs[systname] = {}
                 for index, (rate, procname) in enumerate(zip(self.rates, self.proc_names)):
                     # rates_errs[systname][procname] = E(rate, 0)
                     rates_errs[systname][procname] = systs_data[systname][index]*100.
-                    print_str += "& " + "{:<20.1f}".format(rates_errs[systname][procname])
+                    if rates_errs[systname][procname] == 0:
+                        print_str += "& " + "{:<20s}".format("-")
+                    else:
+                        print_str += "& " + "{:<20.1f}".format(rates_errs[systname][procname])
                 print print_str
                 print_str = ""
 

@@ -57,14 +57,14 @@ namespace RooUtil
             CutTree cuttree;
             CutTree* last_active_cut; // when getCut is called this is set
             std::map<TREEMAPSTRING, CutTree*> cuttreemap;
-            std::map<CUTFLOWMAPSTRING, TH1F*> cutflow_histograms;
-            std::map<CUTFLOWMAPSTRING, TH1F*> rawcutflow_histograms;
-            std::map<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>, TH1F*> booked_histograms; // key is <cutname, syst, varname>
+            std::map<CUTFLOWMAPSTRING, THist*> cutflow_histograms;
+            std::map<CUTFLOWMAPSTRING, THist*> rawcutflow_histograms;
+            std::map<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>, THist*> booked_histograms; // key is <cutname, syst, varname>
             std::map<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>, TH2F*> booked_2dhistograms; // key is <cutname, syst, varname, varnamey>
             std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_histograms_nominal_keys; // key is <cutname, syst="", varname>
             std::vector<std::tuple<TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING, TREEMAPSTRING>> booked_2dhistograms_nominal_keys; // key is <cutname, syst="", varname, varnamey>
-            std::vector<std::tuple<TH1F*, std::vector<int*>, std::vector<float*>, std::function<float()>>> cutflow_histograms_v2;
-            std::vector<std::tuple<TH1F*, std::vector<int*>>> rawcutflow_histograms_v2;
+            std::vector<std::tuple<THist*, std::vector<int*>, std::vector<float*>, std::function<float()>>> cutflow_histograms_v2;
+            std::vector<std::tuple<THist*, std::vector<int*>>> rawcutflow_histograms_v2;
             std::vector<TString> cutflow_nofill_cut_list;
             TFile* ofile;
             TTree* t;
@@ -96,7 +96,7 @@ namespace RooUtil
             void printCuts();
             CutTree& getCut(TString n);
             void removeCut(TString n);
-            void filterCuts(TString n);
+            // void filterCuts(TString n);
             void filterCuts(std::vector<TString> ns);
             void setCutLists(std::vector<TString> regions);
             void addCutToSkipCutflowList(TString n);
@@ -119,7 +119,7 @@ namespace RooUtil
             void setCut(TString cutname, bool pass, float weight);
             void setCutSyst(TString cutname, TString syst, bool pass, float weight);
 #endif
-            void addCutSyst(TString syst, std::vector<TString> pattern);
+            void addCutSyst(TString syst, std::vector<TString> pattern, std::vector<TString> vetopattern=std::vector<TString>());
 #ifdef USE_CUTLAMBDA
             void addWgtSyst(TString syst, std::function<float()>);
 #else
@@ -132,9 +132,9 @@ namespace RooUtil
             void bookEventLists();
             void fill();
             void fillCutflows(TString syst="", bool iswgtsyst=true);
-            void fillCutflow(std::vector<TString>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
+            void fillCutflow(std::vector<TString>& cutlist, THist* h, THist* hraw, float wgtsyst=1);
             void fillCutflows_v1(TString syst="", bool iswgtsyst=true);
-            void fillCutflow_v2(std::vector<CutTree*>& cutlist, TH1F* h, TH1F* hraw, float wgtsyst=1);
+            void fillCutflow_v2(std::vector<CutTree*>& cutlist, THist* h, THist* hraw, float wgtsyst=1);
             void fillCutflows_v2(TString syst="", bool iswgtsyst=true);
             void fillHistograms(TString syst="", bool iswgtsyst=true);
 #ifdef USE_CUTLAMBDA

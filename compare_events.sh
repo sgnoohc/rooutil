@@ -154,6 +154,35 @@ void CompareTwoEventListFiles(string fname1, string fname2, bool forcopypaste=fa
     cout << \"Out of these there are \" << only2.size() << \" events only in file2 \" << fname2 << endl;
     cout << \"Check \" << f1.size() << \"+\" << f2.size() << \"=\" << f1.size()+f2.size() << \" should be equal to \" << \"2*\" << same.size() << \"+\" << only1.size() << \"+\" << only2.size() << \"=\" << (2*same.size())+only1.size()+only2.size() << endl;
 
+    if(only1.size()+same.size()!=f1.size()){
+        for(unsigned int i = 0; i<f1.size();++i){
+            int jind = -1;
+            for(unsigned int j = i+1; j<f1.size();++j){
+                if(f1[i].Run!=f1[j].Run) continue;
+                if(f1[i].LS !=f1[j].LS ) continue;
+                if(f1[i].Evt!=f1[j].Evt) continue;
+                jind = j; break;
+            }
+            if(jind!=-1){
+                cout << \"Warning, file1 (\" << fname1 << \") has following event duplicated (check your eventlist creation): \" << f1[jind].Run << \":\" << f1[jind].LS << \":\" << f1[jind].Evt << endl;
+            }
+        }
+    }
+    if(only2.size()+same.size()!=f2.size()){
+        for(unsigned int i = 0; i<f2.size();++i){
+            int jind = -1;
+            for(unsigned int j = i+1; j<f2.size();++j){
+                if(f2[i].Run!=f2[j].Run) continue;
+                if(f2[i].LS !=f2[j].LS ) continue;
+                if(f2[i].Evt!=f2[j].Evt) continue;
+                jind = j; break;
+            }
+            if(jind!=-1){
+                cout << \"Warning, file2 (\" << fname2 << \") has following event duplicated (check your eventlist creation): \" << f2[jind].Run << \":\" << f2[jind].LS << \":\" << f2[jind].Evt << endl;
+            }
+        }
+    }
+
 }
 """ > /tmp/CompareTwoEventListFiles.C
 
