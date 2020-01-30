@@ -152,7 +152,7 @@ class DataCardWriter:
         rtn  = "bin                                     {}\n".format("{:17s}".format(self.region_name) * len(self.hists))
         rtn += "process                                 {}\n".format("".join(["{:<17d}".format(i) for i in xrange(len(self.hists))]))
         rtn += "process                                 {}\n".format("".join(["{:17s}".format(i) for i in self.proc_names]))
-        rtn += "rate                                    {}\n".format("".join([("{:<17.3f}".format(i) if i != 0 else "{:<17s}".format("1e-6")) for i in self.rates]))
+        rtn += "rate                                    {}\n".format("".join([("{:<17.3f}".format(i) if i > 0 else "{:<17s}".format("1e-6")) for i in self.rates]))
         rtn += "{}\n".format(self.get_delimiter())
         return rtn
 
