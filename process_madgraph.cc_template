@@ -18,6 +18,12 @@ public:
     // Number of events to loop over
     int n_events;
 
+    // Multiplicity object
+    unsigned int multiplicity;
+
+    // Pairs
+    std::vector<std::pair<unsigned int, unsigned int>> pairs;
+
     // Jobs to split (if this number is positive, then we will skip certain number of events)
     // If there are N events, and was asked to split 2 ways, then depending on job_index, it will run over first half or latter half
     int nsplit_jobs;
@@ -65,6 +71,8 @@ int main(int argc, char** argv)
         ("t,tree"        , "Name of the tree in the root file to open and loop over"                                             , cxxopts::value<std::string>())
         ("o,output"      , "Output file name"                                                                                    , cxxopts::value<std::string>())
         ("n,nevents"     , "N events to loop over"                                                                               , cxxopts::value<int>()->default_value("-1"))
+        ("m,multiplicity", "Book histogram up to considering multiplicity up to m"                                               , cxxopts::value<int>()->default_value("6"))
+        ("p,pairs"       , "Book pair object histograms (e.g. 0:1,0:2,1:3)"                                                      , cxxopts::value<std::string>())
         ("j,nsplit_jobs" , "Enable splitting jobs by N blocks (--job_index must be set)"                                         , cxxopts::value<int>())
         ("I,job_index"   , "job_index of split jobs (--nsplit_jobs must be set. index starts from 0. i.e. 0, 1, 2, 3, etc...)"   , cxxopts::value<int>())
         ("d,debug"       , "Run debug job. i.e. overrides output option to 'debug.root' and 'recreate's the file.")
@@ -144,6 +152,10 @@ int main(int argc, char** argv)
     ana.n_events = result["nevents"].as<int>();
 
     //_______________________________________________________________________________
+    // --multiplicity
+    ana.multiplicity = result["multiplicity"].as<int>();
+
+    //_______________________________________________________________________________
     // --nsplit_jobs
     if (result.count("nsplit_jobs"))
     {
@@ -177,6 +189,19 @@ int main(int argc, char** argv)
     else
     {
         ana.job_index = -1;
+    }
+
+    //_______________________________________________________________________________
+    // Parse pairs
+    if (result.count("pairs"))
+    {
+        TString pairs_string = result["pairs"].as<std::string>();
+        for (auto& pair_string : RooUtil::StringUtil::split(pairs_string, ","))
+        {
+            unsigned int i = atoi(RooUtil::StringUtil::split(pair_string, ":")[0].Data());
+            unsigned int j = atof(RooUtil::StringUtil::split(pair_string, ":")[1].Data());
+            ana.pairs.push_back(std::make_pair(i, j));
+        }
     }
 
 
@@ -373,109 +398,129 @@ int main(int argc, char** argv)
     // Print cut structure
     ana.cutflow.printCuts();
 
+    // From the .lhe file (which it assumes that the .lhe file is named the same as the input root file with the extension being only difference) we parse the cross section info
+    float nevents = 1;
+    float xsec = 1;
+    TString filename = ana.input_file_list_tstring;
+    TString lhefile = filename.ReplaceAll(".root", ".lhe");
+    std::cout <<  " lhefile: " << lhefile <<  std::endl;
+    std::string line;
+    std::ifstream myfile(lhefile.Data());
+    if (myfile.is_open())
+    {
+        while (getline(myfile, line))
+        {
+            TString ltstring = line.c_str();
+            // #  Number of Events        :       10000
+            // #  Integrated weight (pb)  :       0.00013113605389
+            if (ltstring.Contains("Number of Events"))
+            {
+                nevents = atof(RooUtil::StringUtil::split(ltstring)[5].Data());
+            }
+            if (ltstring.Contains("Integrated weight (pb)"))
+            {
+                xsec = atof(RooUtil::StringUtil::split(ltstring)[5].Data());
+            }
+        }
+        myfile.close();
+    }
+
+    std::cout <<  " nevents: " << nevents <<  std::endl;
+    std::cout <<  " xsec: " << xsec <<  std::endl;
+
     ana.cutflow.addCut("Wgt", [&]()
             {
-                if (ana.looper.getCurrentFileName().Contains("on_shell"))
-                {
-                    TLorentzVector lep;
-                    lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                    if (lep.Pt() > 10. and abs(lep.Eta()) < 2.5)
-                        return true;
-                    else
-                        return false;
-                }
-                else
-                {
-                    return true;
-                }
+                // FOR EXAMPLE IN CASE WE NEED TO CUT
+                return (lhe.P4()[0] + lhe.P4()[1]).mass() > 500.;
             }, [&]()
             {
-                if (ana.looper.getCurrentFileName().Contains("off_shell.root"))
-                    return 0.0096318683101;
-                if (ana.looper.getCurrentFileName().Contains("off_shell_bw100.root"))
-                    return 0.009672;
-                if (ana.looper.getCurrentFileName().Contains("off_shell_bw50000.root"))
-                    return 0.009581;
-                if (ana.looper.getCurrentFileName().Contains("off_shell_nopole.root"))
-                    return 0.0030442641601;
-                if (ana.looper.getCurrentFileName().Contains("off_shell_large.root"))
-                    return 0.0096364922526/10.;
-                if (ana.looper.getCurrentFileName().Contains("on_shell.root"))
-                    return 0.0079582925;
-                if (ana.looper.getCurrentFileName().Contains("on_shell_bw100_large.root"))
-                    return 0.012609062057/10.;
-                if (ana.looper.getCurrentFileName().Contains("on_shell_bw100.root"))
-                    return 0.01262151787;
+                return xsec / nevents * 1000. * 0.2172 * 0.2172 * 0.57 * 137; // To set it to fb unit
             }
             );
-    ana.cutflow.addCutToLastActiveCut("OffShell", [&](){
-                TLorentzVector lep;
-                TLorentzVector neu;
-                lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                neu.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
-                return (lep + neu).M() > 110.;
-            }, UNITY);
+    // For example if we need to cut
+    // ana.cutflow.addCutToLastActiveCut("OffShell", [&](){
+    //             TLorentzVector lep;
+    //             TLorentzVector neu;
+    //             lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
+    //             neu.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
+    //             return (lep + neu).M() > 110.;
+    //         }, UNITY);
 
     // Histogram utility object that is used to define the histograms
-    ana.histograms.addHistogram("Mlv", 180, 0, 150, [&]()
-            {
-                TLorentzVector lep;
-                TLorentzVector neu;
-                lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                neu.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
-                return (lep + neu).M();
-            } );
+    for (unsigned int i = 0; i < ana.multiplicity; i++)
+    {
+        ana.histograms.addHistogram(TString::Format("Eta%d"    , i) , 180 , -6   , 6    , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].eta(); } );
+        ana.histograms.addHistogram(TString::Format("M%d_v1"   , i) , 180 , -50  , 150  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d_v1"  , i) , 180 , -50  , 150  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("E%d_v1"   , i) , 180 , -50  , 150  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d_v2"   , i) , 180 , -50  , 350  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d_v2"  , i) , 180 , -50  , 350  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("E%d_v2"   , i) , 180 , -50  , 350  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d_v3"   , i) , 180 , -50  , 500  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d_v3"  , i) , 180 , -50  , 500  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("E%d_v3"   , i) , 180 , -50  , 500  , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d_v4"   , i) , 180 , -50  , 1000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d_v4"  , i) , 180 , -50  , 1000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("E%d_v4"   , i) , 180 , -50  , 1000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d_v5"   , i) , 180 , -50  , 2000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d_v5"  , i) , 180 , -50  , 2000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("E%d_v5"   , i) , 180 , -50  , 2000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d_v6"   , i) , 180 , -50  , 5000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d_v6"  , i) , 180 , -50  , 5000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("E%d_v6"   , i) , 180 , -50  , 5000 , [& , i]() { if (lhe.P4().size() <= i) return -999.0f; return lhe.P4()[i].energy();   } );
+    }
 
-    // Histogram utility object that is used to define the histograms
-    ana.histograms.addHistogram("MlvLarge", 180, 0, 350, [&]()
-            {
-                TLorentzVector lep;
-                TLorentzVector neu;
-                lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                neu.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
-                return (lep + neu).M();
-            } );
-
-    // Histogram utility object that is used to define the histograms
-    ana.histograms.addHistogram("lepPt0", 180, 0, 150, [&]()
-            {
-                TLorentzVector lep;
-                lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                return lep.Pt();
-            } );
-
-    // Histogram utility object that is used to define the histograms
-    ana.histograms.addHistogram("lepPt1", 180, 0, 150, [&]()
-            {
-                TLorentzVector lep;
-                lep.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
-                return lep.Pt();
-            } );
-
-    // Histogram utility object that is used to define the histograms
-    ana.histograms.addHistogram("lepEta0", 180, -3, 3, [&]()
-            {
-                TLorentzVector lep;
-                lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                return lep.Eta();
-            } );
-
-    // Histogram utility object that is used to define the histograms
-    ana.histograms.addHistogram("lepEta1", 180, -3, 3, [&]()
-            {
-                TLorentzVector lep;
-                lep.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
-                return lep.Eta();
-            } );
-
-    ana.histograms.addHistogram("MTlv", 180, 0, 250, [&]()
-            {
-                TLorentzVector lep;
-                TLorentzVector neu;
-                lep.SetPxPyPzE(lhe.P_X().at(2), lhe.P_Y().at(2), lhe.P_Z().at(2), lhe.E().at(2));
-                neu.SetPxPyPzE(lhe.P_X().at(3), lhe.P_Y().at(3), lhe.P_Z().at(3), lhe.E().at(3));
-                return (lep + neu).Mt();
-            } );
+    for (auto& pair : ana.pairs)
+    {
+        unsigned int i = pair.first;
+        unsigned int j = pair.second;
+        ana.histograms.addHistogram(TString::Format("Eta%d%d"           , i , j) , 180 , -6   , 6    , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).eta(); } );
+        ana.histograms.addHistogram(TString::Format("DeltaEta%d%d"      , i , j) , 180 , 0    , 10   , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return abs(RooUtil::Calc::DeltaEta(lhe.P4()[i], lhe.P4()[j])); } );
+        ana.histograms.addHistogram(TString::Format("EtaLead%d%d"       , i , j) , 180 , -6   , 6    , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].eta() : lhe.P4()[j].eta();  } );
+        ana.histograms.addHistogram(TString::Format("EtaSubLead%d%d"    , i , j) , 180 , -6   , 6    , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].eta() : lhe.P4()[i].eta();  } );
+        ana.histograms.addHistogram(TString::Format("M%d%d_v1"          , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d%d_v1"         , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtLead%d%d_v1"     , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].pt() : lhe.P4()[j].pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtSubLead%d%d_v1"  , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].pt() : lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("ELead%d%d_v1"      , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].energy() : lhe.P4()[j].energy();  } );
+        ana.histograms.addHistogram(TString::Format("ESubLead%d%d_v1"   , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].energy() : lhe.P4()[i].energy();  } );
+        ana.histograms.addHistogram(TString::Format("E%d%d_v1"          , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d%d_v2"          , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d%d_v2"         , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtLead%d%d_v2"     , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].pt() : lhe.P4()[j].pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtSubLead%d%d_v2"  , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].pt() : lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("ELead%d%d_v2"      , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].energy() : lhe.P4()[j].energy();  } );
+        ana.histograms.addHistogram(TString::Format("ESubLead%d%d_v2"   , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].energy() : lhe.P4()[i].energy();  } );
+        ana.histograms.addHistogram(TString::Format("E%d%d_v2"          , i , j) , 180 , -50  , 350  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d%d_v3"          , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d%d_v3"         , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtLead%d%d_v3"     , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].pt() : lhe.P4()[j].pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtSubLead%d%d_v3"  , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].pt() : lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("ELead%d%d_v3"      , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].energy() : lhe.P4()[j].energy();  } );
+        ana.histograms.addHistogram(TString::Format("ESubLead%d%d_v3"   , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].energy() : lhe.P4()[i].energy();  } );
+        ana.histograms.addHistogram(TString::Format("E%d%d_v3"          , i , j) , 180 , -50  , 500  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d%d_v4"          , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d%d_v4"         , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtLead%d%d_v4"     , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].pt() : lhe.P4()[j].pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtSubLead%d%d_v4"  , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].pt() : lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("ELead%d%d_v4"      , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].energy() : lhe.P4()[j].energy();  } );
+        ana.histograms.addHistogram(TString::Format("ESubLead%d%d_v4"   , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].energy() : lhe.P4()[i].energy();  } );
+        ana.histograms.addHistogram(TString::Format("E%d%d_v4"          , i , j) , 180 , -50  , 1000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d%d_v5"          , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d%d_v5"         , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtLead%d%d_v5"     , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].pt() : lhe.P4()[j].pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtSubLead%d%d_v5"  , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].pt() : lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("ELead%d%d_v5"      , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].energy() : lhe.P4()[j].energy();  } );
+        ana.histograms.addHistogram(TString::Format("ESubLead%d%d_v5"   , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].energy() : lhe.P4()[i].energy();  } );
+        ana.histograms.addHistogram(TString::Format("E%d%d_v5"          , i , j) , 180 , -50  , 2000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).energy();   } );
+        ana.histograms.addHistogram(TString::Format("M%d%d_v6"          , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );
+        ana.histograms.addHistogram(TString::Format("Pt%d%d_v6"         , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtLead%d%d_v6"     , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].pt() : lhe.P4()[j].pt();  } );
+        ana.histograms.addHistogram(TString::Format("PtSubLead%d%d_v6"  , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].pt() : lhe.P4()[i].pt();  } );
+        ana.histograms.addHistogram(TString::Format("ELead%d%d_v6"      , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].energy() : lhe.P4()[j].energy();  } );
+        ana.histograms.addHistogram(TString::Format("ESubLead%d%d_v6"   , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].energy() : lhe.P4()[i].energy();  } );
+        ana.histograms.addHistogram(TString::Format("E%d%d_v6"          , i , j) , 180 , -50  , 5000 , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).energy();   } );
+    }
 
     // Book cutflows
     ana.cutflow.bookCutflows();

@@ -12,6 +12,7 @@
 import os, sys
 import ROOT as r
 from ROOT import TTree, TFile, AddressOf, gROOT
+from ROOT import Math
 
 # Get the input lhe file
 if len(sys.argv) < 2:
@@ -43,6 +44,7 @@ P_Y_v =r.vector('Double_t')()
 P_Z_v =r.vector('Double_t')()
 E_v =r.vector('Double_t')()
 M_v =r.vector('Double_t')()
+P4_v=r.vector('ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float>>')()
 
 # Create a struct which acts as the TBranch for non-vectors
 gROOT.ProcessLine( "struct MyStruct{ Int_t n_particles; };")
@@ -57,6 +59,7 @@ output_tree.Branch("P_Y",P_Y_v)
 output_tree.Branch("P_Z",P_Z_v)
 output_tree.Branch("E",E_v)
 output_tree.Branch("M",M_v)
+output_tree.Branch("P4",P4_v)
 
 in_ev = 0 # To know when to look for particles we must know when we are inside an event
 in_ev_1 = 0 # The first line after <event> is information so we must skip that as well
@@ -89,6 +92,7 @@ for line in input_file:
         P_Z_v.clear()
         E_v.clear()
         M_v.clear()
+        P4_v.clear()
         in_ev = 0
         continue
     
@@ -104,6 +108,8 @@ for line in input_file:
                 P_Z_v.push_back( float(line.split()[8]) )
                 E_v.push_back( float(line.split()[9]) )
                 M_v.push_back( float(line.split()[10]) )
+                VecLep = Math.LorentzVector('ROOT::Math::PxPyPzE4D<float>')(float(line.split()[6]), float(line.split()[7]), float(line.split()[8]), float(line.split()[9]))
+                P4_v.push_back( VecLep )
                 pass
             pass
         except:
