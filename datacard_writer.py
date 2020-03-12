@@ -431,7 +431,7 @@ class DataCardWriter:
                 else:
                     print proc, rate_err, 0
 
-            return self.proc_names, rates_errs
+            return self.proc_names, rates_errs, self.data.GetBinContent(self.bin_number)
 
 class DataCardConverter:
 

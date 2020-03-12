@@ -82,6 +82,42 @@ mycolors.append(r.TColor(2010 , 120 / 255. , 160 / 255. , 0   / 255.)) #light gr
 mycolors.append(r.TColor(2011 , 0   / 255. , 158 / 255. , 115 / 255.)) #green
 mycolors.append(r.TColor(2012 , 204 / 255. , 121 / 255. , 167 / 255.)) #pink?
 
+mycolors.append(r.TColor(4001 , 49  / 255. , 76  / 255. , 26  / 255. ))
+mycolors.append(r.TColor(4002 , 33  / 255. , 164 / 255. , 105  / 255. ))
+mycolors.append(r.TColor(4003 , 176 / 255. , 224 / 255. , 160 / 255. ))
+mycolors.append(r.TColor(4004 , 210 / 255. , 245 / 255. , 200 / 255. ))
+mycolors.append(r.TColor(4005 , 232 / 255. , 249 / 255. , 223 / 255. ))
+mycolors.append(r.TColor(4006 , 253 / 255. , 156 / 255. , 207 / 255. ))
+mycolors.append(r.TColor(4007 , 121 / 255. , 204 / 255. , 158 / 255. ))
+mycolors.append(r.TColor(4008 , 158 / 255. ,   0 / 255. ,  42 / 255. ))
+mycolors.append(r.TColor(4009 , 176 / 255. ,   0 / 255. , 195 / 255. ))
+mycolors.append(r.TColor(4010 ,  20 / 255. , 195 / 255. ,   0 / 255. ))
+mycolors.append(r.TColor(4011 , 145 / 255. ,   2 / 255. , 206 / 255. ))
+mycolors.append(r.TColor(4012 , 255 / 255. ,   0 / 255. , 255 / 255. ))
+mycolors.append(r.TColor(4013 , 243 / 255. ,  85 / 255. ,   0 / 255. ))
+mycolors.append(r.TColor(4014 , 157 / 255. , 243 / 255. , 130 / 255. ))
+mycolors.append(r.TColor(4015 , 235 / 255. , 117 / 255. , 249 / 255. ))
+mycolors.append(r.TColor(4016 ,  90 / 255. , 211 / 255. , 221 / 255. ))
+mycolors.append(r.TColor(4017 ,  85 / 255. , 181 / 255. ,  92 / 255. ))
+mycolors.append(r.TColor(4018 , 172 / 255. ,  50 / 255. ,  60 / 255. ))
+mycolors.append(r.TColor(4019 ,  42 / 255. , 111 / 255. , 130 / 255. ))
+
+mycolors.append(r.TColor(4020 , 240 / 255. , 155 / 255. , 205 / 255. )) # ATLAS pink
+mycolors.append(r.TColor(4021 ,  77 / 255. , 161 / 255. ,  60 / 255. )) # ATLAS green
+mycolors.append(r.TColor(4022 ,  87 / 255. , 161 / 255. , 247 / 255. )) # ATLAS blue
+mycolors.append(r.TColor(4023 , 196 / 255. , 139 / 255. , 253 / 255. )) # ATLAS darkpink
+mycolors.append(r.TColor(4024 , 205 / 255. , 240 / 255. , 155 / 255. )) # Complementary
+
+mycolors.append(r.TColor(4101 , 102 / 255. , 102 / 255. , 204 / 255. )) # ATLAS HWW / WW
+mycolors.append(r.TColor(4102 ,  89 / 255. , 185 / 255. ,  26 / 255. )) # ATLAS HWW / DY
+mycolors.append(r.TColor(4103 , 225 / 255. ,  91 / 255. , 226 / 255. )) # ATLAS HWW / VV
+mycolors.append(r.TColor(4104 , 103 / 255. , 236 / 255. , 235 / 255. )) # ATLAS HWW / misid
+
+mycolors.append(r.TColor(4201 ,  16 / 255. , 220 / 255. , 138 / 255. )) # Signal complementary
+
+mycolors.append(r.TColor(4305 ,   0/255. , 208/255. , 145/255.)) # green made up
+
+
 default_colors = []
 default_colors.append(2005)
 default_colors.append(2001)
