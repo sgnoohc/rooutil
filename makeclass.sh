@@ -607,7 +607,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                    >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo '%.o: %.cc'                                                                                                                                    >> Makefile
-        echo '	$(CC) $(CFLAGS) $(EXTRACFLAGS) $< -c'                                                                                                       >> Makefile
+        echo '	$(CC) $(CFLAGS) $(EXTRACFLAGS) $< -c -o $@'                                                                                                 >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo 'clean:'                                                                                                                                       >> Makefile
         echo '	rm -f *.o $(EXE)'                                                                                                                           >> Makefile
