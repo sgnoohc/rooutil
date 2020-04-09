@@ -40,19 +40,17 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     TString hostname(hostnamestupid);
     std::cout << ">>> Hostname is " << hostname << std::endl;  
     bool useXrootd = inputs.BeginsWith("/store/");
-    if (useXrootd and hostname.Contains("t2.ucsd.edu"))
+    // if (useXrootd and hostname.Contains("t2.ucsd.edu"))
+    // {
+    //     if (inputs.Contains("/hadoop/cms"))
+    //         inputs.ReplaceAll("/hadoop/cms", "root://redirector.t2.ucsd.edu/");
+    //     else
+    //         inputs.ReplaceAll("/store", "root://redirector.t2.ucsd.edu//store");
+    // }
+    // else
+    if (useXrootd)
     {
-        if (inputs.Contains("/hadoop/cms"))
-            inputs.ReplaceAll("/hadoop/cms", "root://redirector.t2.ucsd.edu/");
-        else
-            inputs.ReplaceAll("/store", "root://redirector.t2.ucsd.edu//store");
-    }
-    else if (useXrootd)
-    {
-        if (inputs.Contains("/hadoop/cms"))
-            inputs.ReplaceAll("/hadoop/cms", "root://cmsxrootd.fnal.gov/");
-        else
-            inputs.ReplaceAll("/store", "root://cmsxrootd.fnal.gov//store");
+        inputs.ReplaceAll("/store", "root://cmsxrootd.fnal.gov//store");
     }
     std::cout << "inputs : " << inputs.Data() << std::endl;
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
