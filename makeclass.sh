@@ -610,7 +610,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo '	$(CC) $(CFLAGS) $(EXTRACFLAGS) $< -c -o $@'                                                                                                 >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo 'clean:'                                                                                                                                       >> Makefile
-        echo '	rm -f *.o $(EXE)'                                                                                                                           >> Makefile
+        echo '	rm -f $(OBJECTS) $(EXE)'                                                                                                                    >> Makefile
     fi
 
     #echo "	sh rooutil/makeclass.sh -f -x TEMPLATE_TREE_PATH ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}  > /dev/null 2>&1"  >> Makefile
