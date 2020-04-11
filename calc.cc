@@ -357,4 +357,71 @@ int RooUtil::Calc::calcBin2D(const std::vector<float>& xbounds, const std::vecto
     return (cx - 1) + (cy - 1) * (xbounds.size()-1);
 }
 
+//_________________________________________________________________________________________________
+std::tuple<bool, int, int, float> RooUtil::Calc::pickZcandidateIdxs(
+        const std::vector<int>& lepton_idxs,
+        const std::vector<int>& lepton_pdgids,
+        const std::vector<LV>& lepton_p4s,
+        const std::vector<int> to_skip)
+{
+    // Loop over all pairs and if it is SFOS check whether it forms a Z if it does not then skip
+    // Ultimately select the two idxs with invariant mass closest to the Z pole
+    bool has_sfos = false;
+    int z_idx_1 = -999;
+    int z_idx_2 = -999;
+    float closest_mll = 999;
+    for(auto& idx : lepton_idxs)
+    {
+
+        // If an index is part of to_skip then skip
+        if (std::find(to_skip.begin(), to_skip.end(), idx) != to_skip.end())
+            continue;
+
+        // First lepton 4 vector
+        const LV& i_p4 = lepton_p4s[idx];
+
+        // First lepton pdgid
+        int i_pdgid = lepton_pdgids[idx];
+
+        // Nested loop
+        for(auto& jdx : lepton_idxs)
+        {
+
+            // If an index is part of to_skip then skip
+            if (std::find(to_skip.begin(), to_skip.end(), jdx) != to_skip.end())
+                continue;
+
+            // If they are same or idx is larger than jdx then object skip
+            if (idx >= jdx)
+                continue;
+
+            // Second lepton 4 vector
+            const LV& j_p4 = lepton_p4s[jdx];
+
+            // Second lepton pdgid
+            int j_pdgid = lepton_pdgids[jdx];
+
+            // If the pair is not SFOS then skip
+            if (i_pdgid != -j_pdgid)
+                continue;
+
+            // invariant mass
+            float mll = (i_p4 + j_p4).mass();
+
+            // invariant mass "distance" from MZ
+            if (not has_sfos || // if it is the first pair then fill it regardless
+                abs(closest_mll - 91.1876) > abs(mll - 91.1876))
+            {
+                closest_mll = mll;
+                z_idx_1 = idx;
+                z_idx_2 = jdx;
+            }
+
+            // Now set the has_sfos as we found at least one
+            has_sfos = true;
+        }
+    }
+    return std::make_tuple(has_sfos, z_idx_1, z_idx_2, closest_mll);
+}
+
 //eof
