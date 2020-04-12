@@ -1576,7 +1576,8 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     hist_names = []
     for n in tfs:
         for key in tfs[n].GetListOfKeys():
-            hist_names.append(str(key.GetName()))
+            if "TH" in tfs[n].Get(str(key.GetName())).ClassName():
+                hist_names.append(str(key.GetName()))
 
     # Remove duplicate names
     hist_names = list(set(hist_names))
