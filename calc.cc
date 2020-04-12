@@ -359,7 +359,6 @@ int RooUtil::Calc::calcBin2D(const std::vector<float>& xbounds, const std::vecto
 
 //_________________________________________________________________________________________________
 std::tuple<bool, int, int, float> RooUtil::Calc::pickZcandidateIdxs(
-        const std::vector<int>& lepton_idxs,
         const std::vector<int>& lepton_pdgids,
         const std::vector<LV>& lepton_p4s,
         const std::vector<int> to_skip)
@@ -370,7 +369,7 @@ std::tuple<bool, int, int, float> RooUtil::Calc::pickZcandidateIdxs(
     int z_idx_1 = -999;
     int z_idx_2 = -999;
     float closest_mll = 999;
-    for(auto& idx : lepton_idxs)
+    for (unsigned int idx = 0; idx < lepton_p4s.size(); ++idx)
     {
 
         // If an index is part of to_skip then skip
@@ -384,15 +383,11 @@ std::tuple<bool, int, int, float> RooUtil::Calc::pickZcandidateIdxs(
         int i_pdgid = lepton_pdgids[idx];
 
         // Nested loop
-        for(auto& jdx : lepton_idxs)
+        for (unsigned int jdx = idx + 1; jdx < lepton_p4s.size(); ++jdx)
         {
 
             // If an index is part of to_skip then skip
             if (std::find(to_skip.begin(), to_skip.end(), jdx) != to_skip.end())
-                continue;
-
-            // If they are same or idx is larger than jdx then object skip
-            if (idx >= jdx)
                 continue;
 
             // Second lepton 4 vector

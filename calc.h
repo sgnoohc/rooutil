@@ -47,7 +47,6 @@ namespace RooUtil
         void printLV(const LV& a);
         int calcBin2D(const std::vector<float>& xbounds, const std::vector<float>& ybounds, float xval, float yval);
         std::tuple<bool, int, int, float> pickZcandidateIdxs(
-                const std::vector<int>& lepton_idxs,
                 const std::vector<int>& lepton_pdgids,
                 const std::vector<LV>& lepton_p4s,
                 std::vector<int> to_skip=std::vector<int>());
