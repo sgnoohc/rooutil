@@ -1061,7 +1061,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             data.Reset()
 
     # Compute some arguments that are missing (viz. colors, sig_labels, legend_labels)
-    hsig_labels = []
+    hsig_labels = sig_labels
     if len(sig_labels) == 0:
         for hsig in sigs:
             hsig_labels.append(hsig.GetName())
