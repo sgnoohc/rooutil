@@ -87,6 +87,12 @@ float RooUtil::Calc::DeltaPhi(const LV& a, const LV& b)
     return ROOT::Math::VectorUtil::DeltaPhi(a, b);
 }
 
+//_________________________________________________________________________________________________
+float RooUtil::Calc::mT(const LV& lep, const LV& met)
+{
+    return sqrt(2 * met.pt() * lep.Et() * (1.0 - cos(lep.phi() - met.phi())));
+}
+
 //*************************************************************************************************
 //
 // Math for solving neutrino momentum based on parent particle mass (e.g. W -> lv)
