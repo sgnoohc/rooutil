@@ -633,7 +633,7 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
                 local_max_f_err = ferr
         scan.SetBinContent(i, local_max_f)
         scan.SetBinError(i, ferr)
-    scan.SetName("{:.4f} ({:.4f},{:.4f})".format(max_f, max_f_cut_low, max_f_cut_high))
+    scan.SetName("{:.2f} ({:.2f},{:.2f})".format(max_f, max_f_cut_low, max_f_cut_high))
     return scan
 
 #______________________________________________________________________________________________________________________
@@ -664,7 +664,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
             max_f = f
             max_f_cut = xmin + xwidth * (i - 1)
     # print max_f
-    leftscan.SetName("#rightarrow {:.6f} ({:.6f})".format(max_f, max_f_cut))
+    leftscan.SetName("#rightarrow {:.2f} ({:.2f})".format(max_f, max_f_cut))
     rightscan = cloneTH1(sig)
     rightscan.Reset()
     max_f = 0
@@ -680,7 +680,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         if max_f < f:
             max_f = f
             max_f_cut = xmin + xwidth * i
-    rightscan.SetName("#leftarrow {:.6f} ({:.6f})".format(max_f, max_f_cut))
+    rightscan.SetName("#leftarrow {:.2f} ({:.2f})".format(max_f, max_f_cut))
     return leftscan, rightscan
 
 #______________________________________________________________________________________________________________________
@@ -1305,24 +1305,24 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
     hsigs = []
     hbgs = []
     if syst:
-        leftscan, rightscan = plot_sigscan_w_syst(sigs[0], bgs, systs=syst)
+        leftscan, rightscan = plot_sigscan_w_syst(sigs[0].Clone(), [bg.Clone() for bg in bgs], systs=syst)
     else:
-        leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs))
+        leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone())
     leftscan.Print("all")
     if leftscan.GetBinContent(1) != 0:
         leftscan.Scale(1./leftscan.GetBinContent(1))
     if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
         rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
     leftscan.SetFillStyle(1)
-    hbgs.append(leftscan)
-    hsigs.append(rightscan)
-    scan2d = plot_sigscan2d(sigs[0], get_total_hist(bgs))
+    hbgs.append(leftscan.Clone())
+    hsigs.append(rightscan.Clone())
+    scan2d = plot_sigscan2d(sigs[0].Clone(), get_total_hist(bgs).Clone())
     if scan2d.GetBinContent(1) != 0:
         scan2d.Scale(1./scan2d.GetBinContent(1))
-    hsigs.append(scan2d)
-    leftscan, rightscan = plot_sigscan(sigs[0], get_total_hist(bgs), fom_acceptance)
-    hsigs.append(leftscan)
-    hsigs.append(rightscan)
+    hsigs.append(scan2d.Clone())
+    leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone(), fom_acceptance)
+    hsigs.append(leftscan.Clone())
+    hsigs.append(rightscan.Clone())
     options["bkg_err_fill_color"] = 0
     options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
     options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
