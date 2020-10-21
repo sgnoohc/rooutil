@@ -425,4 +425,10 @@ std::tuple<bool, int, int, float> RooUtil::Calc::pickZcandidateIdxs(
     return std::make_tuple(has_sfos, z_idx_1, z_idx_2, closest_mll);
 }
 
+std::vector<LV> RooUtil::Calc::sortByPt(std::vector<LV> vecs)
+{
+    std::sort(vecs.begin(), vecs.end(), [&](const LV& a, const LV& b) { return a.pt() > b.pt(); });
+    return vecs;
+}
+
 //eof

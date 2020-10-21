@@ -51,6 +51,7 @@ namespace RooUtil
                 const std::vector<int>& lepton_pdgids,
                 const std::vector<LV>& lepton_p4s,
                 std::vector<int> to_skip=std::vector<int>());
+        std::vector<LV> sortByPt(std::vector<LV> vecs);
     }
 }
 
