@@ -24,16 +24,16 @@ int main(int argc, char** argv)
                 continue;
         }
 
-        ana.tx.clear();
+        ana.tx->clear();
 
         runAnalysis();
 
-        ana.tx.fill();
+        ana.tx->fill();
         ana.cutflow.fill();
     }
 
     ana.cutflow.saveOutput();
-    ana.tx.write();
+    ana.tx->write();
 
     delete ana.output_tfile;
 }
@@ -43,18 +43,18 @@ int main(int argc, char** argv)
 //=============================================================================================
 void setupAnalysis()
 {
-    ana.cutflow.addCut("Weight", [&]() { return 1/*set your cut here*/; }, [&]() { return 1; } );
+    ana.tx->createBranch<vector<LV>>("reco_leptons_p4");
+    ana.tx->createBranch<vector<int>>("reco_leptons_tightid");
+    ana.tx->createBranch<vector<int>>("reco_leptons_pdgId");
+    ana.tx->createBranch<vector<LV>>("reco_jets_p4");
+    ana.tx->createBranch<vector<int>>("reco_jets_bloose");
+    ana.tx->createBranch<vector<int>>("reco_jets_bmedium");
+    ana.tx->createBranch<vector<int>>("reco_jets_btight");
+    ana.tx->createBranch<int>("nbloose");
+    ana.tx->createBranch<int>("nbmedium");
+    ana.tx->createBranch<int>("nbtight");
 
-    ana.tx.createBranch<vector<LV>>("reco_leptons_p4");
-    ana.tx.createBranch<vector<int>>("reco_leptons_tightid");
-    ana.tx.createBranch<vector<int>>("reco_leptons_pdgId");
-    ana.tx.createBranch<vector<LV>>("reco_jets_p4");
-    ana.tx.createBranch<vector<int>>("reco_jets_bloose");
-    ana.tx.createBranch<vector<int>>("reco_jets_bmedium");
-    ana.tx.createBranch<vector<int>>("reco_jets_btight");
-    ana.tx.createBranch<int>("nbloose");
-    ana.tx.createBranch<int>("nbmedium");
-    ana.tx.createBranch<int>("nbtight");
+    ana.cutflow.addCut("Weight", [&]() { return 1/*set your cut here*/; }, [&]() { return 1; } );
 
     // Book cutflows
     ana.cutflow.bookCutflows();
@@ -74,9 +74,9 @@ void runAnalysis()
     {
         if (SS::muonID(imu, SS::IDfakable, nt.year()))
         {
-            ana.tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Muon_p4()[imu]);
-            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, nt.year()));
-            ana.tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Muon_charge()[imu]) * 13);
+            ana.tx->pushbackToBranch<LV>("reco_leptons_p4", nt.Muon_p4()[imu]);
+            ana.tx->pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, nt.year()));
+            ana.tx->pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Muon_charge()[imu]) * 13);
         }
     }
 
@@ -85,13 +85,13 @@ void runAnalysis()
     {
         if (SS::electronID(iel, SS::IDfakable, nt.year()))
         {
-            ana.tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Electron_p4()[iel]);
-            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, nt.year()));
-            ana.tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Electron_charge()[iel]) * 11);
+            ana.tx->pushbackToBranch<LV>("reco_leptons_p4", nt.Electron_p4()[iel]);
+            ana.tx->pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, nt.year()));
+            ana.tx->pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Electron_charge()[iel]) * 11);
         }
     }
 
-    ana.tx.sortVecBranchesByPt("reco_leptons_p4", {}, {"reco_leptons_tightid", "reco_leptons_pdgId"}, {});
+    ana.tx->sortVecBranchesByPt("reco_leptons_p4", {}, {"reco_leptons_tightid", "reco_leptons_pdgId"}, {});
 
     // Select jets
     int nbloose = 0;
@@ -104,7 +104,7 @@ void runAnalysis()
 
         // Overlap check against good leptons
         bool isOverlap = false;
-        for (auto& lep_p4 : ana.tx.getBranchLazy<vector<LV>>("reco_leptons_p4"))
+        for (auto& lep_p4 : ana.tx->getBranchLazy<vector<LV>>("reco_leptons_p4"))
         {
             if (RooUtil::Calc::DeltaR(jet_p4, lep_p4) < 0.4)
             {
@@ -123,7 +123,7 @@ void runAnalysis()
         if (not (fabs(jet_p4.eta()) < 5.0))
             continue;
 
-        ana.tx.pushbackToBranch<LV>("reco_jets_p4", jet_p4);
+        ana.tx->pushbackToBranch<LV>("reco_jets_p4", jet_p4);
         bool is_loose_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.0521;
         bool is_medium_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.3033;
         bool is_tight_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.7489;
@@ -132,15 +132,15 @@ void runAnalysis()
         if (is_medium_btagged) nbmedium++;
         if (is_tight_btagged) nbtight++;
 
-        ana.tx.pushbackToBranch<int>("reco_jets_bloose", is_loose_btagged);
-        ana.tx.pushbackToBranch<int>("reco_jets_bmedium", is_medium_btagged);
-        ana.tx.pushbackToBranch<int>("reco_jets_btight", is_tight_btagged);
+        ana.tx->pushbackToBranch<int>("reco_jets_bloose", is_loose_btagged);
+        ana.tx->pushbackToBranch<int>("reco_jets_bmedium", is_medium_btagged);
+        ana.tx->pushbackToBranch<int>("reco_jets_btight", is_tight_btagged);
 
     }
 
-    ana.tx.setBranch<int>("nbloose", nbloose);
-    ana.tx.setBranch<int>("nbmedium", nbmedium);
-    ana.tx.setBranch<int>("nbtight", nbtight);
+    ana.tx->setBranch<int>("nbloose", nbloose);
+    ana.tx->setBranch<int>("nbmedium", nbmedium);
+    ana.tx->setBranch<int>("nbtight", nbtight);
 
 }
 
@@ -165,7 +165,6 @@ void runAnalysis()
 //-----------------======================-----------------======================-----------------======================-----------------=======================
 //-----------------======================-----------------======================-----------------======================-----------------=======================
 //-----------------======================-----------------======================-----------------======================-----------------=======================
-
 
 void parseArguments(int argc, char** argv)
 {
@@ -237,6 +236,7 @@ void parseArguments(int argc, char** argv)
     if (result.count("debug"))
     {
         ana.output_tfile = new TFile("debug.root", "recreate");
+        ana.tx = new RooUtil::TTreeX("variable", "variable");
     }
     else
     {
@@ -245,6 +245,7 @@ void parseArguments(int argc, char** argv)
         if (result.count("output"))
         {
             ana.output_tfile = new TFile(result["output"].as<std::string>().c_str(), "create");
+            ana.tx = new RooUtil::TTreeX("variable", "variable");
             if (not ana.output_tfile->IsOpen())
             {
                 std::cout << options.help() << std::endl;
@@ -350,3 +351,4 @@ void initializeInputsAndOutputs()
     ana.cutflow.setTFile(ana.output_tfile);
 
 }
+

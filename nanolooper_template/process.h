@@ -9,12 +9,6 @@
 #include "MuonSelections.h"
 #include "MCTools.h"
 
-// helper functions
-void parseArguments(int argc, char** argv);
-void initializeInputsAndOutputs();
-void setupAnalysis();
-void runAnalysis();
-
 // helper variables
 class AnalysisConfig {
 
@@ -55,10 +49,14 @@ public:
     RooUtil::Histograms histograms;
 
     // Custom TTree object
-    RooUtil::TTreeX tx;
-
-    AnalysisConfig() : tx("variable", "variable") {}
+    RooUtil::TTreeX* tx;
 
 };
+
+// helper functions
+void parseArguments(int argc, char** argv);
+void initializeInputsAndOutputs();
+void setupAnalysis();
+void runAnalysis();
 
 #endif
