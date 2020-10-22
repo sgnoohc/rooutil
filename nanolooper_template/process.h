@@ -12,6 +12,8 @@
 // helper functions
 void parseArguments(int argc, char** argv);
 void initializeInputsAndOutputs();
+void setupAnalysis();
+void runAnalysis();
 
 // helper variables
 class AnalysisConfig {

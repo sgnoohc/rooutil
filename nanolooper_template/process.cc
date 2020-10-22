@@ -3,6 +3,42 @@
 AnalysisConfig ana;
 
 //=============================================================================================
+// main()
+//=============================================================================================
+int main(int argc, char** argv)
+{
+
+    parseArguments(argc, argv);
+    initializeInputsAndOutputs();
+    nt.SetYear(2018); // comment this out in case you don't need to override
+    setupAnalysis();
+
+    // Looping input file
+    while (ana.looper.nextEvent())
+    {
+
+        // If splitting jobs are requested then determine whether to process the event or not based on remainder
+        if (ana.job_index != -1 and ana.nsplit_jobs != -1)
+        {
+            if (ana.looper.getNEventsProcessed() % ana.nsplit_jobs != (unsigned int) ana.job_index)
+                continue;
+        }
+
+        ana.tx.clear();
+
+        runAnalysis();
+
+        ana.tx.fill();
+        ana.cutflow.fill();
+    }
+
+    ana.cutflow.saveOutput();
+    ana.tx.write();
+
+    delete ana.output_tfile;
+}
+
+//=============================================================================================
 // Setup analysis (prior to the event looping)
 //=============================================================================================
 void setupAnalysis()
@@ -36,10 +72,10 @@ void runAnalysis()
     // Select muons
     for (unsigned int imu = 0; imu < nt.Muon_pt().size(); ++imu)
     {
-        if (SS::muonID(imu, SS::IDfakable, year))
+        if (SS::muonID(imu, SS::IDfakable, nt.year()))
         {
             ana.tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Muon_p4()[imu]);
-            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, year));
+            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, nt.year()));
             ana.tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Muon_charge()[imu]) * 13);
         }
     }
@@ -47,10 +83,10 @@ void runAnalysis()
     // Select electrons
     for (unsigned int iel = 0; iel < nt.Electron_pt().size(); ++iel)
     {
-        if (SS::electronID(iel, SS::IDfakable, year))
+        if (SS::electronID(iel, SS::IDfakable, nt.year()))
         {
             ana.tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Electron_p4()[iel]);
-            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, year));
+            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, nt.year()));
             ana.tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Electron_charge()[iel]) * 11);
         }
     }
@@ -108,38 +144,6 @@ void runAnalysis()
 
 }
 
-// ./process INPUTFILEPATH OUTPUTFILE [NEVENTS]
-int main(int argc, char** argv)
-{
-
-    parseArguments(argc, argv);
-    initializeInputsAndOutputs();
-    setupAnalysis();
-
-    // Looping input file
-    while (ana.looper.nextEvent())
-    {
-
-        // If splitting jobs are requested then determine whether to process the event or not based on remainder
-        if (result.count("job_index") and result.count("nsplit_jobs"))
-        {
-            if (ana.looper.getNEventsProcessed() % ana.nsplit_jobs != (unsigned int) ana.job_index)
-                continue;
-        }
-
-        ana.tx.clear();
-
-        runAnalysis();
-
-        ana.tx.fill();
-        ana.cutflow.fill();
-    }
-
-    ana.cutflow.saveOutput();
-    ana.tx.write();
-
-    delete ana.output_tfile;
-}
 
 
 
@@ -340,9 +344,6 @@ void initializeInputsAndOutputs()
     // Create the TChain that holds the TTree's of the baby ntuples
     ana.events_tchain = RooUtil::FileUtil::createTChain(ana.input_tree_name, ana.input_file_list_tstring);
 
-    int year = 2018;
-
-    nt.SetYear(year);
     ana.looper.init(ana.events_tchain, &nt, ana.n_events);
 
     // Set the cutflow object output file
