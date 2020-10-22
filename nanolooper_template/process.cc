@@ -1,57 +1,170 @@
-#include "Nano.h"
-#include "rooutil.h"
-#include "cxxopts.h"
-#include "Base.h"
-#include "ElectronSelections.h"
-#include "MuonSelections.h"
-#include "MCTools.h"
-
-class AnalysisConfig {
-
-public:
-
-    // TString that holds the input file list (comma separated)
-    TString input_file_list_tstring;
-
-    // TString that holds the name of the TTree to open for each input files
-    TString input_tree_name;
-
-    // Output TFile
-    TFile* output_tfile;
-
-    // Number of events to loop over
-    int n_events;
-
-    // Jobs to split (if this number is positive, then we will skip certain number of events)
-    // If there are N events, and was asked to split 2 ways, then depending on job_index, it will run over first half or latter half
-    int nsplit_jobs;
-
-    // Job index (assuming nsplit_jobs is set, the job_index determine where to loop over)
-    int job_index;
-
-    // Debug boolean
-    bool debug;
-
-    // TChain that holds the input TTree's
-    TChain* events_tchain;
-
-    // Custom Looper object to facilitate looping over many files
-    RooUtil::Looper<Nano> looper;
-
-    // Custom Cutflow framework
-    RooUtil::Cutflow cutflow;
-
-    // Custom Histograms object compatible with RooUtil::Cutflow framework
-    RooUtil::Histograms histograms;
-
-};
+#include "process.h"
 
 AnalysisConfig ana;
+
+//=============================================================================================
+// Setup analysis (prior to the event looping)
+//=============================================================================================
+void setupAnalysis()
+{
+    ana.cutflow.addCut("Weight", [&]() { return 1/*set your cut here*/; }, [&]() { return 1; } );
+
+    ana.tx.createBranch<vector<LV>>("reco_leptons_p4");
+    ana.tx.createBranch<vector<int>>("reco_leptons_tightid");
+    ana.tx.createBranch<vector<int>>("reco_leptons_pdgId");
+    ana.tx.createBranch<vector<LV>>("reco_jets_p4");
+    ana.tx.createBranch<vector<int>>("reco_jets_bloose");
+    ana.tx.createBranch<vector<int>>("reco_jets_bmedium");
+    ana.tx.createBranch<vector<int>>("reco_jets_btight");
+    ana.tx.createBranch<int>("nbloose");
+    ana.tx.createBranch<int>("nbmedium");
+    ana.tx.createBranch<int>("nbtight");
+
+    // Book cutflows
+    ana.cutflow.bookCutflows();
+
+    // Book Histograms
+    ana.cutflow.bookHistogramsForCutAndBelow(ana.histograms, "Weight");
+
+}
+
+//=============================================================================================
+// runAnalysis (within the event looping)
+//=============================================================================================
+void runAnalysis()
+{
+    // Select muons
+    for (unsigned int imu = 0; imu < nt.Muon_pt().size(); ++imu)
+    {
+        if (SS::muonID(imu, SS::IDfakable, year))
+        {
+            ana.tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Muon_p4()[imu]);
+            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, year));
+            ana.tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Muon_charge()[imu]) * 13);
+        }
+    }
+
+    // Select electrons
+    for (unsigned int iel = 0; iel < nt.Electron_pt().size(); ++iel)
+    {
+        if (SS::electronID(iel, SS::IDfakable, year))
+        {
+            ana.tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Electron_p4()[iel]);
+            ana.tx.pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, year));
+            ana.tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Electron_charge()[iel]) * 11);
+        }
+    }
+
+    ana.tx.sortVecBranchesByPt("reco_leptons_p4", {}, {"reco_leptons_tightid", "reco_leptons_pdgId"}, {});
+
+    // Select jets
+    int nbloose = 0;
+    int nbmedium = 0;
+    int nbtight = 0;
+    for (unsigned int ijet = 0; ijet < nt.Jet_pt().size(); ++ijet)
+    {
+        // Read jet p4
+        const LV& jet_p4 = nt.Jet_p4()[ijet];
+
+        // Overlap check against good leptons
+        bool isOverlap = false;
+        for (auto& lep_p4 : ana.tx.getBranchLazy<vector<LV>>("reco_leptons_p4"))
+        {
+            if (RooUtil::Calc::DeltaR(jet_p4, lep_p4) < 0.4)
+            {
+                isOverlap = true;
+                break;
+            }
+        }
+
+        // Then skip
+        if (isOverlap)
+            continue;
+
+        if (not (jet_p4.pt() > 20.))
+            continue;
+
+        if (not (fabs(jet_p4.eta()) < 5.0))
+            continue;
+
+        ana.tx.pushbackToBranch<LV>("reco_jets_p4", jet_p4);
+        bool is_loose_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.0521;
+        bool is_medium_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.3033;
+        bool is_tight_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.7489;
+
+        if (is_loose_btagged) nbloose++;
+        if (is_medium_btagged) nbmedium++;
+        if (is_tight_btagged) nbtight++;
+
+        ana.tx.pushbackToBranch<int>("reco_jets_bloose", is_loose_btagged);
+        ana.tx.pushbackToBranch<int>("reco_jets_bmedium", is_medium_btagged);
+        ana.tx.pushbackToBranch<int>("reco_jets_btight", is_tight_btagged);
+
+    }
+
+    ana.tx.setBranch<int>("nbloose", nbloose);
+    ana.tx.setBranch<int>("nbmedium", nbmedium);
+    ana.tx.setBranch<int>("nbtight", nbtight);
+
+}
 
 // ./process INPUTFILEPATH OUTPUTFILE [NEVENTS]
 int main(int argc, char** argv)
 {
 
+    parseArguments(argc, argv);
+    initializeInputsAndOutputs();
+    setupAnalysis();
+
+    // Looping input file
+    while (ana.looper.nextEvent())
+    {
+
+        // If splitting jobs are requested then determine whether to process the event or not based on remainder
+        if (result.count("job_index") and result.count("nsplit_jobs"))
+        {
+            if (ana.looper.getNEventsProcessed() % ana.nsplit_jobs != (unsigned int) ana.job_index)
+                continue;
+        }
+
+        ana.tx.clear();
+
+        runAnalysis();
+
+        ana.tx.fill();
+        ana.cutflow.fill();
+    }
+
+    ana.cutflow.saveOutput();
+    ana.tx.write();
+
+    delete ana.output_tfile;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-----------------======================-----------------======================-----------------======================-----------------=======================
+//-----------------======================-----------------======================-----------------======================-----------------=======================
+//-----------------======================-----------------======================-----------------======================-----------------=======================
+//-----------------======================-----------------======================-----------------======================-----------------=======================
+
+
+void parseArguments(int argc, char** argv)
+{
 //********************************************************************************
 //
 // 1. Parsing options
@@ -219,11 +332,10 @@ int main(int argc, char** argv)
     std::cout <<  " ana.job_index: " << ana.job_index <<  std::endl;
     std::cout <<  "=========================================================" << std::endl;
 
-//********************************************************************************
-//
-// 2. Opening input baby files
-//
-//********************************************************************************
+}
+
+void initializeInputsAndOutputs()
+{
 
     // Create the TChain that holds the TTree's of the baby ntuples
     ana.events_tchain = RooUtil::FileUtil::createTChain(ana.input_tree_name, ana.input_file_list_tstring);
@@ -236,126 +348,4 @@ int main(int argc, char** argv)
     // Set the cutflow object output file
     ana.cutflow.setTFile(ana.output_tfile);
 
-    ana.cutflow.addCut("Weight", [&]() { return 1/*set your cut here*/; }, [&]() { return 1; } );
-
-    // Variables
-    RooUtil::TTreeX tx("variable", "variable");
-
-    tx.createBranch<vector<LV>>("reco_leptons_p4");
-    tx.createBranch<vector<int>>("reco_leptons_tightid");
-    tx.createBranch<vector<int>>("reco_leptons_pdgId");
-    tx.createBranch<vector<LV>>("reco_jets_p4");
-    tx.createBranch<vector<int>>("reco_jets_bloose");
-    tx.createBranch<vector<int>>("reco_jets_bmedium");
-    tx.createBranch<vector<int>>("reco_jets_btight");
-    tx.createBranch<int>("nbloose");
-    tx.createBranch<int>("nbmedium");
-    tx.createBranch<int>("nbtight");
-
-    // Book cutflows
-    ana.cutflow.bookCutflows();
-
-    // Book Histograms
-    ana.cutflow.bookHistogramsForCutAndBelow(ana.histograms, "Weight");
-
-    // Looping input file
-    while (ana.looper.nextEvent())
-    {
-
-        // If splitting jobs are requested then determine whether to process the event or not based on remainder
-        if (result.count("job_index") and result.count("nsplit_jobs"))
-        {
-            if (ana.looper.getNEventsProcessed() % ana.nsplit_jobs != (unsigned int) ana.job_index)
-                continue;
-        }
-
-        tx.clear();
-
-        // Select muons
-        for (unsigned int imu = 0; imu < nt.Muon_pt().size(); ++imu)
-        {
-            if (SS::muonID(imu, SS::IDfakable, year))
-            {
-                tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Muon_p4()[imu]);
-                tx.pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, year));
-                tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Muon_charge()[imu]) * 13);
-            }
-        }
-
-        // Select electrons
-        for (unsigned int iel = 0; iel < nt.Electron_pt().size(); ++iel)
-        {
-            if (SS::electronID(iel, SS::IDfakable, year))
-            {
-                tx.pushbackToBranch<LV>("reco_leptons_p4", nt.Electron_p4()[iel]);
-                tx.pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, year));
-                tx.pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Electron_charge()[iel]) * 11);
-            }
-        }
-
-        tx.sortVecBranchesByPt("reco_leptons_p4", {}, {"reco_leptons_tightid", "reco_leptons_pdgId"}, {});
-
-        // Select jets
-        int nbloose = 0;
-        int nbmedium = 0;
-        int nbtight = 0;
-        for (unsigned int ijet = 0; ijet < nt.Jet_pt().size(); ++ijet)
-        {
-            // Read jet p4
-            const LV& jet_p4 = nt.Jet_p4()[ijet];
-
-            // Overlap check against good leptons
-            bool isOverlap = false;
-            for (auto& lep_p4 : tx.getBranchLazy<vector<LV>>("reco_leptons_p4"))
-            {
-                if (RooUtil::Calc::DeltaR(jet_p4, lep_p4) < 0.4)
-                {
-                    isOverlap = true;
-                    break;
-                }
-            }
-
-            // Then skip
-            if (isOverlap)
-                continue;
-
-            if (not (jet_p4.pt() > 20.))
-                continue;
-
-            if (not (fabs(jet_p4.eta()) < 5.0))
-                continue;
-
-            tx.pushbackToBranch<LV>("reco_jets_p4", jet_p4);
-            bool is_loose_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.0521;
-            bool is_medium_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.3033;
-            bool is_tight_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.7489;
-
-            if (is_loose_btagged) nbloose++;
-            if (is_medium_btagged) nbmedium++;
-            if (is_tight_btagged) nbtight++;
-
-            tx.pushbackToBranch<int>("reco_jets_bloose", is_loose_btagged);
-            tx.pushbackToBranch<int>("reco_jets_bmedium", is_medium_btagged);
-            tx.pushbackToBranch<int>("reco_jets_btight", is_tight_btagged);
-
-        }
-
-        tx.setBranch<int>("nbloose", nbloose);
-        tx.setBranch<int>("nbmedium", nbmedium);
-        tx.setBranch<int>("nbtight", nbtight);
-
-        tx.fill();
-
-        //Do what you need to do in for each event here
-        //To save use the following function
-        ana.cutflow.fill();
-    }
-
-    // Writing output file
-    ana.cutflow.saveOutput();
-
-    tx.write();
-
-    // The below can be sometimes crucial
-    delete ana.output_tfile;
 }
