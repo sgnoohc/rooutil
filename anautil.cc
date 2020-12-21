@@ -73,6 +73,10 @@ void RooUtil::Cutflow::addCutToLastActiveCut(TString n) { last_active_cut->addCu
 void RooUtil::Cutflow::removeCut(TString n)
 {
     CutTree* c = cuttree.getCutPointer(n);
+    for (auto& child : c->children)
+    {
+        removeCut(child->name);
+    }
     c->parent->children.erase(std::find(c->parent->children.begin(), c->parent->children.end(), c));
     cuttreemap.erase(cuttreemap.find(n.Data()));
 }
