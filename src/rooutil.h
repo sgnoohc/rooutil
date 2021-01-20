@@ -7,3 +7,4 @@
 #include "stringutil.h"
 #include "ttreex.h"
 #include "cxxopts.h"
+#include "histmap.h"
