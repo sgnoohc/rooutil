@@ -35,7 +35,7 @@
 #include "TString.h"
 #include "TLorentzVector.h"
 #include "Math/LorentzVector.h"
-#include "Math/GenVector/PtEtaPhiM4D.h"
+#include "Math/PtEtaPhiM4D.h"
 
 #ifdef LorentzVectorPtEtaPhiM4D
 typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> > LV;

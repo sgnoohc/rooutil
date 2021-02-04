@@ -36,7 +36,7 @@
 #include "TString.h"
 #include "TLorentzVector.h"
 #include "Math/LorentzVector.h"
-#include "Math/GenVector/PtEtaPhiM4D.h"
+#include "Math/PtEtaPhiM4D.h"
 
 #include "printutil.h"
 
