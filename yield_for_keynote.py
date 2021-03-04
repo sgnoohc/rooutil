@@ -23,7 +23,7 @@ for line in lines:
         line = "".join(["	"] + line.split()[3:])
         line = line.replace("|", ",,,")
         print line
-    if "Bin" in line:
+    elif "|" in line:
         line = "".join(["	"] + line.split()[3:])
         line = line.replace("|", ",")
         line = line.replace(u"\u00B1".encode("utf-8"), "," + u"\u00B1".encode("utf-8") + ",")

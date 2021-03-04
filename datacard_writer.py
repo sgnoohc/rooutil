@@ -19,7 +19,7 @@ from errors import E
 
 class DataCardWriter:
 
-    def __init__(self, sig=None, bgs=[], data=None, datacard_filename="datacard.txt", region_name="SR", bin_number=1, no_stat_procs=[], systs=[]):
+    def __init__(self, sig=None, bgs=[], data=None, datacard_filename="datacard.txt", region_name="SR", bin_number=1, no_stat_procs=[], systs=[], extrasigs=[]):
 
         """
         sig                  TH1         Signal histogram where each bins are a region (bin_number will choose which one to write out)
@@ -30,6 +30,7 @@ class DataCardWriter:
         bin_number           int         bin number to write out from each histogram
         no_stat_procs        list        list of processes to skip statistical error provided by the nominal histograms
         systs                list        format is explained below
+        extrasigs            [TH1s]      Extra signal histograms for multi dimensional fit
         [
             ('syst', 'lnN', [], {'qqWW': [TH1, TH1], 'ggWW': None, 'ggH': [TH1, TH1], 'others': None}),
               name
@@ -65,9 +66,11 @@ class DataCardWriter:
         self.datacard_filename = datacard_filename
         self.region_name = region_name
         self.systs = systs
+        self.extrasigs = extrasigs
         self.bin_number = bin_number
-        self.hists = [self.sig] + self.bgs
+        self.hists = extrasigs + [self.sig] + self.bgs
         self.no_stat_procs = no_stat_procs
+        self.nsig = len(extrasigs) + 1
 
     def set_bin(self, i):
         self.bin_number = i
@@ -150,9 +153,9 @@ class DataCardWriter:
     def get_rates_str(self):
         """ Returns a string of process names and rates. """
         rtn  = "bin                                     {}\n".format("{:17s}".format(self.region_name) * len(self.hists))
-        rtn += "process                                 {}\n".format("".join(["{:<17d}".format(i) for i in xrange(len(self.hists))]))
+        rtn += "process                                 {}\n".format("".join(["{:<17d}".format(i) for i in xrange(0 - (self.nsig - 1), len(self.hists) - (self.nsig - 1))]))
         rtn += "process                                 {}\n".format("".join(["{:17s}".format(i) for i in self.proc_names]))
-        rtn += "rate                                    {}\n".format("".join([("{:<17.3f}".format(i) if i > 0 else "{:<17s}".format("1e-6")) for i in self.rates]))
+        rtn += "rate                                    {}\n".format("".join([("{:<17.6f}".format(i) if i > 0 else "{:<17s}".format("1e-6")) for i in self.rates]))
         rtn += "{}\n".format(self.get_delimiter())
         return rtn
 
