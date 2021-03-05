@@ -124,10 +124,10 @@ source $DIR/setuproot.sh ""
 
 if [ -e $DIR/../macro/makeCMS3ClassFiles.C ]; then
   echo "running makeCMS3ClassFiles.C"
-  root -l -b -q $DIR/../macro/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\)  &> /dev/null
+  root -l -b -q $DIR/../macro/makeCMS3ClassFiles.C\(\"${ROOTFILE}\",\"${TTREENAME}\",\"${MAKECLASSNAME}\",\"${NAMESPACENAME}\",\"${TREEINSTANCENAME}\"\)  &> .makeclass.log
 fi
 
-if [ $? -eq 0 ]; then
+if [ -f ${MAKECLASSNAME}.cc ]; then
     e_arrow "RooUtil:: Generated ${MAKECLASSNAME}.cc/h successfully!"
 else
     e_error "RooUtil:: Failed to generate ${MAKECLASSNAME}.cc/h!"
