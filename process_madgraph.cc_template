@@ -431,7 +431,8 @@ int main(int argc, char** argv)
     ana.cutflow.addCut("Wgt", [&]()
             {
                 // FOR EXAMPLE IN CASE WE NEED TO CUT
-                return (lhe.P4()[0] + lhe.P4()[1]).mass() > 500.;
+                // return (lhe.P4()[0] + lhe.P4()[1]).mass() > 500.;
+                return 1.;
             }, [&]()
             {
                 return xsec / nevents * 1000. * 0.2172 * 0.2172 * 0.57 * 137; // To set it to fb unit
@@ -476,6 +477,8 @@ int main(int argc, char** argv)
         unsigned int j = pair.second;
         ana.histograms.addHistogram(TString::Format("Eta%d%d"           , i , j) , 180 , -6   , 6    , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).eta(); } );
         ana.histograms.addHistogram(TString::Format("DeltaEta%d%d"      , i , j) , 180 , 0    , 10   , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return abs(RooUtil::Calc::DeltaEta(lhe.P4()[i], lhe.P4()[j])); } );
+        ana.histograms.addHistogram(TString::Format("DeltaPhi%d%d"      , i , j) , 180 , 0    , 3.142, [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return abs(RooUtil::Calc::DeltaPhi(lhe.P4()[i], lhe.P4()[j])); } );
+        ana.histograms.addHistogram(TString::Format("DeltaR%d%d"        , i , j) , 180 , 0    , 10   , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return abs(RooUtil::Calc::DeltaR(lhe.P4()[i], lhe.P4()[j])); } );
         ana.histograms.addHistogram(TString::Format("EtaLead%d%d"       , i , j) , 180 , -6   , 6    , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[i].eta() : lhe.P4()[j].eta();  } );
         ana.histograms.addHistogram(TString::Format("EtaSubLead%d%d"    , i , j) , 180 , -6   , 6    , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return lhe.P4()[i].pt() > lhe.P4()[j].pt() ? lhe.P4()[j].eta() : lhe.P4()[i].eta();  } );
         ana.histograms.addHistogram(TString::Format("M%d%d_v1"          , i , j) , 180 , -50  , 150  , [& , i , j]() { if (lhe.P4().size() <= i or lhe.P4().size() <= j) return -999.0f; return (lhe.P4()[i] + lhe.P4()[j]).mass();   } );

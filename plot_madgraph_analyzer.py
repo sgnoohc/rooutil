@@ -1,33 +1,28 @@
 #!/bin/env python
 
 import plottery_wrapper as p
-import glob
-import sys
 
-if len(sys.argv) > 1:
-    histfiles = [sys.argv[1]]
-else:
-    histfiles = glob.glob("*_hist.root")
+def plot(histname):
 
-for histfile in histfiles:
-    suffix = histfile.replace("_hist.root", "")
-    p.dump_plot(fnames=[histfile],
-            filter_pattern="Wgt__",
-            dogrep=True,
-            dirname="plots_{}".format(suffix),
-            extraoptions={
-                "nbins":60,
-                "print_yield":True,
-                "lumi_value":1,
-                },
-            )
-    p.dump_plot(fnames=[histfile],
-            dirname="plots_{}_log".format(suffix),
-            filter_pattern="Wgt__",
+    p.dump_plot(
+            fnames=[
+                "whh_c3_1_hist.root",
+                ],
+            data_fname="whh_c3_9_hist.root",
+            filter_pattern=histname,
             dogrep=True,
             extraoptions={
-                "yaxis_log":True,
-                "lumi_value":1,
+                "nbins":30,
+                "ratio_range":[0., 20.],
                 },
             )
 
+if __name__ == "__main__":
+
+    plot("Wgt__PtLead12_v4")
+    plot("Wgt__PtSubLead12_v4")
+    plot("Wgt__M12_v4")
+    plot("Wgt__Pt0_v4")
+    plot("Wgt__DeltaPhi12")
+    plot("Wgt__DeltaEta12")
+    plot("Wgt__DeltaR12")
