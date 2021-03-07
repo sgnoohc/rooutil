@@ -435,7 +435,7 @@ int main(int argc, char** argv)
                 return 1.;
             }, [&]()
             {
-                return xsec / nevents * 1000. * 0.2172 * 0.2172 * 0.57 * 137; // To set it to fb unit
+                return xsec / nevents * 1000. * 137; // To set it to fb unit
             }
             );
     // For example if we need to cut
