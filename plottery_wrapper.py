@@ -21,6 +21,9 @@ from errors import E
 import errno    
 import pyrootutil as ru
 
+r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+
 # ================================================================
 # New TColors
 # ================================================================
@@ -565,6 +568,16 @@ def apply_nf_w_error_2d(hists, nfs):
 # =================
 
 #______________________________________________________________________________________________________________________
+# 95% CL limit
+def fom_limit(s, serr, b, berr, totals, totalb):
+    if b > 0:
+        print s, b, berr,  berr / b
+        print r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+        return r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+    else:
+        return 0, 0
+
+#______________________________________________________________________________________________________________________
 # S / sqrt(B) fom
 def fom_SoverB(s, serr, b, berr, totals, totalb):
     if b > 0:
@@ -638,7 +651,8 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
 
 #______________________________________________________________________________________________________________________
 # For each signal and total background return scan from left/right of fom (figure of merit) func.
-def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+# def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+def plot_sigscan(sig, bkg, fom=fom_limit):
 #def plot_sigscan(sig, bkg, fom=fom_SoverB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():

@@ -1,46 +1,34 @@
-//
-//---------------------------
-//
-//     Fit to single bin
-//
-//---------------------------
-//
-// root.exe -q -b single_bin_limit.C
-//
-//
-// Adopted               by Philip Chang       UCSD            March 16, 2021
-// Original code written by Michael Schmitt    Northwestern    November 1, 2019
-//
-//
-//
-//
-//
-#include <iomanip>
-#include <math.h>
-#include <iostream>
-#include <string>
-#include "TROOT.h"
-#include "TStyle.h"
-#include "TFile.h"
-#include "TCanvas.h"
-using namespace std;
+#include "statutil.h"
 
-//
-// Run-time options
-//
-const Bool_t FixBackgrounds = false;
-const Bool_t DrawGraph = false;
+Bool_t RooUtil::StatUtil::FixBackgrounds = false;
+Bool_t RooUtil::StatUtil::DrawGraph = false;
+Bool_t RooUtil::StatUtil::Verbose = false;
 
 //
 // parameters
 //
-const Int_t nP = 2;
-Double_t mu_cen, mu_unc;
-Double_t beta;
+Double_t RooUtil::StatUtil::mu_cen;
+Double_t RooUtil::StatUtil::mu_unc;
+Double_t RooUtil::StatUtil::beta;
 
 // log-normal parameters
-Double_t beta_W;
-Double_t beta_A;
+Double_t RooUtil::StatUtil::beta_W;
+Double_t RooUtil::StatUtil::beta_A;
+
+void RooUtil::StatUtil::setFixBackgrounds(Bool_t v)
+{
+    FixBackgrounds = v;
+}
+
+void RooUtil::StatUtil::setDrawGraph(Bool_t v)
+{
+    DrawGraph = v;
+}
+
+void RooUtil::StatUtil::setVerbose(Bool_t v)
+{
+    Verbose = v;
+}
 
 //
 // Data
@@ -48,11 +36,13 @@ Double_t beta_A;
 //      B = total background in channel n
 //      N = observed yield in channel n
 //
-Double_t S, B, N;
+Double_t RooUtil::StatUtil::S;
+Double_t RooUtil::StatUtil::B;
+Double_t RooUtil::StatUtil::N;
 
 //
 // Find the sigma parameter needed for the log-normal distribution.
-Double_t findW(Double_t Z)
+Double_t RooUtil::StatUtil::findW(Double_t Z)
 {
     Double_t Wbeg = Z / 2.;
     Double_t Wend = Z * 2.;
@@ -76,28 +66,31 @@ Double_t findW(Double_t Z)
 
 
 
-void setupData(Double_t S_, Double_t B_, Double_t BSyst_)
+void RooUtil::StatUtil::setupData(Double_t S_, Double_t B_, Double_t BSyst_)
 {
-  cout << "\nSetup data...\n\n";
+    if (Verbose)
+        cout << "\nSetup data...\n\n";
 
-  Double_t uncty;
+    Double_t uncty;
 
-  B = B_;
-  S = S_;
-  N = B + 1e-5 * S_;
+    B = B_;
+    S = S_;
+    N = B + 1e-5 * S_;
 
-  cout << "\nConstraint data: \n";
+    if (Verbose)
+        cout << "\nConstraint data: \n";
 
-  uncty = BSyst_;
-  beta_W = findW(uncty);     beta_A = pow(uncty,2);
-  printf("1-bin\tB= %6.2f   uncty= %6.2f    W: %7.3f A: %7.4f\n", B, uncty, beta_W, beta_A);
+    uncty = BSyst_;
+    beta_W = findW(uncty);     beta_A = pow(uncty,2);
+    if (Verbose)
+        printf("1-bin\tB= %6.2f   uncty= %6.2f    W: %7.3f A: %7.4f\n", B, uncty, beta_W, beta_A);
 
 }
 
 
 
 
-Double_t termEval(Double_t S_, Double_t B_, Double_t N_)
+Double_t RooUtil::StatUtil::termEval(Double_t S_, Double_t B_, Double_t N_)
 {
   Double_t val = (S_ + B_) - N * log(S_ + B_);
   return val;
@@ -107,7 +100,7 @@ Double_t termEval(Double_t S_, Double_t B_, Double_t N_)
 
 
 //======================================================================
-Double_t NLLFunS(Double_t mu_, Double_t beta_)
+Double_t RooUtil::StatUtil::NLLFunS(Double_t mu_, Double_t beta_)
 {
   Double_t S_ = mu_ * S;
   Double_t B_ = beta_ * B;
@@ -118,7 +111,7 @@ Double_t NLLFunS(Double_t mu_, Double_t beta_)
 
 //======================================================================
 // constraint term
-Double_t NLLFunB(Double_t beta_, Double_t W_, Double_t A_)
+Double_t RooUtil::StatUtil::NLLFunB(Double_t beta_, Double_t W_, Double_t A_)
 {
     Double_t term = (log(beta_) - A_) / W_;
     Double_t val = beta_ + 0.5 * pow(term, 2);
@@ -126,7 +119,7 @@ Double_t NLLFunB(Double_t beta_, Double_t W_, Double_t A_)
 }
 
 
-Double_t NLLFun(Double_t mu_, Double_t beta_)
+Double_t RooUtil::StatUtil::NLLFun(Double_t mu_, Double_t beta_)
 {
     Double_t NLL = NLLFunS(mu_, beta_);
     Double_t NLLB = NLLFunB(beta_, beta_W, beta_A);
@@ -134,23 +127,24 @@ Double_t NLLFun(Double_t mu_, Double_t beta_)
     return val;
 }
 
-Double_t NLLFunVec( Double_t pvec[nP] ) {
+Double_t RooUtil::StatUtil::NLLFunVec( Double_t pvec[nP] ) {
   Double_t val = NLLFun(pvec[0], pvec[1]);
   return val;
 }
 
 
 
-void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
+void RooUtil::StatUtil::fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 {
     Double_t mu_ = par[0];
     Double_t beta_ = par[1];
     f = NLLFun(mu_, beta_);
 }
 
-void doFit()
+void RooUtil::StatUtil::doFit()
 {
-    cout << "\nDo the fit...\n";
+    if (Verbose)
+        cout << "\nDo the fit...\n";
     //
     // Set up MINUIT
     //
@@ -201,23 +195,28 @@ void doFit()
     //
     gMinuit->SetPrintLevel(-1);
     gMinuit->GetParameter(0, mu_cen, mu_unc);
-    cout << "\n"
-         << "\t\t\t\t-----------\n"
-         << "\t\t\t\tFIT RESULTS\n"
-         << "\t\t\t\t-----------\n\n";
-    cout << "FixBackgrounds      = " << FixBackgrounds << endl;
-    cout << endl;
-    printf("mu = %8.5f +/- %7.5f\toverall mu\tprecision:%6.3f\n", mu_cen, mu_unc, mu_unc / mu_cen);
+    if (Verbose)
+    {
+        cout << "\n"
+            << "\t\t\t\t-----------\n"
+            << "\t\t\t\tFIT RESULTS\n"
+            << "\t\t\t\t-----------\n\n";
+        cout << "FixBackgrounds      = " << FixBackgrounds << endl;
+        cout << endl;
+        printf("mu = %8.5f +/- %7.5f\toverall mu\tprecision:%6.3f\n", mu_cen, mu_unc, mu_unc / mu_cen);
+    }
     //
     Double_t betacen, betaunc;
     gMinuit->GetParameter(1, betacen, betaunc);
-    printf("\nbeta= %8.5f +/- %7.5f\t background\tprecision:%6.3f\n", betacen, betaunc, betaunc / betacen);
+    if (Verbose)
+        printf("\nbeta= %8.5f +/- %7.5f\t background\tprecision:%6.3f\n", betacen, betaunc, betaunc / betacen);
 
     //------------------------------
     // Calculate delta-NLL
     //------------------------------
 
-    cout << "\nDelta-NLL analysis:\n";
+    if (Verbose)
+        cout << "\nDelta-NLL analysis:\n";
     Double_t parCen[nP], parUnc[nP], tmpCen[nP], tmpUnc[nP];
     Double_t val0, val1, vari, stdev, pval;
 
@@ -252,19 +251,23 @@ void doFit()
     vari = 2. * (val0 - val1);
     stdev = sqrt(vari);
     pval = 0.5 * (1. + TMath::Erf(-stdev / sqrt(2.)));
-    printf("  mu  \t2*DNLL = %7.4f\tst.dev.= %5.2f\tp-value:%10.3g\n", vari, stdev, pval);
-    cout << " *** Warning.  Needs checking.   ***\n";
+    if (Verbose)
+    {
+        printf("  mu  \t2*DNLL = %7.4f\tst.dev.= %5.2f\tp-value:%10.3g\n", vari, stdev, pval);
+        cout << " *** Warning.  Needs checking.   ***\n";
+    }
 }
 
 
 
 
 
-void doScanSingle()
+float RooUtil::StatUtil::doScanSingle()
 {
-    cout << "\n\nDo scans for signal strength...\n\n";
+    if (Verbose)
+        cout << "\n\nDo scans for signal strength...\n\n";
 
-    const Int_t NVMax = 1000;
+    const Int_t NVMax = 10000;
     Double_t muV[NVMax], NLLV[NVMax];
     Int_t NV;
     Double_t NLLmin = 1.e10;
@@ -278,11 +281,12 @@ void doScanSingle()
 
     // --------------------------------------------------------------------------------
     // Scan mu
-    printf("\nScan mu............\n");
+    if (Verbose)
+        printf("\nScan mu............\n");
     Double_t mucen = 100.;
     NV = 0;
     NLLmin = 1.e10;
-    for (Double_t mux = 2.; mux > -dmux / 2.; mux -= dmux)
+    for (Double_t mux = 100.; mux > -dmux / 2.; mux -= dmux)
     {
         gMinuit->SetPrintLevel(-1);
         Int_t ierflg = 0;
@@ -352,9 +356,12 @@ void doScanSingle()
             }
         }
     }
-    printf("mucen:\t%6.3f\tNLLmin= %f\n", mucen, NLLmin);
-    printf("68 percent CI:\t%6.3f\t%6.3f\n", mudn, muup);
-    printf("error bars:   \t%6.3f\t%6.3f\n", mudn - mucen, muup - mucen);
+    if (Verbose)
+    {
+        printf("mucen:\t%6.3f\tNLLmin= %f\n", mucen, NLLmin);
+        printf("68 percent CI:\t%6.3f\t%6.3f\n", mudn, muup);
+        printf("error bars:   \t%6.3f\t%6.3f\n", mudn - mucen, muup - mucen);
+    }
     NLLupmin = 1.e10;
     NLLdnmin = 1.e10;
     Double_t muup2 = 10.;
@@ -378,7 +385,8 @@ void doScanSingle()
             }
         }
     }
-    printf("95 percent CI:\t%6.3f\t%6.3f\n", mudn2, muup2);
+    if (Verbose)
+        printf("95 percent CI:\t%6.3f\t%6.3f\n", mudn2, muup2);
 
     if (DrawGraph)
     {
@@ -419,21 +427,28 @@ void doScanSingle()
         TEXT->DrawLatexNDC(0.8, 0.71, TString::Format("#mu = %6.3f_{%6.3f}^{+%6.3f} (95%% CL)", mucen, mudn2, muup2));
         C0->Print("scan_mu0.pdf");
     }
+    return muup2;
 }
 
-void cut_and_count_limit(Double_t S_, Double_t B_, Double_t BSyst_)
+float RooUtil::StatUtil::cut_and_count_95percent_limit(Double_t S_, Double_t B_, Double_t BSyst_, Bool_t verbose)
 {
-    cout << "\nPerform a global fit to single bin experiment...\n\n";
+    setVerbose(verbose);
+
+    if (Verbose)
+        cout << "\nPerform a global fit to single bin experiment...\n\n";
 
     setupData(S_, B_, BSyst_);
 
-    printf("\nSummary of data:\n");
-    printf("  total signal     = %7.3f\n", S);
-    printf("  total background = %7.3f\n", B);
-    printf("  observed         = %7.3f\n", N);
-    cout << endl;
+    if (Verbose)
+    {
+        printf("\nSummary of data:\n");
+        printf("  total signal     = %7.3f\n", S);
+        printf("  total background = %7.3f\n", B);
+        printf("  observed         = %7.3f\n", N);
+        cout << endl;
+    }
 
     doFit();
 
-    doScanSingle();
+    return doScanSingle();
 }

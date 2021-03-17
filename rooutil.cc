@@ -18,3 +18,4 @@
 #include "module.cc"
 #include "varmap.cc"
 #include "eventindexmap.cc"
+#include "statutil.cc"
