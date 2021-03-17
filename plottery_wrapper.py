@@ -571,9 +571,8 @@ def apply_nf_w_error_2d(hists, nfs):
 # 95% CL limit
 def fom_limit(s, serr, b, berr, totals, totalb):
     if b > 0:
-        print s, b, berr,  berr / b
-        print r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
-        return r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+        print s, b, 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+        return 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
     else:
         return 0, 0
 
