@@ -779,12 +779,36 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
 # ====================
 
 #______________________________________________________________________________________________________________________
+def human_readable_sample_name(name):
+    tmpname = name.replace("t#bar{t}", "tt")
+    tmpname = tmpname.replace("W^{#pm}W^{#pm}", "ssWW")
+    tmpname = tmpname.replace("^{#pm}", "")
+    return tmpname
+
+#______________________________________________________________________________________________________________________
+def human_format(num):
+    is_fraction = False
+    if num < 1:
+        is_fraction = True
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    # add more suffixes if you need them
+    if is_fraction:
+        return '%.2g%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+    else:
+        return '%.3g%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+
+#______________________________________________________________________________________________________________________
 def yield_str(hist, i, prec=3, noerror=False):
     if noerror:
         return "{{:.{}f}}".format(prec).format(hist.GetBinContent(i))
     else:
         e = E(hist.GetBinContent(i), hist.GetBinError(i))
-        return e.round(prec)
+        # return e.round(prec)
+        sep = u"\u00B1".encode("utf-8")
+        return "%s %s %s" % (human_format(e.val), sep, human_format(e.err))
 #______________________________________________________________________________________________________________________
 def yield_tex_str(hist, i, prec=3, noerror=False):
     tmp = yield_str(hist, i, prec, noerror)
@@ -799,8 +823,8 @@ def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=
     if len(hists) == 0:
         return
     # add bin column
-    bins = binrange if len(binrange) != 0 else range(0, hists[0].GetNbinsX()+2)
     labels = hists[0].GetXaxis().GetLabels()
+    bins = binrange if len(binrange) != 0 else (range(1, hists[0].GetNbinsX()+1) if labels else range(0, hists[0].GetNbinsX()+2))
     if labels:
         x.add_column("Bin#", [ hists[0].GetXaxis().GetBinLabel(i) for i in bins])
     else:
@@ -892,7 +916,6 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
     hists = []
     hists.extend(hbkgs)
-    hists.extend(hsigs)
     htotal = None
     if len(hbkgs) != 0:
         htotal = get_total_hist(hbkgs)
@@ -906,6 +929,7 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         #hists.append(htotal)
         hists.append(hdata)
         hists.append(hratio)
+    hists.extend(hsigs)
     prec = 2
     if "yield_prec" in options:
         prec = options["yield_prec"]
@@ -1130,7 +1154,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     # Print yield table if the option is turned on
     if "print_yield" in options:
         if options["print_yield"]:
-            print_yield_table(data, bgs, sigs, syst, options)
+            print_yield_table(None if didnothaveanydata else data, bgs, sigs, syst, options)
         del options["print_yield"]
 
     # Inject signal option
@@ -1883,13 +1907,17 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         for n in sample_names:
             h = tfs[n].Get(hist_name)
             if h:
-                if signal_labels:
-                    if n in issig:
+                if n in issig:
+                    if signal_labels:
                         h.SetName(signal_labels[issig.index(n)])
                     else:
                         h.SetName(n)
                 else:
-                    h.SetName(n)
+                    if len(legend_labels) > 0:
+                        hrsn = human_readable_sample_name(legend_labels[sample_names.index(n)])
+                        h.SetName(hrsn)
+                    else:
+                        h.SetName(n)
                 hists.append(h)
                 colors.append(clrs[n])
             else:
