@@ -601,7 +601,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo 'CXXFLAGS   += $(ROOTCFLAGS)'                                                                                                                  >> Makefile
         echo 'CFLAGS      = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                                        >> Makefile
         echo 'EXTRACFLAGS = $(shell rooutil-config)'                                                                                                        >> Makefile
-        echo 'EXTRAFLAGS  = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer'                              >> Makefile
+        echo 'EXTRAFLAGS  = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -lMinuit'                     >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o'                                                                                                      >> Makefile
         echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                    >> Makefile

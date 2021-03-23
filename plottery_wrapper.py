@@ -21,8 +21,9 @@ from errors import E
 import errno    
 import pyrootutil as ru
 
-r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
-r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+if os.path.exists("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0])):
+    r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+    r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
 
 # ================================================================
 # New TColors
@@ -1914,8 +1915,11 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         h.SetName(n)
                 else:
                     if len(legend_labels) > 0:
-                        hrsn = human_readable_sample_name(legend_labels[sample_names.index(n)])
-                        h.SetName(hrsn)
+                        try:
+                            hrsn = human_readable_sample_name(legend_labels[sample_names.index(n)])
+                            h.SetName(hrsn)
+                        except:
+                            h.SetName(n)
                     else:
                         h.SetName(n)
                 hists.append(h)
