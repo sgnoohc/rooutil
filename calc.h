@@ -24,6 +24,8 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> > LV;
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LV;
 #endif
 
+#include "hungarian.h"
+
 namespace RooUtil
 {
     namespace Calc {
@@ -53,6 +55,7 @@ namespace RooUtil
                 const std::vector<LV>& lepton_p4s,
                 std::vector<int> to_skip=std::vector<int>());
         std::vector<LV> sortByPt(std::vector<LV> vecs);
+        std::vector<int> hungarianDeltaRMatching(std::vector<LV> src_obj_to_match, std::vector<LV> target_obj_to_match_to);
     }
 }
 

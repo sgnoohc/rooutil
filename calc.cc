@@ -437,4 +437,23 @@ std::vector<LV> RooUtil::Calc::sortByPt(std::vector<LV> vecs)
     return vecs;
 }
 
+std::vector<int> RooUtil::Calc::hungarianDeltaRMatching(std::vector<LV> src_obj_to_match, std::vector<LV> target_obj_to_match_to)
+{
+    std::vector<std::vector<double>> costMatrix;
+    for (int isrc = 0; isrc < src_obj_to_match.size(); ++isrc)
+    {
+        std::vector<double> drs;
+        for (int itar = 0; itar < target_obj_to_match_to.size(); ++itar)
+        {
+            float dr = RooUtil::Calc::DeltaR(src_obj_to_match[isrc], target_obj_to_match_to[itar]);
+            drs.push_back(dr);
+        }
+        costMatrix.push_back(drs);
+    }
+    vector<int> assignment;
+    HungarianAlgorithm HungAlgo;
+    double cost = HungAlgo.Solve(costMatrix, assignment);
+    return assignment;
+}
+
 //eof

@@ -19,3 +19,4 @@
 #include "varmap.h"
 #include "eventindexmap.h"
 #include "statutil.h"
+#include "hungarian.h"
