@@ -6,6 +6,8 @@ import sys
 f = open(sys.argv[1])
 if len(sys.argv) > 2:
     dosimple = True
+else:
+    dosimple = False
 
 lines = [ l.strip() for l in f.readlines() ]
 

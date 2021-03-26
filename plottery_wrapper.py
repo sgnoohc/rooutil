@@ -21,9 +21,9 @@ from errors import E
 import errno    
 import pyrootutil as ru
 
-if os.path.exists("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0])):
-    r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
-    r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+# if os.path.exists("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0])):
+#     r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+#     r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
 
 # ================================================================
 # New TColors
@@ -802,14 +802,19 @@ def human_format(num):
         return '%.3g%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
 #______________________________________________________________________________________________________________________
-def yield_str(hist, i, prec=3, noerror=False):
+def yield_str(hist, i, prec=3, noerror=False, options={}):
     if noerror:
         return "{{:.{}f}}".format(prec).format(hist.GetBinContent(i))
     else:
         e = E(hist.GetBinContent(i), hist.GetBinError(i))
-        # return e.round(prec)
-        sep = u"\u00B1".encode("utf-8")
-        return "%s %s %s" % (human_format(e.val), sep, human_format(e.err))
+        if "human_format" in options:
+            if options["human_format"]:
+                sep = u"\u00B1".encode("utf-8")
+                return "%s %s %s" % (human_format(e.val), sep, human_format(e.err))
+            else:
+                return e.round(prec)
+        else:
+            return e.round(prec)
 #______________________________________________________________________________________________________________________
 def yield_tex_str(hist, i, prec=3, noerror=False):
     tmp = yield_str(hist, i, prec, noerror)
@@ -819,7 +824,7 @@ def yield_tex_str(hist, i, prec=3, noerror=False):
     return tmp
 
 #______________________________________________________________________________________________________________________
-def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=False):
+def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=False, options={}):
     x = Table()
     if len(hists) == 0:
         return
@@ -831,7 +836,7 @@ def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=
     else:
         x.add_column("Bin#", ["Bin{}".format(i) for i in bins])
     for hist in hists:
-        x.add_column(hist.GetName(), [ yield_str(hist, i, prec, noerror) for i in bins])
+        x.add_column(hist.GetName(), [ yield_str(hist, i, prec, noerror, options) for i in bins])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
@@ -935,7 +940,7 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
     if "yield_prec" in options:
         prec = options["yield_prec"]
         del options["yield_prec"]
-    print_yield_table_from_list(hists, options["output_name"], prec)
+    print_yield_table_from_list(hists, options["output_name"], prec, options=options)
     print_yield_tex_table_from_list(hists, options["output_name"], prec, options["yield_table_caption"] if "yield_table_caption" in options else "PUT YOUR CAPTION HERE")
     if "yield_table_caption" in options: del options["yield_table_caption"]
 
@@ -1157,6 +1162,9 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         if options["print_yield"]:
             print_yield_table(None if didnothaveanydata else data, bgs, sigs, syst, options)
         del options["print_yield"]
+
+    if "human_format" in options:
+        del options["human_format"]
 
     # Inject signal option
     if "inject_signal" in options:
@@ -1995,6 +2003,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"}
                         options.update(extraoptions)
                         plot_hist_2d(hist=h, options=options)
+    print "here1"
 
     if do_sum:
 
@@ -2042,6 +2051,11 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+
+    print "here2"
+
+    sys.exit()
+
 
 def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, signal_scale="", extraoptions={}, usercolors=None, hsuffix="_cutflow", _plotter=plot_hist):
 

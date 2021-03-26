@@ -38,6 +38,7 @@ namespace RooUtil
         float pPRel(const LV& a, const LV& b);
         float DeltaEta(const LV& a, const LV& b);
         float DeltaPhi(const LV& a, const LV& b);
+        float DeltaPtFrac(const LV& a, const LV& b);
         float mT(const LV& lep, const LV& met);
         LV getNeutrinoP4(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool invertpz=false, bool debug=false);
         float getNeutrinoPz(const LV& lep, const float& met_pt, const float& met_phi, float mw=80.385, bool getsol2=false, bool debug=false);
