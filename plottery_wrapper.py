@@ -1038,10 +1038,13 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             for sig in sigs:
                 if sig.Integral() != 0:
                     sig.Scale(integral/sig.Integral())
+                    sig.SetName(sig.GetName() + " [norm]")
             del options["signal_scale"]
         else:
             for sig in sigs:
                 sig.Scale(options["signal_scale"])
+                if options["signal_scale"] != 1:
+                    sig.SetName(sig.GetName() + " [{}x]".format(options["signal_scale"]))
             del options["signal_scale"]
 
     # autobin
