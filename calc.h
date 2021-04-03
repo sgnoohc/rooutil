@@ -56,6 +56,8 @@ namespace RooUtil
                 std::vector<int> to_skip=std::vector<int>());
         std::vector<LV> sortByPt(std::vector<LV> vecs);
         std::vector<int> hungarianDeltaRMatching(std::vector<LV> src_obj_to_match, std::vector<LV> target_obj_to_match_to);
+        std::vector<int> hungarianDeltaEtaMatching(std::vector<LV> src_obj_to_match, std::vector<LV> target_obj_to_match_to);
+        std::pair<int, int> selectVBFJetsMaxEScheme(std::vector<LV> jets);
     }
 }
 

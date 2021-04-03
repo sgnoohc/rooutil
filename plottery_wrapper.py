@@ -1830,7 +1830,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None, histxaxislabeloptions={}):
 
     # color_pallete
     colors_ = default_colors
@@ -1972,6 +1972,19 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                             bkgs = [ sigs.pop(0) ]
                         options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale, "do_ks_test":doKStest}
                         options.update(extraoptions)
+                        # ---------Below is special setting that gets set by user
+                        # The histxaxislabeloptions is a dict with keys being either "Mbb" or "SRLLChannell__Mbb" <-- with a cut name in front
+                        # if the latter is provided then the former is overridden
+                        # Otherwise go with the former
+                        if "__" in hist_name:
+                            if hist_name.split("__")[1] in histxaxislabeloptions or hist_name in histxaxislabeloptions:
+                                # has_full_name_config?
+                                if hist_name in histxaxislabeloptions:
+                                    hist_var_name = hist_name
+                                else: # otherwise go with just the histogrm setting
+                                    hist_var_name = hist_name.split("__")[1]
+                                options.update(histxaxislabeloptions[hist_var_name])
+                            # ---------Below is special setting that gets set by user
                         _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
                 if hists[0].GetDimension() == 2:
                     if donorm:
@@ -2003,8 +2016,6 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"}
                         options.update(extraoptions)
                         plot_hist_2d(hist=h, options=options)
-    print "here1"
-
     if do_sum:
 
         hists = summed_hist
@@ -2051,8 +2062,6 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
-
-    print "here2"
 
     sys.exit()
 

@@ -456,4 +456,91 @@ std::vector<int> RooUtil::Calc::hungarianDeltaRMatching(std::vector<LV> src_obj_
     return assignment;
 }
 
+std::vector<int> RooUtil::Calc::hungarianDeltaEtaMatching(std::vector<LV> src_obj_to_match, std::vector<LV> target_obj_to_match_to)
+{
+    std::vector<std::vector<double>> costMatrix;
+    for (int isrc = 0; isrc < src_obj_to_match.size(); ++isrc)
+    {
+        std::vector<double> detas;
+        for (int itar = 0; itar < target_obj_to_match_to.size(); ++itar)
+        {
+            float deta = fabs(RooUtil::Calc::DeltaEta(src_obj_to_match[isrc], target_obj_to_match_to[itar]));
+            detas.push_back(deta);
+        }
+        costMatrix.push_back(detas);
+    }
+    vector<int> assignment;
+    HungarianAlgorithm HungAlgo;
+    double cost = HungAlgo.Solve(costMatrix, assignment);
+    return assignment;
+}
+
+std::pair<int, int> RooUtil::Calc::selectVBFJetsMaxEScheme(std::vector<LV> jets)
+{
+
+    if (jets.size() < 2)
+    {
+        return std::make_pair(-1, -1);
+    }
+
+    if (jets.size() == 2)
+    {
+        return std::make_pair(0, 1);
+    }
+
+    // Otherwise, I have 3 or more vbs candidate jets
+    std::vector<std::pair<float, int>> vbs_pos_eta_jets;
+    std::vector<std::pair<float, int>> vbs_neg_eta_jets;
+    for (unsigned int ijet = 0; ijet < jets.size(); ijet++)
+    {
+        const LV& jet = jets[ijet];
+        const float& P = jets[ijet].P();
+        if (jet.eta() >= 0)
+        {
+            vbs_pos_eta_jets.push_back(std::make_pair(P, ijet));
+        }
+        if (jet.eta() < 0)
+        {
+            vbs_neg_eta_jets.push_back(std::make_pair(P, ijet));
+        }
+    }
+
+    // Sort the pairs
+    std::sort(vbs_pos_eta_jets.begin(), vbs_pos_eta_jets.end(),
+              [](const std::pair<float, int> & a, const std::pair<float, int> & b) -> bool
+              {
+                  return a.first > b.first;
+              });
+
+    // Sort the pairs
+    std::sort(vbs_neg_eta_jets.begin(), vbs_neg_eta_jets.end(),
+              [](const std::pair<float, int> & a, const std::pair<float, int> & b) -> bool
+              {
+                  return a.first > b.first;
+              });
+
+    int vbs_jet_idx_A = -999;
+    int vbs_jet_idx_B = -999;
+    if (vbs_pos_eta_jets.size() == 0)
+    {
+        vbs_jet_idx_A = vbs_neg_eta_jets[0].second;
+        vbs_jet_idx_B = vbs_neg_eta_jets[1].second;
+    }
+    else if (vbs_neg_eta_jets.size() == 0)
+    {
+        vbs_jet_idx_A = vbs_pos_eta_jets[0].second;
+        vbs_jet_idx_B = vbs_pos_eta_jets[1].second;
+    }
+    else
+    {
+        vbs_jet_idx_A = vbs_pos_eta_jets[0].second;
+        vbs_jet_idx_B = vbs_neg_eta_jets[0].second;
+    }
+
+    int vbs_jet_idx_0 = vbs_jet_idx_A < vbs_jet_idx_B ? vbs_jet_idx_A : vbs_jet_idx_B;
+    int vbs_jet_idx_1 = vbs_jet_idx_A < vbs_jet_idx_B ? vbs_jet_idx_B : vbs_jet_idx_A;
+
+    return std::make_pair(vbs_jet_idx_0, vbs_jet_idx_1);
+}
+
 //eof
