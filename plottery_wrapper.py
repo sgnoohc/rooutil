@@ -830,7 +830,10 @@ def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=
         return
     # add bin column
     labels = hists[0].GetXaxis().GetLabels()
-    bins = binrange if len(binrange) != 0 else (range(1, hists[0].GetNbinsX()+1) if labels else range(0, hists[0].GetNbinsX()+2))
+    if "print_yield_bin_indices" in options:
+        bins = options["print_yield_bin_indices"]
+    else:
+        bins = binrange if len(binrange) != 0 else (range(1, hists[0].GetNbinsX()+1) if labels else range(0, hists[0].GetNbinsX()+2))
     if labels:
         x.add_column("Bin#", [ hists[0].GetXaxis().GetBinLabel(i) for i in bins])
     else:
@@ -1870,8 +1873,40 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     hist_names = []
     for n in tfs:
         for key in tfs[n].GetListOfKeys():
+
+            keyname = str(key.GetName())
+
+            # If to filter certain histograms
+            if filter_pattern:
+                if dogrep:
+                    doskip = True
+                    for item in filter_pattern.split(","):
+                        if "*" in item:
+                            match = True
+                            for token in item.split("*"):
+                                if token not in keyname:
+                                    match = False
+                                    break
+                            if match:
+                                doskip = False
+                                break
+                        else:
+                            if item in keyname:
+                                doskip = False
+                                break
+                    if doskip:
+                        continue
+                else:
+                    doskip = True
+                    for item in filter_pattern.split(","):
+                        if keyname == item:
+                            doskip = False
+                            break
+                    if doskip:
+                        continue
+
             if "TH" in tfs[n].Get(str(key.GetName())).ClassName():
-                hist_names.append(str(key.GetName()))
+                hist_names.append(keyname)
 
     # Remove duplicate names
     hist_names = list(set(hist_names))
@@ -1884,7 +1919,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
 
     # Loop over hist_names
     for hist_name in hist_names:
-        
+
         # If to filter certain histograms
         if filter_pattern:
             if dogrep:
@@ -1979,16 +2014,15 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         # The histxaxislabeloptions is a dict with keys being either "Mbb" or "SRLLChannell__Mbb" <-- with a cut name in front
                         # if the latter is provided then the former is overridden
                         # Otherwise go with the former
-                        if "__" in hist_name:
-                            if hist_name.split("__")[1] in histxaxislabeloptions or hist_name in histxaxislabeloptions:
-                                # has_full_name_config?
-                                if hist_name in histxaxislabeloptions:
-                                    hist_var_name = hist_name
-                                else: # otherwise go with just the histogrm setting
-                                    hist_var_name = hist_name.split("__")[1]
-                                options.update(histxaxislabeloptions[hist_var_name])
-                            # ---------Below is special setting that gets set by user
-                        _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
+                        if hist_name in histxaxislabeloptions or (("__" in hist_name) and (hist_name.split("__")[1] in histxaxislabeloptions)):
+                            # has_full_name_config?
+                            if hist_name in histxaxislabeloptions:
+                                hist_var_name = hist_name
+                            else: # otherwise go with just the histogrm setting
+                                hist_var_name = hist_name.split("__")[1]
+                            options.update(histxaxislabeloptions[hist_var_name])
+                        # ---------Below is special setting that gets set by user
+                        _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [], sig_labels=[])
                 if hists[0].GetDimension() == 2:
                     if donorm:
                         for h in hists:
@@ -2065,8 +2099,6 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
-
-    sys.exit()
 
 
 def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, signal_scale="", extraoptions={}, usercolors=None, hsuffix="_cutflow", _plotter=plot_hist):
