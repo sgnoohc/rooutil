@@ -2015,12 +2015,13 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         # if the latter is provided then the former is overridden
                         # Otherwise go with the former
                         if hist_name in histxaxislabeloptions or (("__" in hist_name) and (hist_name.split("__")[1] in histxaxislabeloptions)):
+                            # has variable name in config?
+                            if "__" in hist_name and hist_name.split("__")[1] in histxaxislabeloptions:
+                                options.update(histxaxislabeloptions[hist_name.split("__")[1]]) # First update with just variable name as key
                             # has_full_name_config?
                             if hist_name in histxaxislabeloptions:
                                 hist_var_name = hist_name
-                            else: # otherwise go with just the histogrm setting
-                                hist_var_name = hist_name.split("__")[1]
-                            options.update(histxaxislabeloptions[hist_var_name])
+                                options.update(histxaxislabeloptions[hist_var_name]) # If full name key exists update with that as well
                         # ---------Below is special setting that gets set by user
                         _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [], sig_labels=[])
                 if hists[0].GetDimension() == 2:
