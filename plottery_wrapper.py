@@ -1163,6 +1163,22 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     #for hbg in bgs:
     #    hbg.Print("all")
 
+    if "bin_labels" in options:
+        # Set can extend turned off if label exists
+        for h in bgs + sigs + [data] + [syst]:
+            if h:
+                nbins = h.GetNbinsX()
+                nlabels = len(options["bin_labels"])
+                if nbins != nlabels:
+                    print "Error: the bin_labels length do not match the histogram nbinsx"
+                    continue
+                else:
+                    for i in xrange(nlabels):
+                        h.GetXaxis().SetBinLabel(i + 1, options["bin_labels"][i])
+                    h.SetCanExtend(False)
+                    h.LabelsOption("v")
+        del options["bin_labels"]
+
     # Print yield table if the option is turned on
     if "print_yield" in options:
         if options["print_yield"]:
@@ -1836,7 +1852,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None, histxaxislabeloptions={}):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None, histxaxislabeloptions={}, skip2d=False):
 
     # color_pallete
     colors_ = default_colors
@@ -2024,7 +2040,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                                 options.update(histxaxislabeloptions[hist_var_name]) # If full name key exists update with that as well
                         # ---------Below is special setting that gets set by user
                         _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [], sig_labels=[])
-                if hists[0].GetDimension() == 2:
+                if hists[0].GetDimension() == 2 and not skip2d:
                     if donorm:
                         for h in hists:
                             h.Scale(1./h.Integral())
