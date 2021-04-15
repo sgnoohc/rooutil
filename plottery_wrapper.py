@@ -1176,7 +1176,12 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                     for i in xrange(nlabels):
                         h.GetXaxis().SetBinLabel(i + 1, options["bin_labels"][i])
                     h.SetCanExtend(False)
-                    h.LabelsOption("v")
+                    if "bin_labels_orientation" in options:
+                        h.LabelsOption(options["bin_labels_orientation"])
+                    else:
+                        h.LabelsOption("h")
+        if "bin_labels_orientation" in options:
+            del options["bin_labels_orientation"]
         del options["bin_labels"]
 
     # Print yield table if the option is turned on
