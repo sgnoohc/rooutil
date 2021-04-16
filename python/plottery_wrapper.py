@@ -21,6 +21,10 @@ from errors import E
 import errno    
 import pyrootutil as ru
 
+# if os.path.exists("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0])):
+#     r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+#     r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+
 # ================================================================
 # New TColors
 # ================================================================
@@ -565,6 +569,15 @@ def apply_nf_w_error_2d(hists, nfs):
 # =================
 
 #______________________________________________________________________________________________________________________
+# 95% CL limit
+def fom_limit(s, serr, b, berr, totals, totalb):
+    if b > 0:
+        print s, b, 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+        return 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+    else:
+        return 0, 0
+
+#______________________________________________________________________________________________________________________
 # S / sqrt(B) fom
 def fom_SoverB(s, serr, b, berr, totals, totalb):
     if b > 0:
@@ -638,7 +651,8 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
 
 #______________________________________________________________________________________________________________________
 # For each signal and total background return scan from left/right of fom (figure of merit) func.
-def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+# def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+def plot_sigscan(sig, bkg, fom=fom_limit):
 #def plot_sigscan(sig, bkg, fom=fom_SoverB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
@@ -766,12 +780,41 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
 # ====================
 
 #______________________________________________________________________________________________________________________
-def yield_str(hist, i, prec=3, noerror=False):
+def human_readable_sample_name(name):
+    tmpname = name.replace("t#bar{t}", "tt")
+    tmpname = tmpname.replace("W^{#pm}W^{#pm}", "ssWW")
+    tmpname = tmpname.replace("^{#pm}", "")
+    return tmpname
+
+#______________________________________________________________________________________________________________________
+def human_format(num):
+    is_fraction = False
+    if num < 1:
+        is_fraction = True
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    # add more suffixes if you need them
+    if is_fraction:
+        return '%.2g%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+    else:
+        return '%.3g%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+
+#______________________________________________________________________________________________________________________
+def yield_str(hist, i, prec=3, noerror=False, options={}):
     if noerror:
         return "{{:.{}f}}".format(prec).format(hist.GetBinContent(i))
     else:
         e = E(hist.GetBinContent(i), hist.GetBinError(i))
-        return e.round(prec)
+        if "human_format" in options:
+            if options["human_format"]:
+                sep = u"\u00B1".encode("utf-8")
+                return "%s %s %s" % (human_format(e.val), sep, human_format(e.err))
+            else:
+                return e.round(prec)
+        else:
+            return e.round(prec)
 #______________________________________________________________________________________________________________________
 def yield_tex_str(hist, i, prec=3, noerror=False):
     tmp = yield_str(hist, i, prec, noerror)
@@ -781,19 +824,22 @@ def yield_tex_str(hist, i, prec=3, noerror=False):
     return tmp
 
 #______________________________________________________________________________________________________________________
-def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=False):
+def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=False, options={}):
     x = Table()
     if len(hists) == 0:
         return
     # add bin column
-    bins = binrange if len(binrange) != 0 else range(0, hists[0].GetNbinsX()+2)
     labels = hists[0].GetXaxis().GetLabels()
+    if "print_yield_bin_indices" in options:
+        bins = options["print_yield_bin_indices"]
+    else:
+        bins = binrange if len(binrange) != 0 else (range(1, hists[0].GetNbinsX()+1) if labels else range(0, hists[0].GetNbinsX()+2))
     if labels:
         x.add_column("Bin#", [ hists[0].GetXaxis().GetBinLabel(i) for i in bins])
     else:
         x.add_column("Bin#", ["Bin{}".format(i) for i in bins])
     for hist in hists:
-        x.add_column(hist.GetName(), [ yield_str(hist, i, prec, noerror) for i in bins])
+        x.add_column(hist.GetName(), [ yield_str(hist, i, prec, noerror, options) for i in bins])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.txt'
     x.print_table()
@@ -879,7 +925,6 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
     hists = []
     hists.extend(hbkgs)
-    hists.extend(hsigs)
     htotal = None
     if len(hbkgs) != 0:
         htotal = get_total_hist(hbkgs)
@@ -893,18 +938,19 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         #hists.append(htotal)
         hists.append(hdata)
         hists.append(hratio)
+    hists.extend(hsigs)
     prec = 2
     if "yield_prec" in options:
         prec = options["yield_prec"]
         del options["yield_prec"]
-    print_yield_table_from_list(hists, options["output_name"], prec)
+    print_yield_table_from_list(hists, options["output_name"], prec, options=options)
     print_yield_tex_table_from_list(hists, options["output_name"], prec, options["yield_table_caption"] if "yield_table_caption" in options else "PUT YOUR CAPTION HERE")
     if "yield_table_caption" in options: del options["yield_table_caption"]
 
 def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
-    os.system("cp {}/../misc/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+    os.system("cp {}/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
     os.system("chmod 755 {}/index.php".format(plotdir))
 #    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
@@ -995,10 +1041,13 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             for sig in sigs:
                 if sig.Integral() != 0:
                     sig.Scale(integral/sig.Integral())
+                    sig.SetName(sig.GetName() + " [norm]")
             del options["signal_scale"]
         else:
             for sig in sigs:
                 sig.Scale(options["signal_scale"])
+                if options["signal_scale"] != 1:
+                    sig.SetName(sig.GetName() + " [{}x]".format(options["signal_scale"]))
             del options["signal_scale"]
 
     # autobin
@@ -1082,7 +1131,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if "ymax_scale" in options:
         maxmult = options["ymax_scale"]
         del options["ymax_scale"]
-    yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg]) * maxmult)
+    yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg] + sigs) * maxmult)
     yaxismin = get_nonzeromin_yaxis_range(bgs)
     #yaxismin = 1000
 
@@ -1114,11 +1163,35 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     #for hbg in bgs:
     #    hbg.Print("all")
 
+    if "bin_labels" in options:
+        # Set can extend turned off if label exists
+        for h in bgs + sigs + [data] + [syst]:
+            if h:
+                nbins = h.GetNbinsX()
+                nlabels = len(options["bin_labels"])
+                if nbins != nlabels:
+                    print "Error: the bin_labels length do not match the histogram nbinsx"
+                    continue
+                else:
+                    for i in xrange(nlabels):
+                        h.GetXaxis().SetBinLabel(i + 1, options["bin_labels"][i])
+                    h.SetCanExtend(False)
+                    if "bin_labels_orientation" in options:
+                        h.LabelsOption(options["bin_labels_orientation"])
+                    else:
+                        h.LabelsOption("h")
+        if "bin_labels_orientation" in options:
+            del options["bin_labels_orientation"]
+        del options["bin_labels"]
+
     # Print yield table if the option is turned on
     if "print_yield" in options:
         if options["print_yield"]:
-            print_yield_table(data, bgs, sigs, syst, options)
+            print_yield_table(None if didnothaveanydata else data, bgs, sigs, syst, options)
         del options["print_yield"]
+
+    if "human_format" in options:
+        del options["human_format"]
 
     # Inject signal option
     if "inject_signal" in options:
@@ -1319,7 +1392,36 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
     scan2d = plot_sigscan2d(sigs[0].Clone(), get_total_hist(bgs).Clone())
     if scan2d.GetBinContent(1) != 0:
         scan2d.Scale(1./scan2d.GetBinContent(1))
-    hsigs.append(scan2d.Clone())
+    # hsigs.append(scan2d.Clone())
+    leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone(), fom_acceptance)
+    hsigs.append(leftscan.Clone())
+    hsigs.append(rightscan.Clone())
+    options["bkg_err_fill_color"] = 0
+    options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
+    options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
+    options["signal_scale"] = 1
+    plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
+
+#______________________________________________________________________________________________________________________
+def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
+    hsigs = []
+    hbgs = []
+    if syst:
+        leftscan, rightscan = plot_sigscan_w_syst(sigs[0].Clone(), [bg.Clone() for bg in bgs], systs=syst)
+    else:
+        leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone())
+    leftscan.Print("all")
+    if leftscan.GetBinContent(1) != 0:
+        leftscan.Scale(1./leftscan.GetBinContent(1))
+    if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
+        rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
+    leftscan.SetFillStyle(1)
+    hbgs.append(leftscan.Clone())
+    hsigs.append(rightscan.Clone())
+    scan2d = plot_sigscan2d(sigs[0].Clone(), get_total_hist(bgs).Clone())
+    if scan2d.GetBinContent(1) != 0:
+        scan2d.Scale(1./scan2d.GetBinContent(1))
+    # hsigs.append(scan2d.Clone())
     leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone(), fom_acceptance)
     hsigs.append(leftscan.Clone())
     hsigs.append(rightscan.Clone())
@@ -1546,6 +1648,193 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
 
 
 #______________________________________________________________________________________________________________________
+def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],options={},_persist=[]):
+
+    #opts = Options(options, kind="graph")
+
+    #style = utils.set_style()
+
+    #c1 = r.TCanvas()
+    #if opts["canvas_width"] and opts["canvas_height"]:
+    #    width = opts["canvas_width"]
+    #    height = opts["canvas_height"]
+    #    c1 = r.TCanvas("c1", "c1", width, height)
+    #_persist.append(c1) # need this to avoid segfault with garbage collection
+
+    #pad_main = r.TPad("pad1","pad1",0.,0.,1.,1.)
+    #if opts["canvas_main_topmargin"]: pad_main.SetTopMargin(opts["canvas_main_topmargin"])
+    #if opts["canvas_main_rightmargin"]: pad_main.SetRightMargin(opts["canvas_main_rightmargin"])
+    #if opts["canvas_main_bottommargin"]: pad_main.SetBottomMargin(opts["canvas_main_bottommargin"])
+    #if opts["canvas_main_leftmargin"]: pad_main.SetLeftMargin(opts["canvas_main_leftmargin"])
+    #if opts["canvas_tick_one_side"]: pad_main.SetTicks(0, 0)
+    #pad_main.Draw()
+
+    #pad_main.cd()
+
+    map(u.move_in_overflows, tps)
+    map(u.move_in_overflows, fps)
+
+    #legend = get_legend(opts)
+
+    # generalize later
+    if len(tps) != len(fps):
+        print len(tps), len(fps)
+        print ">>> number of true positive hists and false positive hists must match"
+        sys.exit(-1)
+
+    debug = False
+
+    ## do your thing
+    valpairs = []
+    pointpairs = []
+    ref_seff = 0
+    ref_beff = 0
+    for index, _ in enumerate(tps):
+
+        sighist = tps[index]
+        bkghist = fps[index]
+        cutval = cutvals[index] if len(cutvals) == len(tps) else -999
+
+        if debug: print "[DEBUG] >>> here", sighist.GetName(), bkghist.GetName()
+
+        error = r.Double()
+
+        stot = sighist.IntegralAndError(0, sighist.GetNbinsX()+1, error)
+        btot = bkghist.IntegralAndError(0, bkghist.GetNbinsX()+1, error)
+
+        if debug: print '[DEBUG] >>>', stot, btot
+        if debug: print '[DEBUG] >>> sighist.GetMean()', sighist.GetMean()
+        if debug: print '[DEBUG] >>> bkghist.GetMean()', bkghist.GetMean()
+
+        x=[]
+        y=[]
+        cuteffset = False
+
+        for i in range(0, sighist.GetNbinsX()+2):
+            if len(scanreverse) > 0:
+                doreverse = scanreverse[index]
+            else:
+                doreverse = False
+            s = sighist.IntegralAndError(sighist.GetNbinsX()-i, sighist.GetNbinsX()+1, error)
+            b = bkghist.IntegralAndError(sighist.GetNbinsX()-i, bkghist.GetNbinsX()+1, error)
+            if doreverse:
+                s = sighist.IntegralAndError(0, 1 + i, error)
+                b = bkghist.IntegralAndError(0, 1 + i, error)
+            #s = sighist.IntegralAndError(0, i, error)
+            #b = bkghist.IntegralAndError(0, i, error)
+            seff = s / stot
+            beff = b / btot
+            curval = sighist.GetXaxis().GetBinUpEdge(sighist.GetNbinsX()) - i * sighist.GetXaxis().GetBinWidth(1)
+            if doreverse:
+                curval = sighist.GetXaxis().GetBinUpEdge(1 + i)
+            print seff, beff, curval
+#            if abs(ref_seff - seff) < 0.03:
+#                print abs(ref_seff - seff) < 0.03
+#                print ref_seff
+#                print cuteffset
+#                print cutval == -999, cutval
+            if abs(ref_seff - seff) < 0.01 and ref_seff > 0 and not cuteffset and cutval == -999:
+#                print 'here'
+                cuteffset = True
+                legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                pointpairs.append(([beff], [seff]))
+            if not doreverse:
+                if curval <= cutval and not cuteffset:
+                    legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                    pointpairs.append(([beff], [seff]))
+                    cuteffset = True
+                    if ref_seff == 0: ref_seff = seff
+                    if ref_beff == 0: ref_beff = beff
+            else:
+                if curval >= cutval and not cuteffset:
+                    legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
+                    pointpairs.append(([beff], [seff]))
+                    cuteffset = True
+                    if ref_seff == 0: ref_seff = seff
+                    if ref_beff == 0: ref_beff = beff
+            if debug:
+                if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.10) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.07) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(beff - 0.07) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(beff - 0.04) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(seff - 0.91) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+            #if beff != 0:
+            #    print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff), s, b, stot, btot
+            x.append(beff)
+            y.append(seff)
+
+        valpairs.append((x,y))
+
+        #graph = ROOT.TGraph(len(x))
+        #for index, i in enumerate(x):
+        #    graph.SetPoint(index, x[index], y[index])
+
+        #graph.SetTitle(legend_labels[index])
+        #graph.SetName(legend_labels[index])
+        #graph.SetMinimum(0.)
+        #graph.SetMaximum(1)
+        ##graph.GetXaxis().SetRangeUser(0.05,1)
+        #graph.SetLineColor(colors[index])
+        #graph.SetLineWidth(colors[index])
+        ##graph.GetXaxis().SetTitle("Eff Background")
+        ##graph.GetYaxis().SetTitle("Eff Signal")
+        ##self.histmanager.set_histaxis_settings(graph, 1.0)
+        ##from copy import deepcopy
+        #graphs.append(graph)
+        ##self.objs.append(deepcopy(graph))
+
+    #ymin, ymax = 0., 1. # generally ROC curves are always between 0. to 1.
+
+    #for index, graph in enumerate(graphs):
+    #    if index == 0:
+    #        if opts["yaxis_range"]:
+    #            graph.SetMinimum(opts["yaxis_range"][0])
+    #            graph.SetMaximum(opts["yaxis_range"][1])
+    #            ymin, ymax = opts["yaxis_range"]
+    #        graph.SetMinimum(ymin)
+    #        graph.SetMaximum(ymax)
+    #        graph.Draw("alp")
+    #    else:
+    #        graph.Draw("lp")
+
+    #draw_cms_lumi(pad_main, opts)
+    #handle_axes(pad_main, stack, opts)
+    #draw_extra_stuff(pad_main, opts)
+
+    ## ymin ymax needs to be defined
+    #if opts["legend_smart"]:
+    #    utils.smart_legend(legend, bgs, data=data, ymin=ymin, ymax=ymax, opts=opts)
+    #legend.Draw()
+
+    #save(c1, opts)
+    if not "legend_alignment"               in options: options["legend_alignment"]               = "bottomright"
+    if not "legend_scalex"                  in options: options["legend_scalex"]                  = 1.5
+    if not "legend_scaley"                  in options: options["legend_scaley"]                  = 0.8
+    if not "legend_border"                  in options: options["legend_border"]                  = False
+
+    valpairs.extend(pointpairs)
+
+    draw_styles=[]
+    for i in colors: draw_styles.append(1)
+
+    colors.extend(colors)
+
+    ll = []
+    for x in legend_labels:
+        if len(x) > 0:
+            ll.append(x)
+    legend_labels = ll
+
+    c1 = p.plot_graph(valpairs, colors=colors, legend_labels=legend_labels, options=options, draw_styles=draw_styles)
+
+    copy_nice_plot_index_php(options)
+
+    return c1
+
+
+#______________________________________________________________________________________________________________________
 def plot_hist_2d(hist,options={}):
     p.plot_hist_2d(hist, options)
     options["output_name"] = options["output_name"].replace("pdf","png")
@@ -1568,7 +1857,7 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None):
+def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None, histxaxislabeloptions={}, skip2d=False):
 
     # color_pallete
     colors_ = default_colors
@@ -1605,8 +1894,40 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     hist_names = []
     for n in tfs:
         for key in tfs[n].GetListOfKeys():
+
+            keyname = str(key.GetName())
+
+            # If to filter certain histograms
+            if filter_pattern:
+                if dogrep:
+                    doskip = True
+                    for item in filter_pattern.split(","):
+                        if "*" in item:
+                            match = True
+                            for token in item.split("*"):
+                                if token not in keyname:
+                                    match = False
+                                    break
+                            if match:
+                                doskip = False
+                                break
+                        else:
+                            if item in keyname:
+                                doskip = False
+                                break
+                    if doskip:
+                        continue
+                else:
+                    doskip = True
+                    for item in filter_pattern.split(","):
+                        if keyname == item:
+                            doskip = False
+                            break
+                    if doskip:
+                        continue
+
             if "TH" in tfs[n].Get(str(key.GetName())).ClassName():
-                hist_names.append(str(key.GetName()))
+                hist_names.append(keyname)
 
     # Remove duplicate names
     hist_names = list(set(hist_names))
@@ -1619,7 +1940,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
 
     # Loop over hist_names
     for hist_name in hist_names:
-        
+
         # If to filter certain histograms
         if filter_pattern:
             if dogrep:
@@ -1654,13 +1975,20 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         for n in sample_names:
             h = tfs[n].Get(hist_name)
             if h:
-                if signal_labels:
-                    if n in issig:
+                if n in issig:
+                    if signal_labels:
                         h.SetName(signal_labels[issig.index(n)])
                     else:
                         h.SetName(n)
                 else:
-                    h.SetName(n)
+                    if len(legend_labels) > 0:
+                        try:
+                            hrsn = human_readable_sample_name(legend_labels[sample_names.index(n)])
+                            h.SetName(hrsn)
+                        except:
+                            h.SetName(n)
+                    else:
+                        h.SetName(n)
                 hists.append(h)
                 colors.append(clrs[n])
             else:
@@ -1703,8 +2031,21 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                             bkgs = [ sigs.pop(0) ]
                         options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale, "do_ks_test":doKStest}
                         options.update(extraoptions)
-                        _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [])
-                if hists[0].GetDimension() == 2:
+                        # ---------Below is special setting that gets set by user
+                        # The histxaxislabeloptions is a dict with keys being either "Mbb" or "SRLLChannell__Mbb" <-- with a cut name in front
+                        # if the latter is provided then the former is overridden
+                        # Otherwise go with the former
+                        if hist_name in histxaxislabeloptions or (("__" in hist_name) and (hist_name.split("__")[1] in histxaxislabeloptions)):
+                            # has variable name in config?
+                            if "__" in hist_name and hist_name.split("__")[1] in histxaxislabeloptions:
+                                options.update(histxaxislabeloptions[hist_name.split("__")[1]]) # First update with just variable name as key
+                            # has_full_name_config?
+                            if hist_name in histxaxislabeloptions:
+                                hist_var_name = hist_name
+                                options.update(histxaxislabeloptions[hist_var_name]) # If full name key exists update with that as well
+                        # ---------Below is special setting that gets set by user
+                        _plotter(bgs=bkgs, sigs=sigs, data=data, colors=colors, options=options, legend_labels=legend_labels if _plotter==plot_hist else [], sig_labels=[])
+                if hists[0].GetDimension() == 2 and not skip2d:
                     if donorm:
                         for h in hists:
                             h.Scale(1./h.Integral())
@@ -1734,7 +2075,6 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"}
                         options.update(extraoptions)
                         plot_hist_2d(hist=h, options=options)
-
     if do_sum:
 
         hists = summed_hist
@@ -1781,6 +2121,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_lin.pdf", "zaxis_log":False, "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlog.pdf", "zaxis_log":True, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
                 # plot_hist_2d(hist=h, options={"output_name": dirname + "/" + str(h.GetName()) + "_" + hist_name + "_commonlin.pdf", "zaxis_log":False, "zaxis_range":[zmin, zmax], "draw_option_2d":"colz"})
+
 
 def plot_yields(fnames=[], sig_fnames=[], data_fname=None, regions=[], binlabels=[], output_name="yield", dirname="plots", legend_labels=[], signal_labels=None, donorm=False, signal_scale="", extraoptions={}, usercolors=None, hsuffix="_cutflow", _plotter=plot_hist):
 

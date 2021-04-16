@@ -32,6 +32,12 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
         inputs = RooUtil::StringUtil::join(glob(pattern));
     }
 
+    if (inputs.Contains("*"))
+    {
+        std::string pattern = inputs.Data();
+        inputs = RooUtil::StringUtil::join(glob(pattern));
+    }
+
     TChain* chain = new TChain(name);
     inputs = inputs.ReplaceAll("\"",""); // In case some rogue " or ' is left over
     inputs = inputs.ReplaceAll("\'",""); // In case some rogue " or ' is left over
@@ -50,7 +56,7 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     // else
     if (useXrootd)
     {
-        inputs.ReplaceAll("/store", "root://cmsxrootd.fnal.gov//store");
+        inputs.ReplaceAll("/store", "root://xcache-redirector.t2.ucsd.edu:2040//store");
     }
     std::cout << "inputs : " << inputs.Data() << std::endl;
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))
