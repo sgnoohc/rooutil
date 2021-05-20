@@ -115,6 +115,7 @@ void makeHeaderFile(TFile *f, const string& treeName, bool paranoid, const strin
   headerf << "#ifndef " << Classname << "_H" << endl;
   headerf << "#define " << Classname << "_H" << endl << endl;
   headerf << "#include \"Math/LorentzVector.h\"" << endl;
+  headerf << "#include \"Math/GenVector/PtEtaPhiM4D.h\"" << endl;
   headerf << "#include \"Math/Point3D.h\"" << endl;
   headerf << "#include \"TMath.h\"" << endl;
   headerf << "#include \"TBranch.h\"" << endl;

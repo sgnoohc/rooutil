@@ -1,6 +1,8 @@
 #!/bin/bash
 
 igprof -pp -d -z -o igprof.pp.gz $*
+# cmssw-slc6
+source /cvmfs/cms.cern.ch/cmsset_default.sh
 cd /cvmfs/cms.cern.ch/slc6_amd64_gcc491/cms/cmssw-patch/CMSSW_7_4_7_patch1
 eval `scramv1 runtime -sh`
 cd -
