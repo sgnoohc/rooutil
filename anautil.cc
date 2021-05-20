@@ -14,16 +14,16 @@ RooUtil::Cutflow::~Cutflow()
 {
     if (booked_histograms.size() > 0)
     {
-        for (auto& [k, v] : booked_histograms)
+        for (auto& kv : booked_histograms)
         {
-            delete v;
+            delete kv.second;
         }
     }
     if (booked_2dhistograms.size() > 0)
     {
-        for (auto& [k, v] : booked_2dhistograms)
+        for (auto& kv : booked_2dhistograms)
         {
-            delete v;
+            delete kv.second;
         }
     }
 }
