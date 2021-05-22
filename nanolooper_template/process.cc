@@ -43,6 +43,8 @@ int main(int argc, char** argv)
 //=============================================================================================
 void setupAnalysis()
 {
+    gconf.GetConfigs(nt.year());
+
     ana.tx->createBranch<vector<LV>>("reco_leptons_p4");
     ana.tx->createBranch<vector<int>>("reco_leptons_tightid");
     ana.tx->createBranch<vector<int>>("reco_leptons_pdgId");
