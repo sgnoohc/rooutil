@@ -7,6 +7,8 @@
 #include "Base.h"
 #include "ElectronSelections.h"
 #include "MuonSelections.h"
+#include "TauSelections.h"
+#include "Config.h"
 #include "MCTools.h"
 
 // helper variables

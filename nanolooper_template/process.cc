@@ -9,8 +9,8 @@ int main(int argc, char** argv)
 {
 
     parseArguments(argc, argv);
+    // nt.SetYear(2018); // comment this out in case you don't need to override
     initializeInputsAndOutputs();
-    nt.SetYear(2018); // comment this out in case you don't need to override
     setupAnalysis();
 
     // Looping input file
@@ -50,6 +50,8 @@ void setupAnalysis()
     ana.tx->createBranch<vector<int>>("reco_jets_bloose");
     ana.tx->createBranch<vector<int>>("reco_jets_bmedium");
     ana.tx->createBranch<vector<int>>("reco_jets_btight");
+    ana.tx->createBranch<vector<float>>("reco_jets_btag_score");
+    ana.tx->createBranch<vector<int>>("reco_jets_flavor");
     ana.tx->createBranch<int>("nbloose");
     ana.tx->createBranch<int>("nbmedium");
     ana.tx->createBranch<int>("nbtight");
@@ -72,7 +74,7 @@ void runAnalysis()
     // Select muons
     for (unsigned int imu = 0; imu < nt.Muon_pt().size(); ++imu)
     {
-        if (SS::muonID(imu, SS::IDfakable, nt.year()))
+        if (SS::muonID(imu, SS::IDveto, nt.year()))
         {
             ana.tx->pushbackToBranch<LV>("reco_leptons_p4", nt.Muon_p4()[imu]);
             ana.tx->pushbackToBranch<int>("reco_leptons_tightid", SS::muonID(imu, SS::IDtight, nt.year()));
@@ -83,11 +85,22 @@ void runAnalysis()
     // Select electrons
     for (unsigned int iel = 0; iel < nt.Electron_pt().size(); ++iel)
     {
-        if (SS::electronID(iel, SS::IDfakable, nt.year()))
+        if (SS::electronID(iel, SS::IDveto, nt.year()))
         {
             ana.tx->pushbackToBranch<LV>("reco_leptons_p4", nt.Electron_p4()[iel]);
             ana.tx->pushbackToBranch<int>("reco_leptons_tightid", SS::electronID(iel, SS::IDtight, nt.year()));
             ana.tx->pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Electron_charge()[iel]) * 11);
+        }
+    }
+
+    // Select electrons
+    for (unsigned int itau = 0; itau < nt.Tau_pt().size(); ++itau)
+    {
+        if (SS::tauID(itau, SS::IDfakable, nt.year()))
+        {
+            ana.tx->pushbackToBranch<LV>("reco_leptons_p4", nt.Tau_p4()[itau]);
+            ana.tx->pushbackToBranch<int>("reco_leptons_tightid", SS::tauID(itau, SS::IDtight, nt.year()));
+            ana.tx->pushbackToBranch<int>("reco_leptons_pdgId", (-nt.Tau_charge()[itau]) * 15);
         }
     }
 
@@ -123,18 +136,31 @@ void runAnalysis()
         if (not (fabs(jet_p4.eta()) < 5.0))
             continue;
 
+        bool is_loose_btagged = false;
+        bool is_medium_btagged = false;
+        bool is_tight_btagged = false;
+
+        // B-tagging is also done up to 2.4 in eta only
+        if (abs(jet_p4.eta()) < 2.4)
+        {
+            // Check if it passes btagging
+            is_loose_btagged = nt.Jet_btagDeepFlavB()[ijet] > gconf.WP_DeepFlav_loose;
+            is_medium_btagged = nt.Jet_btagDeepFlavB()[ijet] > gconf.WP_DeepFlav_medium;
+            is_tight_btagged = nt.Jet_btagDeepFlavB()[ijet] > gconf.WP_DeepFlav_tight;
+
+            // Count up the btagging
+            if (is_loose_btagged) nbloose++;
+            if (is_medium_btagged) nbmedium++;
+            if (is_tight_btagged) nbtight++;
+
+        }
+
         ana.tx->pushbackToBranch<LV>("reco_jets_p4", jet_p4);
-        bool is_loose_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.0521;
-        bool is_medium_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.3033;
-        bool is_tight_btagged = nt.Jet_btagDeepFlavB()[ijet] > 0.7489;
-
-        if (is_loose_btagged) nbloose++;
-        if (is_medium_btagged) nbmedium++;
-        if (is_tight_btagged) nbtight++;
-
         ana.tx->pushbackToBranch<int>("reco_jets_bloose", is_loose_btagged);
         ana.tx->pushbackToBranch<int>("reco_jets_bmedium", is_medium_btagged);
         ana.tx->pushbackToBranch<int>("reco_jets_btight", is_tight_btagged);
+        ana.tx->pushbackToBranch<float>("reco_jets_btag_score", nt.Jet_btagDeepFlavB()[ijet]);
+        ana.tx->pushbackToBranch<int>("reco_jets_flavor", nt.isData() ? -999 : nt.Jet_hadronFlavour()[ijet]);
 
     }
 
