@@ -56,7 +56,7 @@ TChain* RooUtil::FileUtil::createTChain(TString name, TString inputs)
     // else
     if (useXrootd)
     {
-        inputs.ReplaceAll("/store", "root://xcache-redirector.t2.ucsd.edu:2040//store");
+        inputs.ReplaceAll("/store", "root://xcache-redirector.t2.ucsd.edu:2042//store");
     }
     std::cout << "inputs : " << inputs.Data() << std::endl;
     for (auto& ff : RooUtil::StringUtil::split(inputs, ","))

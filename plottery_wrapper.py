@@ -651,9 +651,9 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
 
 #______________________________________________________________________________________________________________________
 # For each signal and total background return scan from left/right of fom (figure of merit) func.
-# def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
-def plot_sigscan(sig, bkg, fom=fom_limit):
-#def plot_sigscan(sig, bkg, fom=fom_SoverB):
+def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+# def plot_sigscan(sig, bkg, fom=fom_limit):
+# def plot_sigscan(sig, bkg, fom=fom_SoverB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
         print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
