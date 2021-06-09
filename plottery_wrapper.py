@@ -665,7 +665,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
     max_f_cut = 0
     totalsig = sig.Integral(0, nbin + 1)
     totalbkg = bkg.Integral(0, nbin + 1)
-    print totalsig, totalbkg
+    # print totalsig, totalbkg
     for i in xrange(1, nbin + 1):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
@@ -675,8 +675,13 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         leftscan.SetBinContent(i, f)
         leftscan.SetBinError(i, ferr)
         if max_f < f:
-            max_f = f
-            max_f_cut = xmin + xwidth * (i - 1)
+            if fom == fom_acceptance:
+                if f <= 0.9:
+                    max_f = f
+                    max_f_cut = xmin + xwidth * (i - 1)
+            else:
+                max_f = f
+                max_f_cut = xmin + xwidth * (i - 1)
     # print max_f
     leftscan.SetName("#rightarrow {:.2f} ({:.2f})".format(max_f, max_f_cut))
     rightscan = cloneTH1(sig)
@@ -692,8 +697,13 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         rightscan.SetBinContent(i, f)
         rightscan.SetBinError(i, ferr)
         if max_f < f:
-            max_f = f
-            max_f_cut = xmin + xwidth * i
+            if fom == fom_acceptance:
+                if f <= 0.9:
+                    max_f = f
+                    max_f_cut = xmin + xwidth * i
+            else:
+                max_f = f
+                max_f_cut = xmin + xwidth * i
     rightscan.SetName("#leftarrow {:.2f} ({:.2f})".format(max_f, max_f_cut))
     return leftscan, rightscan
 
@@ -1381,36 +1391,7 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0].Clone(), [bg.Clone() for bg in bgs], systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone())
-    leftscan.Print("all")
-    if leftscan.GetBinContent(1) != 0:
-        leftscan.Scale(1./leftscan.GetBinContent(1))
-    if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
-        rightscan.Scale(1./rightscan.GetBinContent(rightscan.GetNbinsX()))
-    leftscan.SetFillStyle(1)
-    hbgs.append(leftscan.Clone())
-    hsigs.append(rightscan.Clone())
-    scan2d = plot_sigscan2d(sigs[0].Clone(), get_total_hist(bgs).Clone())
-    if scan2d.GetBinContent(1) != 0:
-        scan2d.Scale(1./scan2d.GetBinContent(1))
-    # hsigs.append(scan2d.Clone())
-    leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone(), fom_acceptance)
-    hsigs.append(leftscan.Clone())
-    hsigs.append(rightscan.Clone())
-    options["bkg_err_fill_color"] = 0
-    options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
-    options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
-    options["signal_scale"] = 1
-    plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
-
-#______________________________________________________________________________________________________________________
-def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
-    hsigs = []
-    hbgs = []
-    if syst:
-        leftscan, rightscan = plot_sigscan_w_syst(sigs[0].Clone(), [bg.Clone() for bg in bgs], systs=syst)
-    else:
-        leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone())
-    leftscan.Print("all")
+    # leftscan.Print("all")
     if leftscan.GetBinContent(1) != 0:
         leftscan.Scale(1./leftscan.GetBinContent(1))
     if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
@@ -1439,7 +1420,7 @@ def plot_soverb_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[
         leftscan, rightscan = plot_sigscan_w_syst(sigs[0].Clone(), [bg.Clone() for bg in bgs], systs=syst)
     else:
         leftscan, rightscan = plot_sigscan(sigs[0].Clone(), get_total_hist(bgs).Clone(), fom=fom_SoverB)
-    leftscan.Print("all")
+    # leftscan.Print("all")
     if leftscan.GetBinContent(1) != 0:
         leftscan.Scale(1./leftscan.GetBinContent(1))
     if rightscan.GetBinContent(rightscan.GetNbinsX()) != 0:
