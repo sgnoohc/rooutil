@@ -21,9 +21,7 @@ from errors import E
 import errno    
 import pyrootutil as ru
 
-# if os.path.exists("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0])):
-#     r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
-#     r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+RooUtil_StatUtil_Loaded = False
 
 # ================================================================
 # New TColors
@@ -571,6 +569,12 @@ def apply_nf_w_error_2d(hists, nfs):
 #______________________________________________________________________________________________________________________
 # 95% CL limit
 def fom_limit(s, serr, b, berr, totals, totalb):
+    global RooUtil_StatUtil_Loaded
+    if os.path.exists("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0])) and not RooUtil_StatUtil_Loaded:
+        r.gSystem.Load("{0}/rooutil.so".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+        r.gROOT.ProcessLine(".L {0}/rooutil.h".format(os.path.realpath(__file__).rsplit("/",1)[0]))
+        RooUtil_StatUtil_Loaded = True
+
     if b > 0:
         print s, b, 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
         return 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
@@ -582,6 +586,14 @@ def fom_limit(s, serr, b, berr, totals, totalb):
 def fom_SoverB(s, serr, b, berr, totals, totalb):
     if b > 0:
         return s / b, 0
+    else:
+        return 0, 0
+
+#______________________________________________________________________________________________________________________
+# S / sqrt(B) fom
+def fom_SoverSqrtSPlusB(s, serr, b, berr, totals, totalb):
+    if s + b > 0:
+        return s / math.sqrt(s + b), 0
     else:
         return 0, 0
 
@@ -654,6 +666,7 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
 def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
 # def plot_sigscan(sig, bkg, fom=fom_limit):
 # def plot_sigscan(sig, bkg, fom=fom_SoverB):
+# def plot_sigscan(sig, bkg, fom=fom_SoverSqrtSPlusB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
         print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
@@ -676,7 +689,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         leftscan.SetBinError(i, ferr)
         if max_f < f:
             if fom == fom_acceptance:
-                if f <= 0.9:
+                if f <= 0.98:
                     max_f = f
                     max_f_cut = xmin + xwidth * (i - 1)
             else:
@@ -698,7 +711,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
         rightscan.SetBinError(i, ferr)
         if max_f < f:
             if fom == fom_acceptance:
-                if f <= 0.9:
+                if f <= 0.98:
                     max_f = f
                     max_f_cut = xmin + xwidth * i
             else:
@@ -1410,6 +1423,8 @@ def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], 
     options["output_name"] = options["output_name"].replace(".png", "_cut_scan.png")
     options["output_name"] = options["output_name"].replace(".pdf", "_cut_scan.pdf")
     options["signal_scale"] = 1
+    if "nbins" in options:
+        del options["nbins"]
     plot_hist(data=None, sigs=hsigs, bgs=hbgs, syst=None, options=options, colors=colors, sig_labels=sig_labels, legend_labels=legend_labels)
 
 #______________________________________________________________________________________________________________________
