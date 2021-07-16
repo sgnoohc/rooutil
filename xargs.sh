@@ -39,6 +39,7 @@ JOBTXTFILE=$1
 
 MACRONAME=$(mktemp stupid_numbers_XXXXXXXXX)
 MACRO=/tmp/${MACRONAME}.txt
+MACROLOG=/tmp/${MACRONAME}.log
 rm $MACRONAME
 
 # filter some jobs
@@ -48,11 +49,25 @@ else
   cat $1 | grep -v '^#' > ${MACRO}
 fi
 
+. <(curl -sLo- "https://git.io/progressbar")
+
+bar::start
+
 # run the job in parallel
 xargs --arg-file=${MACRO} \
       --max-procs=$cores  \
       --replace \
       --verbose \
-      /bin/sh -c "{}"
+      /bin/sh -c "{}" > ${MACROLOG} 2>&1 &
+
+while [[ -n $(jobs -r) ]]; do
+  NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
+  NJOBSDONE=$(wc -l ${MACROLOG} | awk '{print $1}')
+  bar::status_changed ${NJOBSDONE} ${NTOTALJOBS}
+  sleep 1;
+done
+
+rm -f ${MACRO}
+rm -f ${MACROLOG}
 
 #eof
