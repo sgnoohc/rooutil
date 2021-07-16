@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# trap "kill 0" EXIT
+
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab
 
 #  .
@@ -44,28 +46,28 @@ rm $MACRONAME
 
 # filter some jobs
 if [ "x${2}" != "x" ]; then
-  cat $1 | grep -v '^#' | grep $2 > ${MACRO}
+    cat $1 | grep -v '^#' | grep $2 > ${MACRO}
 else
-  cat $1 | grep -v '^#' > ${MACRO}
+    cat $1 | grep -v '^#' > ${MACRO}
 fi
 
-. <(curl -sLo- "https://git.io/progressbar")
-
-bar::start
+# . <(curl -s https://raw.githubusercontent.com/roddhjav/progressbar/v1.1/progressbar.sh)
 
 # run the job in parallel
 xargs --arg-file=${MACRO} \
       --max-procs=$cores  \
       --replace \
       --verbose \
-      /bin/sh -c "{}" > ${MACROLOG} 2>&1 &
+      /bin/sh -c "{}" &
 
-while [[ -n $(jobs -r) ]]; do
-  NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
-  NJOBSDONE=$(wc -l ${MACROLOG} | awk '{print $1}')
-  bar::status_changed ${NJOBSDONE} ${NTOTALJOBS}
-  sleep 1;
-done
+# while [[ -n $(jobs -r) ]]; do
+#     NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
+#     NJOBSDONE=$(wc -l ${MACROLOG} | awk '{print $1}')
+#     progressbar "Running doAnalysis in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
+#     sleep 1;
+# done
+
+# wait
 
 rm -f ${MACRO}
 rm -f ${MACROLOG}
