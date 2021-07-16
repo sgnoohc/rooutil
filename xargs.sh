@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# trap "kill 0" EXIT
+trap "kill 0" SIGINT
 
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab
 
@@ -51,23 +51,25 @@ else
     cat $1 | grep -v '^#' > ${MACRO}
 fi
 
-# . <(curl -s https://raw.githubusercontent.com/roddhjav/progressbar/v1.1/progressbar.sh)
+. <(curl -s https://raw.githubusercontent.com/roddhjav/progressbar/v1.1/progressbar.sh)
 
 # run the job in parallel
 xargs --arg-file=${MACRO} \
       --max-procs=$cores  \
       --replace \
       --verbose \
-      /bin/sh -c "{}" &
+      /bin/sh -c "{}" > ${MACROLOG} 2>&1 &
 
-# while [[ -n $(jobs -r) ]]; do
-#     NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
-#     NJOBSDONE=$(wc -l ${MACROLOG} | awk '{print $1}')
-#     progressbar "Running doAnalysis in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
-#     sleep 1;
-# done
+while [[ -n $(jobs -r) ]]; do
+    NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
+    NJOBSSTARTED=$(wc -l ${MACROLOG} | awk '{print $1}')
+    child_count=$(($(pgrep --parent $(jobs -p) | wc -l)))
+    NJOBSDONE=$((NJOBSSTARTED - child_count))
+    progressbar "Running ${JOBTXTFILE} in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
+    sleep 1;
+done
 
-# wait
+wait
 
 rm -f ${MACRO}
 rm -f ${MACROLOG}
