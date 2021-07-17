@@ -57,17 +57,26 @@ fi
 xargs --arg-file=${MACRO} \
       --max-procs=$cores  \
       --replace \
-      --verbose \
-      /bin/sh -c "{}" > ${MACROLOG} 2>&1 &
+      /bin/sh -c "echo \"XARGSSHJOBSTART\"; {}" > ${MACROLOG} 2>&1 &
+      # --verbose \
+
+sleep 1;
 
 while [[ -n $(jobs -r) ]]; do
     NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
-    NJOBSSTARTED=$(wc -l ${MACROLOG} | awk '{print $1}')
+    NJOBSSTARTED=$(cat ${MACROLOG} | grep "XARGSSHJOBSTART" | wc | awk '{print $1}')
     child_count=$(($(pgrep --parent $(jobs -p) | wc -l)))
     NJOBSDONE=$((NJOBSSTARTED - child_count))
     progressbar "Running ${JOBTXTFILE} in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
     sleep 1;
 done
+
+# One last check to reach that 100% progress bar
+NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
+NJOBSSTARTED=$(cat ${MACROLOG} | grep "XARGSSHJOBSTART" | wc | awk '{print $1}')
+NJOBSDONE=$((NJOBSSTARTED))
+progressbar "Running ${JOBTXTFILE} in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
+sleep 1;
 
 wait
 
