@@ -2,25 +2,23 @@
 
 trap "kill 0" SIGINT
 
-# vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab
-
 #  .
 # ..: P. Chang, philip@physics.ucsd.edu
 
 usage()
 {
-  echo "Usage:"
-  echo "   sh $0 [-n NCORE=36] COMMAND_LIST.txt [PATTERN]"
-  exit
+    echo "Usage:"
+    echo "   sh $0 [-n NCORE=36] COMMAND_LIST.txt [PATTERN]"
+    exit
 }
 
 # Command-line opts
 while getopts ":n:xh" OPTION; do
-  case $OPTION in
-    n) CORE=${OPTARG};;
-    h) usage;;
-    :) usage;;
-  esac
+    case $OPTION in
+        n) CORE=${OPTARG};;
+        h) usage;;
+        :) usage;;
+    esac
 done
 
 # To shift away the parsed options
@@ -32,9 +30,9 @@ cores=${CORE}
 
 # must provide the job
 if [ "x${1}" == "x" ]; then
-  echo "Error: Must provide the job commands txt file"
-  usage
-  exit
+    echo "Error: Must provide the job commands txt file"
+    usage
+    exit
 fi
 
 JOBTXTFILE=$1
@@ -51,23 +49,67 @@ else
     cat $1 | grep -v '^#' > ${MACRO}
 fi
 
-. <(curl -s https://raw.githubusercontent.com/roddhjav/progressbar/v1.1/progressbar.sh)
+# . <(curl -s https://raw.githubusercontent.com/roddhjav/progressbar/v1.1/progressbar.sh)
+# https://gist.github.com/mllamazares/c412b31bde94c7ad5c30
+function ProgressBar {
+
+    actual="$1"
+    total="$2"
+
+    let progreso=(${actual}*100/${total}*100)/100
+    let realizado=(${progreso}*4)/10
+    let queda=40-$realizado
+
+    if [[ ${progreso} -lt 59 ]]; then 
+      color="91"
+    elif [[ ${progreso} -lt 73 ]]; then 
+      color="94"
+    elif [[ ${progreso} -lt 86 ]]; then 
+      color="93"
+    else
+      color="92"
+    fi
+
+    timestamp=$(date +%H:%M:%S)
+
+    lleno=$(printf "%${realizado}s")
+    vacio=$(printf "%${queda}s")
+
+    tput cuu 1 && tput el
+
+    printf "\rXArgs.sh:: ${timestamp}: Running... [\e[7;${color}m${lleno// /#}\e[00m${vacio// /-}] \e[1;${color}m${progreso}%%\e[00m\n"
+        
+}
+
+function iniProgressBar {
+    printf "\n"
+}
 
 # run the job in parallel
 xargs --arg-file=${MACRO} \
       --max-procs=$cores  \
       --replace \
-      /bin/sh -c "echo \"XARGSSHJOBSTART\"; {}" > ${MACROLOG} 2>&1 &
+      /bin/sh -c "echo \"XARGSSHJOBSTART\" >> ${MACROLOG}; {}" &
       # --verbose \
 
 sleep 1;
 
+echo "\\\\/ ________"                
+echo "/\\\\ XArgs.sh"
+starttimestamp=$(date +%H:%M:%S)
+echo "XArgs.sh:: ${starttimestamp}: Start running script ${JOBTXTFILE} in parallel"
+iniProgressBar
 while [[ -n $(jobs -r) ]]; do
+    JOBS=$(jobs -p)
+    if [ -z "${JOBS}" ]; then
+        break
+    fi
+    child_count=$(($(pgrep --parent ${JOBS} | wc -l)))
     NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
     NJOBSSTARTED=$(cat ${MACROLOG} | grep "XARGSSHJOBSTART" | wc | awk '{print $1}')
-    child_count=$(($(pgrep --parent $(jobs -p) | wc -l)))
     NJOBSDONE=$((NJOBSSTARTED - child_count))
-    progressbar "Running ${JOBTXTFILE} in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
+    # progressbar "+ Running jobs in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
+    ProgressBar ${NJOBSDONE} ${NTOTALJOBS}
     sleep 1;
 done
 
@@ -75,8 +117,10 @@ done
 NTOTALJOBS=$(wc -l ${MACRO} | awk '{print $1}')
 NJOBSSTARTED=$(cat ${MACROLOG} | grep "XARGSSHJOBSTART" | wc | awk '{print $1}')
 NJOBSDONE=$((NJOBSSTARTED))
-progressbar "Running ${JOBTXTFILE} in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
+ProgressBar ${NJOBSDONE} ${NTOTALJOBS}
 sleep 1;
+endtimestamp=$(date +%H:%M:%S)
+echo "XArgs.sh:: ${endtimestamp}: Done!"
 
 wait
 
