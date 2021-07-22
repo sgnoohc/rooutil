@@ -1163,6 +1163,21 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             options["yaxis_range"] = [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
             print [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
 
+    # scale background to fit
+    if "fit_bkg" in options:
+        if options["fit_bkg"]:
+            if not didnothaveanydata:
+                btoterr = r.Double()
+                btot = totalbkg.IntegralAndError(0, totalbkg.GetNbinsX()+1, btoterr)
+                dtoterr = r.Double()
+                dtot = data.IntegralAndError(0, data.GetNbinsX()+1, dtoterr)
+                sf = dtot/btot
+                sferr = sf * math.sqrt((dtoterr / dtot)**2 + (btoterr / btot)**2)
+                for bg in bgs:
+                    bg.Scale(sf)
+                options["extra_text"] = ["SF={:.2f}#pm{:.2f}".format(sf, sferr)]
+        del options["fit_bkg"]
+
     # Once maximum is computed, set the y-axis label location
     if yaxismax < 0.01:
         options["yaxis_title_offset"] = 1.8
