@@ -1070,7 +1070,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             for sig in sigs:
                 sig.Scale(options["signal_scale"])
                 if options["signal_scale"] != 1:
-                    sig.SetName(sig.GetName() + " [{}x]".format(options["signal_scale"]))
+                    sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
             del options["signal_scale"]
 
     # autobin
