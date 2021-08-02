@@ -826,8 +826,12 @@ def human_format(num):
 
 #______________________________________________________________________________________________________________________
 def yield_str(hist, i, prec=3, noerror=False, options={}):
+    if prec == 0 and noerror:
+        return str(int(hist.GetBinContent(i)))
+    tmpval = hist.GetBinContent(i)
+    precuse = prec
     if noerror:
-        return "{{:.{}f}}".format(prec).format(hist.GetBinContent(i))
+        return "{{:.{}g}}".format(precuse).format(hist.GetBinContent(i))
     else:
         e = E(hist.GetBinContent(i), hist.GetBinError(i))
         if "human_format" in options:
@@ -835,9 +839,11 @@ def yield_str(hist, i, prec=3, noerror=False, options={}):
                 sep = u"\u00B1".encode("utf-8")
                 return "%s %s %s" % (human_format(e.val), sep, human_format(e.err))
             else:
-                return e.round(prec)
+                return e.round(precuse)
         else:
-            return e.round(prec)
+            # return e.round(precuse)
+            sep = u"\u00B1".encode("utf-8")
+            return "%s %s %s" % ('{{:.{}g}}'.format(precuse).format(e.val), sep, '{{:.{}g}}'.format(precuse).format(e.err))
 #______________________________________________________________________________________________________________________
 def yield_tex_str(hist, i, prec=3, noerror=False):
     tmp = yield_str(hist, i, prec, noerror)
@@ -874,6 +880,21 @@ def print_yield_table_from_list(hists, outputname, prec=2, binrange=[], noerror=
     f.write("".join(x.get_table_string()))
 
 #______________________________________________________________________________________________________________________
+def print_bin_label_tex_style(rstr):
+    hasmath = False
+    if "^" in rstr: hasmath = True
+    if "{" in rstr: hasmath = True
+    if "}" in rstr: hasmath = True
+    if "(" in rstr: hasmath = True
+    if ")" in rstr: hasmath = True
+    if "#" in rstr:
+        rstr = rstr.replace("#", "\\")
+    if hasmath:
+        return "$"+rstr+"$"
+    else:
+        return rstr
+
+#______________________________________________________________________________________________________________________
 def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR CAPTION HERE", noerror=False, content_only=True):
     x = Table()
     if len(hists) == 0:
@@ -881,14 +902,19 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
     # add bin column
     labels = hists[0].GetXaxis().GetLabels()
     if labels:
-        x.add_column("", [hists[0].GetXaxis().GetBinLabel(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+        x.add_column("", [print_bin_label_tex_style(hists[0].GetXaxis().GetBinLabel(i)) for i in xrange(1, hists[0].GetNbinsX()+1)])
     else:
         x.add_column("", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
     for hist in hists:
-        name = hist.GetName()
+        # print(name)
+        name = hist.GetTitle()
+        if name == "":
+            name = hist.GetName()
         if '#' in name:
             name = name.replace("#", "\\")
             name = "$" + name + "$"
+        if name == "data":
+            name = "Data"
         x.add_column(name, [ yield_tex_str(hist, i, prec, noerror) for i in xrange(1, hist.GetNbinsX()+1)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.tex'
@@ -945,6 +971,85 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
         f.write(footer)
 
 #______________________________________________________________________________________________________________________
+def print_yield_tex_table_from_list_v2(hists_summary, hists_individ, outputname, prec=2, caption="PUT YOUR CAPTION HERE", noerror=False, content_only=True):
+    x = Table()
+    if len(hists_summary) == 0:
+        return
+    # add bin column
+    labels = hists_summary[0].GetXaxis().GetLabels()
+    if labels:
+        x.add_column("", [print_bin_label_tex_style(hists_summary[0].GetXaxis().GetBinLabel(i)) for i in xrange(1, hists_summary[0].GetNbinsX()+1)])
+    else:
+        x.add_column("", ["Bin{}".format(i) for i in xrange(1, hists_summary[0].GetNbinsX()+1)])
+    for hist in hists_summary + hists_individ:
+        # print(name)
+        name = hist.GetTitle()
+        if name == "":
+            name = hist.GetName()
+        if '#' in name:
+            name = name.replace("#", "\\")
+            name = "$" + name + "$"
+        if name == "data":
+            name = "Data"
+        x.add_column(name, [ yield_tex_str(hist, i, 0 if name == "\\Nobs" else prec, True if name == "\\Nobs" else  noerror) for i in xrange(1, hist.GetNbinsX()+1)])
+    fname = outputname
+    fname = os.path.splitext(fname)[0]+'.tex'
+    x.set_theme_basic()
+
+    # Change style for easier tex conversion
+    x.d_style["INNER_INTERSECT"] = ''
+    x.d_style["OUTER_RIGHT_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_INTERSECT"] = ''
+    x.d_style["OUTER_BOTTOM_LEFT"] = ''
+    x.d_style["OUTER_BOTTOM_RIGHT"] = ''
+    x.d_style["OUTER_TOP_INTERSECT"] = ''
+    x.d_style["OUTER_TOP_LEFT"] = ''
+    x.d_style["OUTER_TOP_RIGHT"] = ''
+    x.d_style["INNER_HORIZONTAL"] = ''
+    x.d_style["OUTER_BOTTOM_HORIZONTAL"] = ''
+    x.d_style["OUTER_TOP_HORIZONTAL"] = ''
+
+    x.d_style["OUTER_LEFT_VERTICAL"] = ''
+    x.d_style["OUTER_RIGHT_VERTICAL"] = ''
+
+#        self.d_style["INNER_HORIZONTAL"] = '-'
+#        self.d_style["INNER_INTERSECT"] = '+'
+#        self.d_style["INNER_VERTICAL"] = '|'
+#        self.d_style["OUTER_LEFT_INTERSECT"] = '|'
+#        self.d_style["OUTER_RIGHT_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_BOTTOM_INTERSECT"] = '+'
+#        self.d_style["OUTER_BOTTOM_LEFT"] = '+'
+#        self.d_style["OUTER_BOTTOM_RIGHT"] = '+'
+#        self.d_style["OUTER_TOP_HORIZONTAL"] = '-'
+#        self.d_style["OUTER_TOP_INTERSECT"] = '+'
+#        self.d_style["OUTER_TOP_LEFT"] = '+'
+#        self.d_style["OUTER_TOP_RIGHT"] = '+'
+
+    content = [ x for x in ("".join(x.get_table_string())).split('\n') if len(x) > 0 ]
+
+# \multirow{2}{*}{\onZCR}           & \multicolumn{2}{c}{Summary}                             & \multicolumn{7}{c}{Composition of \Ntotal}                                                                             & Purity (\%)    & \multirow{2}{*}{\SF{\ZZ}}  \\  \cline{2-3}\cline{4-10}\cline{11-11}
+    customheader = "\\multirow{2}{*}{NAME} & \multicolumn{"+str(len(hists_summary))+"}{c}{Summary} & \multicolumn{"+str(len(hists_individ))+"}{c}{Composition of \\Ntotal} \\\\ \\cline{2-"+str(len(hists_summary)-1+2)+"}\\cline{"+str(len(hists_summary)+2)+"-"+str(len(hists_individ)-1+len(hists_summary)+2)+"}"
+
+    # Write tex from text version table
+    f = open(fname, 'w')
+    content = tabletex.makeTableTeX(content, complete=False, customheader=customheader)
+    header = """\\begin{table}[!htb]
+\\caption{"""
+    header += caption
+    header +="""}
+\\resizebox{1.0\\textwidth}{!}{
+"""
+    footer = """}
+\\end{table}
+"""
+    if not content_only:
+        f.write(header)
+    f.write(content)
+    if not content_only:
+        f.write(footer)
+
+#______________________________________________________________________________________________________________________
 def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
     hists = []
     hists.extend(hbkgs)
@@ -952,11 +1057,13 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
     if len(hbkgs) != 0:
         htotal = get_total_hist(hbkgs)
         htotal.SetName("Total")
+        htotal.SetTitle("Total")
         hists.append(htotal)
     if hdata and len(hbkgs) != 0:
         #print hdata
         #hratio = makeRatioHist(hdata, hbkgs)
         hratio = hdata.Clone("Ratio")
+        hratio.SetTitle("Ratio")
         hratio.Divide(htotal)
         #hists.append(htotal)
         hists.append(hdata)
@@ -967,7 +1074,25 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         prec = options["yield_prec"]
         del options["yield_prec"]
     print_yield_table_from_list(hists, options["output_name"], prec, options=options)
-    print_yield_tex_table_from_list(hists, options["output_name"], prec, options["yield_table_caption"] if "yield_table_caption" in options else "PUT YOUR CAPTION HERE")
+
+    # Re arranging for tex
+    histstex = []
+
+    histstexsummary = []
+    histstexindivid = []
+    if len(hbkgs) == 0:
+        histstexsummary = [] # do nothing
+    else:
+        if hdata:
+            histstexsummary = [hists[-(len(hsigs)+1)], hists[-(len(hsigs)+2)], hists[-(len(hsigs)+3)]] # ratio data total
+            histstexsummary[0].SetTitle("\\Nobs / \\Ntotal")
+            histstexsummary[1].SetTitle("\\Nobs")
+            histstexsummary[2].SetTitle("\\Ntotal")
+        else:
+            histstexsummary = [hists[-(len(hsigs)+1)]] # just total
+    histstexsummary.extend(hsigs)
+    histstexindivid.extend(hbkgs)
+    print_yield_tex_table_from_list_v2(histstexsummary, histstexindivid, options["output_name"], prec, options["yield_table_caption"] if "yield_table_caption" in options else "PUT YOUR CAPTION HERE")
     if "yield_table_caption" in options: del options["yield_table_caption"]
 
 def copy_nice_plot_index_php(options):
@@ -1871,7 +1996,32 @@ def dump_plot_v1(fname, dirname="plots"):
             plot_hist_2d(hist=hists[hname], options={"output_name": dirname + "/" + fn + "_" + hname + ".pdf"})
 
 #______________________________________________________________________________________________________________________
-def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend_labels=[], signal_labels=None, donorm=False, filter_pattern="", signal_scale=1, extraoptions={}, usercolors=None, do_sum=False, output_name=None, dogrep=False, _plotter=plot_hist, doKStest=False, histmodfunc=None, histxaxislabeloptions={}, skip2d=False):
+def dump_plot(
+        fnames=[],
+        sig_fnames=[],
+        data_fname=None,
+        dirname="plots",
+        legend_labels=[],
+        legend_labels_tex=[],
+        signal_labels=None,
+        signal_labels_tex=None,
+        donorm=False,
+        filter_pattern="",
+        signal_scale=1,
+        extraoptions={},
+        usercolors=None,
+        do_sum=False,
+        output_name=None,
+        dogrep=False,
+        _plotter=plot_hist,
+        doKStest=False,
+        histmodfunc=None,
+        histxaxislabeloptions={},
+        skip2d=False,
+        data_syst=None,
+        bkg_syst=None,
+        sig_syst=None,
+        ):
 
     # color_pallete
     colors_ = default_colors
@@ -1883,6 +2033,7 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
     tfs = {}
     clrs = {}
     issig = [] # Aggregate a list of signal samples
+    isbkg = [] # Aggregate a list of signal samples
     for index, fname in enumerate(fnames + sig_fnames):
         n = os.path.basename(fname.replace(".root", ""))
         n += str(index)
@@ -1891,6 +2042,8 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         sample_names.append(n)
         if index >= len(fnames):
             issig.append(n)
+        else:
+            isbkg.append(n)
 
     if data_fname:
         n = os.path.basename(data_fname.replace(".root", ""))
@@ -1987,13 +2140,23 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
         hists = []
         colors = []
         for n in sample_names:
-            h = tfs[n].Get(hist_name)
+
+            # If there is a syst suffix defined
+            hist_name_to_get = hist_name
+            if n in isbkg and bkg_syst: hist_name_to_get = hist_name_to_get.replace("__", bkg_syst+"__")
+            if n in issig and sig_syst: hist_name_to_get = hist_name_to_get.replace("__", sig_syst+"__")
+            if n == data_sample_name and data_syst: hist_name_to_get = hist_name_to_get.replace("__", data_syst+"__")
+
+            h = tfs[n].Get(hist_name_to_get)
+
             if h:
                 if n in issig:
                     if signal_labels:
                         h.SetName(signal_labels[issig.index(n)])
                     else:
                         h.SetName(n)
+                    if signal_labels_tex:
+                        h.SetTitle(signal_labels_tex[issig.index(n)])
                 else:
                     if len(legend_labels) > 0:
                         try:
@@ -2001,12 +2164,21 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                             h.SetName(hrsn)
                         except:
                             h.SetName(n)
+                        if len(legend_labels_tex) > 0:
+                            try:
+                                # print(n)
+                                # print(sample_names.index(n))
+                                # print(legend_labels_tex)
+                                texn = legend_labels_tex[sample_names.index(n)]
+                                h.SetTitle(texn)
+                            except:
+                                h.SetTitle(n)
                     else:
                         h.SetName(n)
                 hists.append(h)
                 colors.append(clrs[n])
             else:
-                print "ERROR: did not find histogram", hist_name, "for the file", tfs[n].GetName()
+                print "ERROR: did not find histogram", hist_name_to_get, "for the file", tfs[n].GetName()
                 sys.exit(1)
 
         if do_sum:
@@ -2043,7 +2215,14 @@ def dump_plot(fnames=[], sig_fnames=[], data_fname=None, dirname="plots", legend
                         # But check if bkgs is at least 1
                         if len(bkgs) == 0:
                             bkgs = [ sigs.pop(0) ]
-                        options = {"output_name": dirname + "/" + hist_name + ".pdf", "signal_scale": signal_scale, "do_ks_test":doKStest}
+                        hist_output_name = hist_name
+                        if bkg_syst:
+                            hist_output_name += "__b{}".format(bkg_syst)
+                        if sig_syst:
+                            hist_output_name += "__s{}".format(sig_syst)
+                        if data_syst:
+                            hist_output_name += "__d{}".format(data_syst)
+                        options = {"output_name": dirname + "/" + hist_output_name + ".pdf", "signal_scale": signal_scale, "do_ks_test":doKStest}
                         options.update(extraoptions)
                         # ---------Below is special setting that gets set by user
                         # The histxaxislabeloptions is a dict with keys being either "Mbb" or "SRLLChannell__Mbb" <-- with a cut name in front
