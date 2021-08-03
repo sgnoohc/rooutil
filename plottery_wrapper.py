@@ -119,6 +119,18 @@ mycolors.append(r.TColor(4201 ,  16 / 255. , 220 / 255. , 138 / 255. )) # Signal
 
 mycolors.append(r.TColor(4305 ,   0/255. , 208/255. , 145/255.)) # green made up
 
+# https://brand.ucsd.edu/logos-and-brand-elements/color-palette/index.html
+# Core Colors
+mycolors.append(r.TColor(6001 ,  24/255. ,  43/255. ,  73/255.)) # UCSD Dark   Blue   Pantone 2767
+mycolors.append(r.TColor(6002 ,   0/255. ,  98/255. , 155/255.)) # UCSD Ocean  Blue   Pantone 3015
+mycolors.append(r.TColor(6003 , 198/255. , 146/255. ,  20/255.)) # UCSD        Kelp   Pantone 1245
+mycolors.append(r.TColor(6004 , 255/255. , 205/255. ,   0/255.)) # UCSD Bright Gold   Pantone 116
+# Accent Colors
+mycolors.append(r.TColor(6005 ,   0/255. , 198/255. , 215/255.)) # UCSD        Cyan   Pantone 3115
+mycolors.append(r.TColor(6006 , 110/255. , 150/255. ,  59/255.)) # UCSD        Green  Pantone 7490
+mycolors.append(r.TColor(6007 , 243/255. , 229/255. ,   0/255.)) # UCSD Bright Yellow Pantone 3945
+mycolors.append(r.TColor(6008 , 252/255. , 137/255. ,   0/255.)) # UCSD        Orange Pantone 144
+
 
 default_colors = []
 default_colors.append(2005)
@@ -1194,8 +1206,15 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         else:
             for sig in sigs:
                 sig.Scale(options["signal_scale"])
-                if options["signal_scale"] != 1:
-                    sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
+                if options["signal_scale"] != 1 and not options["hide_signal_scale"]:
+                    if "hide_signal_scale" in options:
+                        if options["hide_signal_scale"]:
+                            pass
+                        else:
+                            sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
+                        del options["hide_signal_scale"]
+                    else:
+                        sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
             del options["signal_scale"]
 
     # autobin

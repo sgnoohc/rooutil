@@ -106,7 +106,8 @@ class DataCardWriter:
                 fakedata.Add(b)
             for i in xrange(1,fakedata.GetNbinsX()+2):
                 b = fakedata.GetBinContent(i)
-                fakedata.SetBinContent(i, int(b) if b > 0 else 0)
+                # fakedata.SetBinContent(i, int(b) if b > 0 else 0)
+                fakedata.SetBinContent(i, b if b > 0 else 0)
             self.data = fakedata
 
     def retrieve_process_names(self):
