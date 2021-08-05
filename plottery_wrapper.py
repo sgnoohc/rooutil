@@ -1217,6 +1217,9 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                         sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
             del options["signal_scale"]
 
+    if "hide_signal_scale" in options:
+        del options["hide_signal_scale"]
+
     # autobin
     if "autobin" in options and options["autobin"]:
         options["nbins"] = autobin(data, bgs)
