@@ -1003,6 +1003,8 @@ def print_yield_tex_table_from_list_v2(hists_summary, hists_individ, outputname,
             name = "$" + name + "$"
         if name == "data":
             name = "Data"
+        if name == "Total":
+            name = "\\Ntotal"
         x.add_column(name, [ yield_tex_str(hist, i, 0 if name == "\\Nobs" else prec, True if name == "\\Nobs" else  noerror) for i in xrange(1, hist.GetNbinsX()+1)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.tex'
