@@ -55,6 +55,7 @@ function ProgressBar {
 
     actual="$1"
     total="$2"
+    running="$3"
 
     let progreso=(${actual}*100/${total}*100)/100
     let realizado=(${progreso}*4)/10
@@ -77,7 +78,11 @@ function ProgressBar {
 
     tput cuu 1 && tput el
 
-    printf "\rXArgs.sh:: ${timestamp}: Running... [\e[7;${color}m${lleno// /#}\e[00m${vacio// /-}] \e[1;${color}m${progreso}%%\e[00m\n"
+    if [[ ${actual} == ${total} ]]; then
+        printf "\rXArgs.sh:: ${timestamp}: Running... [\e[7;${color}m${lleno// /#}\e[00m${vacio// /-}] \e[1;${color}m${progreso}%%\e[00m [${actual}/${total} done]\n"
+    else
+        printf "\rXArgs.sh:: ${timestamp}: Running... [\e[7;${color}m${lleno// /#}\e[00m${vacio// /-}] \e[1;${color}m${progreso}%%\e[00m [${actual}/${total} done, ${running} running...]\n"
+    fi
         
 }
 
@@ -109,7 +114,7 @@ while [[ -n $(jobs -r) ]]; do
     NJOBSSTARTED=$(cat ${MACROLOG} | grep "XARGSSHJOBSTART" | wc | awk '{print $1}')
     NJOBSDONE=$((NJOBSSTARTED - child_count))
     # progressbar "+ Running jobs in parallel..." ${NJOBSDONE} ${NTOTALJOBS}
-    ProgressBar ${NJOBSDONE} ${NTOTALJOBS}
+    ProgressBar ${NJOBSDONE} ${NTOTALJOBS} ${child_count}
     sleep 1;
 done
 
