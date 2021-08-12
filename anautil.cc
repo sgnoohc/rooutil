@@ -722,6 +722,15 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
     float max = std::get<2>(key.second);
     std::function<float()> vardef = std::get<3>(key.second);
     TString histname = cut + syst + "__" + varname;
+    if (histogram_filter.size() != 0)
+    {
+        if (std::find(histogram_filter.begin(), histogram_filter.end(), std::make_pair(cut, varname)) == histogram_filter.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", nbin, min, max);
@@ -745,6 +754,15 @@ void RooUtil::Cutflow::bookVecHistogram(TString cut, std::pair<TString, std::tup
     std::function<std::vector<float>()> vardef = std::get<3>(key.second);
     std::function<std::vector<float>()> wgtdef = std::get<4>(key.second);
     TString histname = cut + syst + "__" + varname;
+    if (histogram_filter.size() != 0)
+    {
+        if (std::find(histogram_filter.begin(), histogram_filter.end(), std::make_pair(cut, varname)) == histogram_filter.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
         booked_histograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data())] = new THist(histname, "", nbin, min, max);
@@ -765,6 +783,15 @@ void RooUtil::Cutflow::bookHistogram(TString cut, std::pair<TString, std::tuple<
     std::vector<float> boundaries = std::get<0>(key.second);
     std::function<float()> vardef = std::get<1>(key.second);
     TString histname = cut + syst + "__" + varname;
+    if (histogram_filter.size() != 0)
+    {
+        if (std::find(histogram_filter.begin(), histogram_filter.end(), std::make_pair(cut, varname)) == histogram_filter.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
         Float_t bounds[boundaries.size()];
@@ -789,6 +816,15 @@ void RooUtil::Cutflow::bookVecHistogram(TString cut, std::pair<TString, std::tup
     std::function<std::vector<float>()> vardef = std::get<1>(key.second);
     std::function<std::vector<float>()> wgtdef = std::get<2>(key.second);
     TString histname = cut + syst + "__" + varname;
+    if (histogram_filter.size() != 0)
+    {
+        if (std::find(histogram_filter.begin(), histogram_filter.end(), std::make_pair(cut, varname)) == histogram_filter.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_histograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data())) == booked_histograms.end())
     {
         Float_t bounds[boundaries.size()];
@@ -819,6 +855,15 @@ void RooUtil::Cutflow::book2DHistogram(TString cut, std::pair<std::pair<TString,
     std::function<float()> varxdef = std::get<6>(key.second);
     std::function<float()> varydef = std::get<7>(key.second);
     TString histname = cut + syst + "__" + varname+"_v_"+varnamey;
+    if (histogram_filter_2d.size() != 0)
+    {
+        if (std::find(histogram_filter_2d.begin(), histogram_filter_2d.end(), std::make_tuple(cut, varname, varnamey)) == histogram_filter_2d.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s, varnamey=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data(), varnamey.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_2dhistograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())) == booked_2dhistograms.end())
     {
         booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())] = new TH2F(histname, "", nbin, min, max, nbiny, miny, maxy);
@@ -847,6 +892,15 @@ void RooUtil::Cutflow::book2DVecHistogram(TString cut, std::pair<std::pair<TStri
     std::function<std::vector<float>()> varydef = std::get<7>(key.second);
     std::function<std::vector<float>()> elemwgt = std::get<8>(key.second);
     TString histname = cut + syst + "__" + varname+"_v_"+varnamey;
+    if (histogram_filter_2d.size() != 0)
+    {
+        if (std::find(histogram_filter_2d.begin(), histogram_filter_2d.end(), std::make_tuple(cut, varname, varnamey)) == histogram_filter_2d.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s, varnamey=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data(), varnamey.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_2dhistograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())) == booked_2dhistograms.end())
     {
         booked_2dhistograms[std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())] = new TH2F(histname, "", nbin, min, max, nbiny, miny, maxy);
@@ -872,6 +926,15 @@ void RooUtil::Cutflow::book2DVecHistogram(TString cut, std::pair<std::pair<TStri
     std::function<std::vector<float>()> varydef = std::get<5>(key.second);
     std::function<std::vector<float>()> elemwgt = std::get<6>(key.second);
     TString histname = cut + syst + "__" + varname+"_v_"+varnamey;
+    if (histogram_filter_2d.size() != 0)
+    {
+        if (std::find(histogram_filter_2d.begin(), histogram_filter_2d.end(), std::make_tuple(cut, varname, varnamey)) == histogram_filter_2d.end())
+        {
+            TString msg = TString::Format("User has setHistogramFilter(). cut=%s, syst=%s, varname=%s, varnamey=%s not found! Skipping ...", cut.Data(), syst.Data(), varname.Data(), varnamey.Data());
+            print(msg);
+            return;
+        }
+    }
     if (booked_2dhistograms.find(std::make_tuple(cut.Data(), syst.Data(), varname.Data(), varnamey.Data())) == booked_2dhistograms.end())
     {
         Double_t xbounds[xboundaries.size()];
@@ -1045,6 +1108,51 @@ void RooUtil::Cutflow::setSaveTTreeX(bool v)
 }
 
 //_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setHistogramFilter(std::vector<std::pair<TString, TString>> hists_to_save)
+{
+    histogram_filter = hists_to_save;
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::set2DHistogramFilter(std::vector<std::tuple<TString, TString, TString>> hists_to_save)
+{
+    histogram_filter_2d = hists_to_save;
+}
+
+//_______________________________________________________________________________________________________
+void RooUtil::Cutflow::setHistogramFilterFromFile(TString filename, TString delim)
+{
+    ifstream ifile;
+    ifile.open( filename.Data() );
+    std::string line;
+    while (std::getline( ifile, line ) )
+    {
+        TString rawline = line;
+        std::vector<TString> list = RooUtil::StringUtil::split(rawline, delim);
+        // If it has # at the front skip the line
+        if (list.size() > 0)
+            if (list[0].Contains("#"))
+                continue;
+        if (list.size() == 2)
+        {
+            TString msg = TString::Format("RooUtil::Cutflow::setHistogramFilterFromFile() add histogram whitelist: cut=%s, varname=%s", list[0].Data(), list[1].Data());
+            print(msg);
+            histogram_filter.push_back(std::pair(list[0], list[1]));
+        }
+        else if (list.size() == 3)
+        {
+            TString msg = TString::Format("RooUtil::Cutflow::setHistogramFilterFromFile() add histogram whitelist: cut=%s, varname=%s, varnamey=%s", list[0].Data(), list[1].Data(), list[2].Data());
+            print(msg);
+            histogram_filter_2d.push_back(std::tuple(list[0], list[1], list[2]));
+        }
+        else
+        {
+            RooUtil::error(Form("[RooUtil::Cutflow::setHistogramFilterFromFile()] Found a line in %s that does not have equal to two or three items.", filename.Data()));
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________
 void RooUtil::Cutflow::printSetFunctionError(TString msg)
 {
     if (seterrorcount < 100)
@@ -1200,5 +1308,4 @@ void RooUtil::Histograms::add2DHistogram(TString name, unsigned int n, float min
         error(TString::Format("histogram already exists name = %s", (name+"_v_"+namey).Data()));
 }
 #endif
-
 

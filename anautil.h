@@ -74,6 +74,8 @@ namespace RooUtil
             std::map<TString, std::function<float()>> systs_funcs;
             std::map<TString, std::vector<TString>> cutlists;
             std::map<TString, std::vector<CutTree*>> cuttreelists;
+            std::vector<std::pair<TString, TString>> histogram_filter;
+            std::vector<std::tuple<TString, TString, TString>> histogram_filter_2d;
             bool iseventlistbooked;
             int seterrorcount;
             bool doskipsysthist;
@@ -156,6 +158,9 @@ namespace RooUtil
             void bookHistogramsForCutAndBelow(Histograms& histograms, TString);
             void bookHistogramsForCutAndAbove(Histograms& histograms, TString);
             void bookHistogramsForEndCuts(Histograms& histograms);
+            void setHistogramFilter(std::vector<std::pair<TString, TString>> hists_to_save);
+            void set2DHistogramFilter(std::vector<std::tuple<TString, TString, TString>> hists_to_save);
+            void setHistogramFilterFromFile(TString filename, TString delim=":");
             void printSetFunctionError(TString msg);
             void setHistsAxesExtendable();
     };
