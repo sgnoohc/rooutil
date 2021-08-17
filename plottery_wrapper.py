@@ -1208,16 +1208,17 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         else:
             for sig in sigs:
                 sig.Scale(options["signal_scale"])
-                if options["signal_scale"] != 1 and not options["hide_signal_scale"]:
+                if options["signal_scale"] != 1:
                     if "hide_signal_scale" in options:
                         if options["hide_signal_scale"]:
                             pass
                         else:
                             sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
-                        del options["hide_signal_scale"]
                     else:
                         sig.SetName(sig.GetName() + " [{:.2f}x]".format(float(options["signal_scale"])))
             del options["signal_scale"]
+            if "hide_signal_scale" in options:
+                del options["hide_signal_scale"]
 
     if "hide_signal_scale" in options:
         del options["hide_signal_scale"]
