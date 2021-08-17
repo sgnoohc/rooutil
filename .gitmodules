@@ -9,3 +9,6 @@
 	path = cxxopts
 	url = git@github.com:jarro2783/cxxopts.git
 	branch = master
+[submodule "stats"]
+	path = stats
+	url = git@github.com:aminnj/stats.git
