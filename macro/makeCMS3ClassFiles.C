@@ -125,7 +125,7 @@ void makeHeaderFile(TFile *f, const string& treeName, bool paranoid, const strin
   headerf << "#include \"TBits.h\"" << endl;
   headerf << "#include <vector> " << endl;
   headerf << "#include <unistd.h> " << endl;
-  headerf << "typedef ROOT::Math::LorentzVector< ROOT::Math::PxPyPzE4D<float> > LorentzVector;" << endl << endl;
+  headerf << "typedef ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiM4D<float> > LorentzVector;" << endl << endl;
   if (paranoid)
     headerf << "#define PARANOIA" << endl << endl;
   headerf << "using namespace std; " << endl;
