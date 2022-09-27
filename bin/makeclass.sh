@@ -602,7 +602,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo 'ROOTLIBS    = $(shell root-config --libs)'                                                                                                    >> Makefile
         echo 'ROOTCFLAGS  = $(shell root-config --cflags)'                                                                                                  >> Makefile
         echo 'CXXFLAGS   += $(ROOTCFLAGS)'                                                                                                                  >> Makefile
-        echo 'CFLAGS      = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking'                                                        >> Makefile
+        echo 'CFLAGS      = $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking -DLorentzVectorPtEtaPhiM4D'                             >> Makefile
         echo 'EXTRACFLAGS = $(shell rooutil-config)'                                                                                                        >> Makefile
         echo 'EXTRAFLAGS  = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer $(shell rooutil-config)'      >> Makefile
         echo ''                                                                                                                                             >> Makefile

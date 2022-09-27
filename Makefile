@@ -7,7 +7,7 @@ SOURCES=$(wildcard src/*.cc)
 OBJECTS=$(SOURCES:.cc=.o)
 HEADERS=$(SOURCES:.cc=.h)
 LIB=lib/rooutil.so
-CFLAGS= $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking
+CFLAGS= $(ROOTCFLAGS) -Wall -Wno-unused-function -g -O2 -fPIC -fno-var-tracking -DLorentzVectorPtEtaPhiM4D
 
 MKDIR_P = mkdir -p
 
