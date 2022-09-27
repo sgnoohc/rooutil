@@ -1,5 +1,6 @@
 #include "anautil.h"
 #include "cutflowutil.h"
+#include "dorky.h"
 #include "eventindexmap.h"
 #include "fileutil.h"
 #include "looper.h"
