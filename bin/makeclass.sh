@@ -617,6 +617,9 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo 'clean:'                                                                                                                                       >> Makefile
         echo '	rm -f $(OBJECTS) $(EXE)'                                                                                                                    >> Makefile
         echo ''                                                                                                                                             >> Makefile
+        echo 'cleanall: clean'                                                                                                                              >> Makefile
+        echo '	$(MAKE) -C rooutil/ clean'                                                                                                                  >> Makefile
+        echo ''                                                                                                                                             >> Makefile
         echo 'rooutil:'                                                                                                                                     >> Makefile
         echo '	$(MAKE) -C rooutil/'                                                                                                                        >> Makefile
         echo ''                                                                                                                                             >> Makefile
