@@ -1,5 +1,5 @@
 lib/
 src/*.o
 rooutil.o
-src/LinkDef.cc
+src/LinkDef.cxx
 src/LinkDef_rdict.pcm
