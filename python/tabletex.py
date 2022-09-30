@@ -38,7 +38,7 @@ def listToRanges(a,addOne=True):
     return ranges
 
 
-def makeTableTeX(lines, complete=True):
+def makeTableTeX(lines, complete=True, customheader=None):
     # clean lines and get maximum number of columns
     rows = []
     maxcols = -1
@@ -92,14 +92,23 @@ def makeTableTeX(lines, complete=True):
     output = ""
     # start printing tex
     if(complete): output += beginStr + "\n"
-    output += "  \\begin{tabular}{|"+"c|" * maxcols+"}" + "\n"
-    output += "  \\hline" + "\n"
+    output += "  \\begin{tabular}{@{\extracolsep{4pt}}l"+("c" * (maxcols-1))+"@{}}" + "\n"
+    #{@{\extracolsep{4pt}}lcccccccccccc@{}}
+    output += "  \\hline\\hline" + "\n"
+
+    output += customheader + "\n"
+    # output += "\\hline"
+
+# \multirow{2}{*}{\onZCR}           & \multicolumn{2}{c}{Summary}                             & \multicolumn{7}{c}{Composition of \Ntotal}                                                                             & Purity (\%)    & \multirow{2}{*}{\SF{\ZZ}}  \\  \cline{2-3}\cline{4-10}\cline{11-11}
+#                                   & $\Nobs$          & $\Ntotal$          & $\Nsig$         & $\NZZ$                   & $\NttZ$         & $\NtWZ$         & $\NWZ$          & \NHiggs          & \NOther          & \NZZ   / \Nbkg &                            \\  % \cline{2-4}
+
 
     # print matrix
     for irow in range(maxrows):
         output += "    "
         if(irow in sectionRows):
-            output += " \\hline\\hline" + "\n"
+            output += " \\hline" + "\n"
+            # output += "\n"
             continue
 
         underlines = []
@@ -110,10 +119,10 @@ def makeTableTeX(lines, complete=True):
 
             output += latex + " "
         output += "\\\\ "
-        for r in listToRanges(underlines): output += "\\cline{%s} " % r
+        # for r in listToRanges(underlines): output += "\\cline{%s} " % r
         output += "\n"
 
-    output += "  \\end{tabular}\n"
+    output += "\\hline\\hline\n  \\end{tabular}\n"
     if(complete): output += endStr
 
     return output

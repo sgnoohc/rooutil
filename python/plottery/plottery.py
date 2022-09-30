@@ -574,7 +574,7 @@ def plot_hist(data=None,bgs=[],legend_labels=[],colors=[],sigs=[],sig_labels=[],
     if sigs:
         if not opts["no_overflow"]:
             map(utils.move_in_overflows, sigs)
-        colors = cycle([r.kRed, r.kBlue, r.kOrange-4, r.kTeal-5])
+        colors = cycle([r.kRed, r.kBlue, 6001, 6003])
         if len(sig_labels) < len(sigs):
             sig_labels = [sig.GetTitle() for sig in sigs]
         for hsig,signame,color in zip(sigs, sig_labels,colors):
@@ -740,13 +740,18 @@ def do_style_ratio(ratio, opts, tpad):
     if opts["ratio_name_offset"]: ratio.GetYaxis().SetTitleOffset(opts["ratio_name_offset"])
     if opts["ratio_name_size"]: ratio.GetYaxis().SetTitleSize(opts["ratio_name_size"])
     ratio.GetYaxis().SetNdivisions(opts["ratio_ndivisions"])
+    ratio.GetXaxis().SetNdivisions(opts["xaxis_ndivisions"])
     ratio.GetYaxis().SetLabelSize(0.13)
     if opts["ratio_yaxis_label_offset"]: ratio.GetYaxis().SetLabelOffset(opts["ratio_yaxis_label_offset"])
 
     if opts["xaxis_range"]: ratio.GetXaxis().SetRangeUser(*opts["xaxis_range"])
     ratio.GetYaxis().SetRangeUser(*opts["ratio_range"])
     ratio.GetXaxis().SetLabelSize(opts["ratio_label_size"])
-    ratio.GetXaxis().SetTitle(opts["ratio_xaxis_title"])
+    if opts["ratio_xaxis_title"] == "":
+        ratio.GetXaxis().SetTitle(opts["xaxis_label"])
+    else:
+        ratio.GetXaxis().SetTitle(opts["ratio_xaxis_title"])
+    ratio.GetXaxis().SetNdivisions(opts["xaxis_ndivisions"])
     if opts["ratio_xaxis_title_size"]: ratio.GetXaxis().SetTitleSize(opts["ratio_xaxis_title_size"])
     if opts["ratio_xaxis_title_offset"] :ratio.GetXaxis().SetTitleOffset(opts["ratio_xaxis_title_offset"])
     if opts["ratio_xaxis_label_offset"]: ratio.GetXaxis().SetLabelOffset(opts["ratio_xaxis_label_offset"])
