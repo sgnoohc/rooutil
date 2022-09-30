@@ -1,3 +1,5 @@
 lib/
 src/*.o
 rooutil.o
+src/LinkDef.cc
+src/LinkDef_rdict.pcm

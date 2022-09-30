@@ -10,3 +10,4 @@
 #include "ttreex.h"
 #include "cxxopts.h"
 #include "histmap.h"
+#include "LinkDef.h"
