@@ -950,12 +950,12 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
 def copy_nice_plot_index_php(options):
     plotdir = os.path.dirname(options["output_name"])
     if len(plotdir) == 0: plotdir = "./"
-    os.system("cp {}/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+    os.system("cp {}/../misc/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
     os.system("chmod 755 {}/index.php".format(plotdir))
 #    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 def copy_nice_plot(plotdir):
-    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+    os.system("cp {}/../misc/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 #______________________________________________________________________________________________________________________
 def autobin(data, bgs):
