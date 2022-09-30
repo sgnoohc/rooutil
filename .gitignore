@@ -3,3 +3,4 @@ src/*.o
 rooutil.o
 src/LinkDef.cxx
 src/LinkDef_rdict.pcm
+*.pyc
