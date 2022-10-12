@@ -3,6 +3,7 @@
 #include "dorky.h"
 #include "calc.h"
 #include "eventindexmap.h"
+#include "eventlist.h"
 #include "fileutil.h"
 #include "looper.h"
 #include "printutil.h"
