@@ -2003,6 +2003,7 @@ def plot_hist_2d(hist,options={}):
     p.plot_hist_2d(hist, options)
     options["output_name"] = options["output_name"].replace("pdf","png")
     p.plot_hist_2d(hist, options)
+    copy_nice_plot_index_php(options)
 
 #______________________________________________________________________________________________________________________
 def dump_plot_v1(fname, dirname="plots"):
