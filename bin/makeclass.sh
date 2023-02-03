@@ -606,7 +606,7 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo 'EXTRACFLAGS = $(shell rooutil-config)'                                                                                                        >> Makefile
         echo 'EXTRAFLAGS  = -fPIC -ITMultiDrawTreePlayer -Wunused-variable -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer $(shell rooutil-config)'      >> Makefile
         echo ''                                                                                                                                             >> Makefile
-        echo 'all: rooutil $(EXE)'                                                                                                                          >> Makefile
+        echo 'all: $(ROOUTILDIR) $(EXE)'                                                                                                                    >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo '$(EXE): $(OBJECTS) '${MAKECLASSNAME}'.o'                                                                                                      >> Makefile
         echo '	$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(ROOTLIBS) $(EXTRAFLAGS) -o $@'                                                                    >> Makefile
@@ -618,12 +618,12 @@ if [ "$GENERATEEXTRACODE" == true ]; then
         echo '	rm -f $(OBJECTS) $(EXE)'                                                                                                                    >> Makefile
         echo ''                                                                                                                                             >> Makefile
         echo 'cleanall: clean'                                                                                                                              >> Makefile
-        echo '	$(MAKE) -C rooutil/ clean'                                                                                                                  >> Makefile
+        echo '	$(MAKE) -C $(ROOUTILDIR) clean'                                                                                                             >> Makefile
         echo ''                                                                                                                                             >> Makefile
-        echo 'rooutil:'                                                                                                                                     >> Makefile
-        echo '	$(MAKE) -C rooutil/'                                                                                                                        >> Makefile
+        echo '$(ROOUTILDIR):'                                                                                                                               >> Makefile
+        echo '	$(MAKE) -C $(ROOUTILDIR)'                                                                                                                   >> Makefile
         echo ''                                                                                                                                             >> Makefile
-        echo '.PHONY: rooutil'                                                                                                                              >> Makefile
+        echo '.PHONY: $(ROOUTILDIR)'                                                                                                                        >> Makefile
     fi
 
     #echo "	sh rooutil/makeclass.sh -f -x TEMPLATE_TREE_PATH ${TTREENAME} ${MAKECLASSNAME} ${NAMESPACENAME} ${TREEINSTANCENAME}  > /dev/null 2>&1"  >> Makefile

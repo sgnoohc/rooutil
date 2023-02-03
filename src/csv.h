@@ -5826,7 +5826,7 @@ namespace csv {
 
     /** Compares the contents of this field to a string */
     template<>
-    CONSTEXPR bool CSVField::operator==(const char * other) const noexcept
+    inline bool CSVField::operator==(const char * other) const noexcept
     {
         return this->sv == other;
     }

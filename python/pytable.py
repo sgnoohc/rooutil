@@ -185,7 +185,7 @@ class Table():
         self.hlines = [oldtonewidx[hline] for hline in self.hlines]
 
     def print_table(self, **kwargs):
-        print "".join(self.get_table_string(**kwargs))
+        print("".join(self.get_table_string(**kwargs)))
 
     def get_table_string(self, bold_title=True, show_row_separators=False, show_alternating=False, ljustall=False, show_colnames=True):
         self.update()
