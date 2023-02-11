@@ -25,7 +25,8 @@ class Table():
     def fmt_string(self, val, length, fill_char=" ", justify="c", bold=False, offcolor=False, color=None):
         ret = ""
         val = str(val)
-        lenval = len(val.decode("utf-8"))
+        # lenval = len(val.decode("utf-8"))
+        lenval = len(val)
             
         if lenval > length: val = self.shorten_string(val, length)
         if justify == "l": 
@@ -158,7 +159,7 @@ class Table():
         if self.matrix:
             for ic, cname in enumerate(self.colnames):
                 self.colsizes.append( max(
-                    max([len(str(r[ic]).decode("utf-8")) for r in self.matrix])+2,
+                    max([len(str(r[ic])) for r in self.matrix])+2,
                     len(str(cname))+2
                     ) )
 

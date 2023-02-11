@@ -161,7 +161,7 @@ def get_summed_histogram(list_of_file_names, hist_names, sfs={}):
         hists = get_histograms(list_of_file_names, hist_names, sfs)
         hist_name = hist_names
     if len(hists) == 0:
-        print "error no histograms are found query=", list_of_file_names, hist_names
+        print("error no histograms are found query=", list_of_file_names, hist_names)
         raise ValueError("No histograms are found with the query")
         sys.exit()
     rtn_hist = hists[0].Clone(hist_name)
@@ -458,8 +458,8 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
 
     # Create tarball
     os.chdir(main_dir)
-    print os.getcwd()
-    print "tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files))
+    print(os.getcwd())
+    print("tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files)))
     os.system("tar -chzf {} {}".format(tar_gz_path, " ".join(tar_files)))
 
     # Change directory to metis
@@ -534,19 +534,19 @@ def submit_metis(job_tag, samples_map, sample_list=[], arguments_map="", exec_sc
 
         # If all done exit the loop
         if all_tasks_complete:
-            print ""
-            print "Job={} finished".format(job_tag)
-            print ""
+            print("")
+            print("Job={} finished".format(job_tag))
+            print("")
             break
 
         # Neat trick to not exit the script for force updating
-        print 'Press Ctrl-C to force update, otherwise will sleep for 300 seconds'
+        print('Press Ctrl-C to force update, otherwise will sleep for 300 seconds')
         try:
             for i in range(0,60):
                 sleep(1) # could use a backward counter to be preeety :)
         except KeyboardInterrupt:
             raw_input("Press Enter to force update, or Ctrl-C to quit.")
-            print "Force updating..."
+            print("Force updating...")
 
     os.chdir(main_dir)
 
@@ -571,16 +571,16 @@ def write_shape_fit_datacard(sig=None, bgs=[], data=None, datacard_filename="dat
 
     # Checking arguments
     if not sig:
-        print "Error: No signal histogram provided for the statistics datacard writing."
+        print("Error: No signal histogram provided for the statistics datacard writing.")
         return
 
     if len(bgs) == 0:
-        print "Error: No background histograms provided for the statistics datacard writing."
+        print("Error: No background histograms provided for the statistics datacard writing.")
         return
 
     if not data:
-        print "Warning: No data histogram provided for the statistics datacard writing."
-        print "data will be set to total bkg expectation. (of course rounded."
+        print("Warning: No data histogram provided for the statistics datacard writing.")
+        print("data will be set to total bkg expectation. (of course rounded.")
         fakedata = bgs[0].Clone()
         fakedata.Reset()
         fakedata.GetXaxis().SetCanExtend(False)

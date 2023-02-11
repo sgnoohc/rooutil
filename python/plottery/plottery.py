@@ -477,7 +477,7 @@ def plot_hist(data=None,bgs=[],legend_labels=[],colors=[],sigs=[],sig_labels=[],
     if opts["stack_signal"]:
         for isig_raw,sig in enumerate(sigs):
             isig = isig_raw + len(bgs) - 1
-            print isig, isig_raw
+            # print isig, isig_raw
             if isig < len(colors):
                 # sig.SetLineColor(r.TColor.GetColorDark(colors[isig]))
                 sig.SetLineColor(colors[isig])

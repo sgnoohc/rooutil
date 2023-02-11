@@ -82,7 +82,8 @@ class E:
         if use_ascii:
             sep = "+-"
         else:
-            sep = u"\u00B1".encode("utf-8")
+            # sep = u"\u00B1".encode("utf-8")
+            sep = u'\u00B1'
         if type(self.val).__name__ == "ndarray":
             import numpy as np
             # trick:
@@ -118,22 +119,22 @@ if __name__ == "__main__":
     v3 = E(10.0,2.0)
     v4 = E(20.0,1.0)
 
-    print v1+v2
-    print v1+1.0
-    print v1-v2
-    print v1-1.0
-    print v1/v2
-    print v1*v2
-    print (v1+v2)*(v1*3.0-v2)/(v1*2.0)
-    print v1*1.0
-    print 1.0*v1
-    print 1.0+v1
-    print 1.0-v1
-    print 1.0/v1
-    print v1/1.0
-    print v1**2
-    print (v1+v2)[0], (v1+v2)[1]
-    print v3/v4
+    print(v1+v2)
+    print(v1+1.0)
+    print(v1-v2)
+    print(v1-1.0)
+    print(v1/v2)
+    print(v1*v2)
+    print((v1+v2)*(v1*3.0-v2)/(v1*2.0))
+    print(v1*1.0)
+    print(1.0*v1)
+    print(1.0+v1)
+    print(1.0-v1)
+    print(1.0/v1)
+    print(v1/1.0)
+    print(v1**2)
+    print((v1+v2)[0], (v1+v2)[1])
+    print(v3/v4)
     val, err = v4/v3
-    print 
+    print()
 

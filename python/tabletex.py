@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import math, sys, os, commands
+import math, sys, os #, commands
 from itertools import groupby
 
 beginStr = """
@@ -127,22 +127,22 @@ def makeTableTeX(lines, complete=True, customheader=None):
 
     return output
 
-def makePDF(content,fname):
-    basename = ".".join(fname.split(".")[:-1])
-    basedir = "/".join(fname.split("/")[:-1])
-    fh = open(basename+".tex","w")
-    fh.write(content)
-    fh.close()
+# def makePDF(content,fname):
+#     basename = ".".join(fname.split(".")[:-1])
+#     basedir = "/".join(fname.split("/")[:-1])
+#     fh = open(basename+".tex","w")
+#     fh.write(content)
+#     fh.close()
 
-    status,out = commands.getstatusoutput("pdflatex -interaction=nonstopmode -output-directory=%s %s" % (basedir, basename+".tex"))
-    # print out
-    if(" Error" in out):
-        print "[TM] ERROR: Tried to compile, but failed. Last few lines of printout below."
-        print "_"*40
-        print "\n".join(out.split("\n")[-30:])
-    else:
-        status,out = commands.getstatusoutput("pdfcrop %s %s" % (basename+".pdf", basename+".pdf"))
-        print "[TM] Created %s" % (basename+".pdf")
+#     status,out = commands.getstatusoutput("pdflatex -interaction=nonstopmode -output-directory=%s %s" % (basedir, basename+".tex"))
+#     # print out
+#     if(" Error" in out):
+#         print "[TM] ERROR: Tried to compile, but failed. Last few lines of printout below."
+#         print "_"*40
+#         print "\n".join(out.split("\n")[-30:])
+#     else:
+#         status,out = commands.getstatusoutput("pdfcrop %s %s" % (basename+".pdf", basename+".pdf"))
+#         print "[TM] Created %s" % (basename+".pdf")
 
 def getString(fname, complete=True):
     # complete=True returns full blown compileable document
@@ -173,11 +173,11 @@ if __name__=='__main__':
         for item in sys.stdin: lines.append(item)
         content = makeTableTeX(lines)
 
-        print content
+        print(content)
 
 
         if(len(lines) < 1):
-            print "Pipe in some stuff, doofus."
+            print("Pipe in some stuff, doofus.")
             sys.exit(1)
 
 

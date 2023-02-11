@@ -27,109 +27,105 @@ RooUtil_StatUtil_Loaded = False
 # New TColors
 # ================================================================
 mycolors = []
-mycolors.append(r.TColor(11005 , 103 / 255. , 0   / 255. , 31  / 255.))
-mycolors.append(r.TColor(11004 , 178 / 255. , 24  / 255. , 43  / 255.))
-mycolors.append(r.TColor(11003 , 214 / 255. , 96  / 255. , 77  / 255.))
-mycolors.append(r.TColor(11002 , 244 / 255. , 165 / 255. , 130 / 255.))
-mycolors.append(r.TColor(11001 , 253 / 255. , 219 / 255. , 199 / 255.))
-mycolors.append(r.TColor(11000 , 247 / 255. , 247 / 255. , 247 / 255.))
-mycolors.append(r.TColor(11011 , 209 / 255. , 229 / 255. , 240 / 255.))
-mycolors.append(r.TColor(11012 , 146 / 255. , 197 / 255. , 222 / 255.))
-mycolors.append(r.TColor(11013 , 67  / 255. , 147 / 255. , 195 / 255.))
-mycolors.append(r.TColor(11014 , 33  / 255. , 102 / 255. , 172 / 255.))
-mycolors.append(r.TColor(11015 , 5   / 255. , 48  / 255. , 97  / 255.))
+mycolors.append(r.TColor(11005 , 103 / 255. , 0   / 255. , 31  / 255.  , "color0001", 1)) 
+mycolors.append(r.TColor(11004 , 178 / 255. , 24  / 255. , 43  / 255.  , "color0002", 1)) 
+mycolors.append(r.TColor(11003 , 214 / 255. , 96  / 255. , 77  / 255.  , "color0003", 1)) 
+mycolors.append(r.TColor(11002 , 244 / 255. , 165 / 255. , 130 / 255.  , "color0004", 1)) 
+mycolors.append(r.TColor(11001 , 253 / 255. , 219 / 255. , 199 / 255.  , "color0005", 1)) 
+mycolors.append(r.TColor(11000 , 247 / 255. , 247 / 255. , 247 / 255.  , "color0006", 1)) 
+mycolors.append(r.TColor(11011 , 209 / 255. , 229 / 255. , 240 / 255.  , "color0007", 1)) 
+mycolors.append(r.TColor(11012 , 146 / 255. , 197 / 255. , 222 / 255.  , "color0010", 1)) 
+mycolors.append(r.TColor(11013 , 67  / 255. , 147 / 255. , 195 / 255.  , "color0011", 1)) 
+mycolors.append(r.TColor(11014 , 33  / 255. , 102 / 255. , 172 / 255.  , "color0012", 1)) 
+mycolors.append(r.TColor(11015 , 5   / 255. , 48  / 255. , 97  / 255.  , "color0013", 1)) 
 
-mycolors.append(r.TColor(3001 , 239 / 255. , 138 / 255. , 98  / 255.))
-mycolors.append(r.TColor(3000 , 247 / 255. , 247 / 255. , 247 / 255.))
-mycolors.append(r.TColor(3011 , 103 / 255. , 169 / 255. , 207 / 255.))
+mycolors.append(r.TColor(3001  , 239 / 255. , 138 / 255. , 98  / 255.  , "color0014", 1)) 
+mycolors.append(r.TColor(3000  , 247 / 255. , 247 / 255. , 247 / 255.  , "color0015", 1)) 
+mycolors.append(r.TColor(3011  , 103 / 255. , 169 / 255. , 207 / 255.  , "color0016", 1)) 
 
-mycolors.append(r.TColor(5001 , 251 / 255. , 180 / 255. , 174 / 255.))
-mycolors.append(r.TColor(5002 , 179 / 255. , 205 / 255. , 227 / 255.))
-mycolors.append(r.TColor(5003 , 204 / 255. , 235 / 255. , 197 / 255.))
-mycolors.append(r.TColor(5004 , 222 / 255. , 203 / 255. , 228 / 255.))
-mycolors.append(r.TColor(5005 , 254 / 255. , 217 / 255. , 166 / 255.))
+mycolors.append(r.TColor(5001  , 251 / 255. , 180 / 255. , 174 / 255.  , "color0017", 1)) 
+mycolors.append(r.TColor(5002  , 179 / 255. , 205 / 255. , 227 / 255.  , "color0020", 1)) 
+mycolors.append(r.TColor(5003  , 204 / 255. , 235 / 255. , 197 / 255.  , "color0021", 1)) 
+mycolors.append(r.TColor(5004  , 222 / 255. , 203 / 255. , 228 / 255.  , "color0022", 1)) 
+mycolors.append(r.TColor(5005  , 254 / 255. , 217 / 255. , 166 / 255.  , "color0023", 1)) 
 
-mycolors.append(r.TColor(7000 ,   0/255. ,   0/255. ,   0/255.))
-mycolors.append(r.TColor(7001 , 213/255. ,  94/255. ,   0/255.)) #r
-mycolors.append(r.TColor(7002 , 230/255. , 159/255. ,   0/255.)) #o
-mycolors.append(r.TColor(7003 , 240/255. , 228/255. ,  66/255.)) #y
-mycolors.append(r.TColor(7004 ,   0/255. , 158/255. , 115/255.)) #g
-mycolors.append(r.TColor(7005 ,   0/255. , 114/255. , 178/255.)) #b
-mycolors.append(r.TColor(7006 ,  86/255. , 180/255. , 233/255.)) #k
-mycolors.append(r.TColor(7007 , 204/255. , 121/255. , 167/255.)) #p
-mycolors.append(r.TColor(7011 , 110/255. ,  54/255. ,   0/255.)) #alt r
-mycolors.append(r.TColor(7012 , 161/255. , 117/255. ,   0/255.)) #alt o
-mycolors.append(r.TColor(7013 , 163/255. , 155/255. ,  47/255.)) #alt y
-mycolors.append(r.TColor(7014 ,   0/255. , 102/255. ,  79/255.)) #alt g
-mycolors.append(r.TColor(7015 ,   0/255. ,  93/255. , 135/255.)) #alt b
-mycolors.append(r.TColor(7016 , 153/255. , 153/255. , 153/255.)) #alt k
-mycolors.append(r.TColor(7017 , 140/255. ,  93/255. , 119/255.)) #alt p
+mycolors.append(r.TColor(7000  , 0/255.     , 0/255.     , 0/255.      , "color0024", 1)) 
+mycolors.append(r.TColor(7001  , 213/255.   , 94/255.    , 0/255.      , "color0025", 1)) #r
+mycolors.append(r.TColor(7002  , 230/255.   , 159/255.   , 0/255.      , "color0026", 1)) #o
+mycolors.append(r.TColor(7003  , 240/255.   , 228/255.   , 66/255.     , "color0027", 1)) #y
+mycolors.append(r.TColor(7004  , 0/255.     , 158/255.   , 115/255.    , "color0030", 1)) #g
+mycolors.append(r.TColor(7005  , 0/255.     , 114/255.   , 178/255.    , "color0031", 1)) #b
+mycolors.append(r.TColor(7006  , 86/255.    , 180/255.   , 233/255.    , "color0032", 1)) #k
+mycolors.append(r.TColor(7007  , 204/255.   , 121/255.   , 167/255.    , "color0033", 1)) #p
+mycolors.append(r.TColor(7011  , 110/255.   , 54/255.    , 0/255.      , "color0034", 1)) #alt r
+mycolors.append(r.TColor(7012  , 161/255.   , 117/255.   , 0/255.      , "color0035", 1)) #alt o
+mycolors.append(r.TColor(7013  , 163/255.   , 155/255.   , 47/255.     , "color0036", 1)) #alt y
+mycolors.append(r.TColor(7014  , 0/255.     , 102/255.   , 79/255.     , "color0037", 1)) #alt g
+mycolors.append(r.TColor(7015  , 0/255.     , 93/255.    , 135/255.    , "color0040", 1)) #alt b
+mycolors.append(r.TColor(7016  , 153/255.   , 153/255.   , 153/255.    , "color0041", 1)) #alt k
+mycolors.append(r.TColor(7017  , 140/255.   , 93/255.    , 119/255.    , "color0042", 1)) #alt p
 
-mycolors.append(r.TColor(9001 ,  60/255. , 186/255. ,  84/255.))
-mycolors.append(r.TColor(9002 , 244/255. , 194/255. ,  13/255.))
-mycolors.append(r.TColor(9003 , 219/255. ,  50/255. ,  54/255.))
-mycolors.append(r.TColor(9004 ,  72/255. , 133/255. , 237/255.))
+mycolors.append(r.TColor(9001  , 60/255.    , 186/255.   , 84/255.     , "color0043", 1)) 
+mycolors.append(r.TColor(9002  , 244/255.   , 194/255.   , 13/255.     , "color0044", 1)) 
+mycolors.append(r.TColor(9003  , 219/255.   , 50/255.    , 54/255.     , "color0045", 1)) 
+mycolors.append(r.TColor(9004  , 72/255.    , 133/255.   , 237/255.    , "color0046", 1)) 
 
-# Color schemes from Hannsjoerg for WWW analysis
-mycolors.append(r.TColor(2001 , 91  / 255. , 187 / 255. , 241 / 255.)) #light-blue
-mycolors.append(r.TColor(2002 , 60  / 255. , 144 / 255. , 196 / 255.)) #blue
-mycolors.append(r.TColor(2003 , 230 / 255. , 159 / 255. , 0   / 255.)) #orange
-mycolors.append(r.TColor(2004 , 180 / 255. , 117 / 255. , 0   / 255.)) #brown
-mycolors.append(r.TColor(2005 , 245 / 255. , 236 / 255. , 69  / 255.)) #yellow
-mycolors.append(r.TColor(2006 , 215 / 255. , 200 / 255. , 0   / 255.)) #dark yellow
-mycolors.append(r.TColor(2007 , 70  / 255. , 109 / 255. , 171 / 255.)) #blue-violet
-mycolors.append(r.TColor(2008 , 70  / 255. , 90  / 255. , 134 / 255.)) #violet
-mycolors.append(r.TColor(2009 , 55  / 255. , 65  / 255. , 100 / 255.)) #dark violet
-mycolors.append(r.TColor(2010 , 120 / 255. , 160 / 255. , 0   / 255.)) #light green
-mycolors.append(r.TColor(2011 , 0   / 255. , 158 / 255. , 115 / 255.)) #green
-mycolors.append(r.TColor(2012 , 204 / 255. , 121 / 255. , 167 / 255.)) #pink?
+mycolors.append(r.TColor(2001  , 91  / 255. , 187 / 255. , 241 / 255.  , "color0047", 1)) #light-blue
+mycolors.append(r.TColor(2002  , 60  / 255. , 144 / 255. , 196 / 255.  , "color0050", 1)) #blue
+mycolors.append(r.TColor(2003  , 230 / 255. , 159 / 255. , 0   / 255.  , "color0051", 1)) #orange
+mycolors.append(r.TColor(2004  , 180 / 255. , 117 / 255. , 0   / 255.  , "color0052", 1)) #brown
+mycolors.append(r.TColor(2005  , 245 / 255. , 236 / 255. , 69  / 255.  , "color0053", 1)) #yellow
+mycolors.append(r.TColor(2006  , 215 / 255. , 200 / 255. , 0   / 255.  , "color0054", 1)) #dark yellow
+mycolors.append(r.TColor(2007  , 70  / 255. , 109 / 255. , 171 / 255.  , "color0055", 1)) #blue-violet
+mycolors.append(r.TColor(2008  , 70  / 255. , 90  / 255. , 134 / 255.  , "color0056", 1)) #violet
+mycolors.append(r.TColor(2009  , 55  / 255. , 65  / 255. , 100 / 255.  , "color0057", 1)) #dark violet
+mycolors.append(r.TColor(2010  , 120 / 255. , 160 / 255. , 0   / 255.  , "color0060", 1)) #light green
+mycolors.append(r.TColor(2011  , 0   / 255. , 158 / 255. , 115 / 255.  , "color0061", 1)) #green
+mycolors.append(r.TColor(2012  , 204 / 255. , 121 / 255. , 167 / 255.  , "color0062", 1)) #pink?
 
-mycolors.append(r.TColor(4001 , 49  / 255. , 76  / 255. , 26  / 255. ))
-mycolors.append(r.TColor(4002 , 33  / 255. , 164 / 255. , 105  / 255. ))
-mycolors.append(r.TColor(4003 , 176 / 255. , 224 / 255. , 160 / 255. ))
-mycolors.append(r.TColor(4004 , 210 / 255. , 245 / 255. , 200 / 255. ))
-mycolors.append(r.TColor(4005 , 232 / 255. , 249 / 255. , 223 / 255. ))
-mycolors.append(r.TColor(4006 , 253 / 255. , 156 / 255. , 207 / 255. ))
-mycolors.append(r.TColor(4007 , 121 / 255. , 204 / 255. , 158 / 255. ))
-mycolors.append(r.TColor(4008 , 158 / 255. ,   0 / 255. ,  42 / 255. ))
-mycolors.append(r.TColor(4009 , 176 / 255. ,   0 / 255. , 195 / 255. ))
-mycolors.append(r.TColor(4010 ,  20 / 255. , 195 / 255. ,   0 / 255. ))
-mycolors.append(r.TColor(4011 , 145 / 255. ,   2 / 255. , 206 / 255. ))
-mycolors.append(r.TColor(4012 , 255 / 255. ,   0 / 255. , 255 / 255. ))
-mycolors.append(r.TColor(4013 , 243 / 255. ,  85 / 255. ,   0 / 255. ))
-mycolors.append(r.TColor(4014 , 157 / 255. , 243 / 255. , 130 / 255. ))
-mycolors.append(r.TColor(4015 , 235 / 255. , 117 / 255. , 249 / 255. ))
-mycolors.append(r.TColor(4016 ,  90 / 255. , 211 / 255. , 221 / 255. ))
-mycolors.append(r.TColor(4017 ,  85 / 255. , 181 / 255. ,  92 / 255. ))
-mycolors.append(r.TColor(4018 , 172 / 255. ,  50 / 255. ,  60 / 255. ))
-mycolors.append(r.TColor(4019 ,  42 / 255. , 111 / 255. , 130 / 255. ))
+mycolors.append(r.TColor(4001  , 49  / 255. , 76  / 255. , 26  / 255.  , "color0063", 1)) 
+mycolors.append(r.TColor(4002  , 33  / 255. , 164 / 255. , 105  / 255. , "color0064", 1)) 
+mycolors.append(r.TColor(4003  , 176 / 255. , 224 / 255. , 160 / 255.  , "color0065", 1)) 
+mycolors.append(r.TColor(4004  , 210 / 255. , 245 / 255. , 200 / 255.  , "color0066", 1)) 
+mycolors.append(r.TColor(4005  , 232 / 255. , 249 / 255. , 223 / 255.  , "color0067", 1)) 
+mycolors.append(r.TColor(4006  , 253 / 255. , 156 / 255. , 207 / 255.  , "color0070", 1)) 
+mycolors.append(r.TColor(4007  , 121 / 255. , 204 / 255. , 158 / 255.  , "color0071", 1)) 
+mycolors.append(r.TColor(4008  , 158 / 255. , 0 / 255.   , 42 / 255.   , "color0072", 1)) 
+mycolors.append(r.TColor(4009  , 176 / 255. , 0 / 255.   , 195 / 255.  , "color0073", 1)) 
+mycolors.append(r.TColor(4010  , 20 / 255.  , 195 / 255. , 0 / 255.    , "color0074", 1)) 
+mycolors.append(r.TColor(4011  , 145 / 255. , 2 / 255.   , 206 / 255.  , "color0075", 1)) 
+mycolors.append(r.TColor(4012  , 255 / 255. , 0 / 255.   , 255 / 255.  , "color0076", 1)) 
+mycolors.append(r.TColor(4013  , 243 / 255. , 85 / 255.  , 0 / 255.    , "color0077", 1)) 
+mycolors.append(r.TColor(4014  , 157 / 255. , 243 / 255. , 130 / 255.  , "color0100", 1)) 
+mycolors.append(r.TColor(4015  , 235 / 255. , 117 / 255. , 249 / 255.  , "color0101", 1)) 
+mycolors.append(r.TColor(4016  , 90 / 255.  , 211 / 255. , 221 / 255.  , "color0102", 1)) 
+mycolors.append(r.TColor(4017  , 85 / 255.  , 181 / 255. , 92 / 255.   , "color0103", 1)) 
+mycolors.append(r.TColor(4018  , 172 / 255. , 50 / 255.  , 60 / 255.   , "color0104", 1)) 
+mycolors.append(r.TColor(4019  , 42 / 255.  , 111 / 255. , 130 / 255.  , "color0105", 1)) 
 
-mycolors.append(r.TColor(4020 , 240 / 255. , 155 / 255. , 205 / 255. )) # ATLAS pink
-mycolors.append(r.TColor(4021 ,  77 / 255. , 161 / 255. ,  60 / 255. )) # ATLAS green
-mycolors.append(r.TColor(4022 ,  87 / 255. , 161 / 255. , 247 / 255. )) # ATLAS blue
-mycolors.append(r.TColor(4023 , 196 / 255. , 139 / 255. , 253 / 255. )) # ATLAS darkpink
-mycolors.append(r.TColor(4024 , 205 / 255. , 240 / 255. , 155 / 255. )) # Complementary
+mycolors.append(r.TColor(4020  , 240 / 255. , 155 / 255. , 205 / 255.  , "color0106", 1)) # ATLAS pink
+mycolors.append(r.TColor(4021  , 77 / 255.  , 161 / 255. , 60 / 255.   , "color0107", 1)) # ATLAS green
+mycolors.append(r.TColor(4022  , 87 / 255.  , 161 / 255. , 247 / 255.  , "color0110", 1)) # ATLAS blue
+mycolors.append(r.TColor(4023  , 196 / 255. , 139 / 255. , 253 / 255.  , "color0111", 1)) # ATLAS darkpink
+mycolors.append(r.TColor(4024  , 205 / 255. , 240 / 255. , 155 / 255.  , "color0112", 1)) # Complementary
 
-mycolors.append(r.TColor(4101 , 102 / 255. , 102 / 255. , 204 / 255. )) # ATLAS HWW / WW
-mycolors.append(r.TColor(4102 ,  89 / 255. , 185 / 255. ,  26 / 255. )) # ATLAS HWW / DY
-mycolors.append(r.TColor(4103 , 225 / 255. ,  91 / 255. , 226 / 255. )) # ATLAS HWW / VV
-mycolors.append(r.TColor(4104 , 103 / 255. , 236 / 255. , 235 / 255. )) # ATLAS HWW / misid
+mycolors.append(r.TColor(4101  , 102 / 255. , 102 / 255. , 204 / 255.  , "color0113", 1)) # ATLAS HWW / WW
+mycolors.append(r.TColor(4102  , 89 / 255.  , 185 / 255. , 26 / 255.   , "color0114", 1)) # ATLAS HWW / DY
+mycolors.append(r.TColor(4103  , 225 / 255. , 91 / 255.  , 226 / 255.  , "color0115", 1)) # ATLAS HWW / VV
+mycolors.append(r.TColor(4104  , 103 / 255. , 236 / 255. , 235 / 255.  , "color0116", 1)) # ATLAS HWW / misid
 
-mycolors.append(r.TColor(4201 ,  16 / 255. , 220 / 255. , 138 / 255. )) # Signal complementary
+mycolors.append(r.TColor(4201  , 16 / 255.  , 220 / 255. , 138 / 255.  , "color0117", 1)) # Signal complementary
 
-mycolors.append(r.TColor(4305 ,   0/255. , 208/255. , 145/255.)) # green made up
+mycolors.append(r.TColor(4305  , 0/255.     , 208/255.   , 145/255.    , "color0120", 1)) # green made up
 
-# https://brand.ucsd.edu/logos-and-brand-elements/color-palette/index.html
-# Core Colors
-mycolors.append(r.TColor(6001 ,  24/255. ,  43/255. ,  73/255.)) # UCSD Dark   Blue   Pantone 2767
-mycolors.append(r.TColor(6002 ,   0/255. ,  98/255. , 155/255.)) # UCSD Ocean  Blue   Pantone 3015
-mycolors.append(r.TColor(6003 , 198/255. , 146/255. ,  20/255.)) # UCSD        Kelp   Pantone 1245
-mycolors.append(r.TColor(6004 , 255/255. , 205/255. ,   0/255.)) # UCSD Bright Gold   Pantone 116
-# Accent Colors
-mycolors.append(r.TColor(6005 ,   0/255. , 198/255. , 215/255.)) # UCSD        Cyan   Pantone 3115
-mycolors.append(r.TColor(6006 , 110/255. , 150/255. ,  59/255.)) # UCSD        Green  Pantone 7490
-mycolors.append(r.TColor(6007 , 243/255. , 229/255. ,   0/255.)) # UCSD Bright Yellow Pantone 3945
-mycolors.append(r.TColor(6008 , 252/255. , 137/255. ,   0/255.)) # UCSD        Orange Pantone 144
+mycolors.append(r.TColor(6001  , 24/255.    , 43/255.    , 73/255.     , "color0121", 1)) # UCSD Dark   Blue   Pantone 2767
+mycolors.append(r.TColor(6002  , 0/255.     , 98/255.    , 155/255.    , "color0122", 1)) # UCSD Ocean  Blue   Pantone 3015
+mycolors.append(r.TColor(6003  , 198/255.   , 146/255.   , 20/255.     , "color0123", 1)) # UCSD        Kelp   Pantone 1245
+mycolors.append(r.TColor(6004  , 255/255.   , 205/255.   , 0/255.      , "color0124", 1)) # UCSD Bright Gold   Pantone 116
+mycolors.append(r.TColor(6005  , 0/255.     , 198/255.   , 215/255.    , "color0125", 1)) # UCSD        Cyan   Pantone 3115
+mycolors.append(r.TColor(6006  , 110/255.   , 150/255.   , 59/255.     , "color0126", 1)) # UCSD        Green  Pantone 7490
+mycolors.append(r.TColor(6007  , 243/255.   , 229/255.   , 0/255.      , "color0127", 1)) # UCSD Bright Yellow Pantone 3945
+mycolors.append(r.TColor(6008  , 252/255.   , 137/255.   , 0/255.      , "color0130", 1)) # UCSD        Orange Pantone 144
 
 
 default_colors = []
@@ -183,7 +179,7 @@ def get_total_hist(hists):
     Sum all histograms and return a new copy of total bkg hist.
     """
     if len(hists) == 0:
-        print "ERROR - the number of histograms are zero, while you asked me to sum them up."
+        print("ERROR - the number of histograms are zero, while you asked me to sum them up.")
     totalhist = cloneTH1(hists[0])
     totalhist.Reset()
     for hist in hists:
@@ -196,11 +192,11 @@ def get_total_err_hist(hists):
     Sum all histograms errors
     """
     if len(hists) == 0:
-        print "ERROR - the number of histograms are zero, while you asked me to sum them up."
+        print("ERROR - the number of histograms are zero, while you asked me to sum them up.")
     totalhist = get_total_hist(hists)
     errhist = cloneTH1(totalhist)
     errhist.Reset()
-    for i in xrange(0, totalhist.GetNbinsX() + 2):
+    for i in range(0, totalhist.GetNbinsX() + 2):
         errhist.SetBinContent(i, totalhist.GetBinError(i))
     return errhist
 
@@ -222,14 +218,14 @@ def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
     """
     Add the difference between nomhist to errhist as an additional error to nomhist
     """
-    if nomhist.GetNbinsX() != errhist.GetNbinsX(): print "ERROR - the nom hist and err hist have different dimension in X"
-    if nomhist.GetNbinsY() != errhist.GetNbinsY(): print "ERROR - the nom hist and err hist have different dimension in Y"
-    if nomhist.GetNbinsZ() != errhist.GetNbinsZ(): print "ERROR - the nom hist and err hist have different dimension in Z"
+    if nomhist.GetNbinsX() != errhist.GetNbinsX(): print("ERROR - the nom hist and err hist have different dimension in X")
+    if nomhist.GetNbinsY() != errhist.GetNbinsY(): print("ERROR - the nom hist and err hist have different dimension in Y")
+    if nomhist.GetNbinsZ() != errhist.GetNbinsZ(): print("ERROR - the nom hist and err hist have different dimension in Z")
 
     if errhistpairvar:
-        if nomhist.GetNbinsX() != errhistpairvar.GetNbinsX(): print "ERROR - the nom hist and err hist paired variation have different dimension in X"
-        if nomhist.GetNbinsY() != errhistpairvar.GetNbinsY(): print "ERROR - the nom hist and err hist paired variation have different dimension in Y"
-        if nomhist.GetNbinsZ() != errhistpairvar.GetNbinsZ(): print "ERROR - the nom hist and err hist paired variation have different dimension in Z"
+        if nomhist.GetNbinsX() != errhistpairvar.GetNbinsX(): print("ERROR - the nom hist and err hist paired variation have different dimension in X")
+        if nomhist.GetNbinsY() != errhistpairvar.GetNbinsY(): print("ERROR - the nom hist and err hist paired variation have different dimension in Y")
+        if nomhist.GetNbinsZ() != errhistpairvar.GetNbinsZ(): print("ERROR - the nom hist and err hist paired variation have different dimension in Z")
 
     labels = nomhist.GetXaxis().GetLabels()
     if labels:
@@ -246,9 +242,9 @@ def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
         errhist.GetYaxis().SetCanExtend(False)
         errhist.GetZaxis().SetCanExtend(False)
 
-    for iz in xrange(0, nomhist.GetNbinsZ()+2):
-        for iy in xrange(0, nomhist.GetNbinsY()+2):
-            for ix in xrange(0, nomhist.GetNbinsX()+2):
+    for iz in range(0, nomhist.GetNbinsZ()+2):
+        for iy in range(0, nomhist.GetNbinsY()+2):
+            for ix in range(0, nomhist.GetNbinsX()+2):
                 nombc = nomhist.GetBinContent(ix, iy, iz)
                 nombe = nomhist.GetBinError(ix, iy, iz)
                 errbc = errhist.GetBinContent(ix, iy, iz)
@@ -259,7 +255,7 @@ def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
                     if abs(diff) < abs(diffpaired):
                         diff = diffpaired
                 newb = E(0, diff) + E(nombc, nombe)
-                #print newb.val, newb.err, diff, nombe, nombc
+                #print(newb.val, newb.err, diff, nombe, nombc)
                 nomhist.SetBinContent(ix, iy, iz, newb.val)
                 nomhist.SetBinError(ix, iy, iz, newb.err)
             if nomhist.GetDimension() == 1:
@@ -271,8 +267,8 @@ def add_diff_to_error(nomhist, errhist, errhistpairvar=None):
 def getYaxisRange(hist):
     maximum = 0
     if hist:
-        for ibin in xrange(0, hist.GetNbinsX()+2):
-        #for ibin in xrange(1, hist.GetNbinsX()+1):
+        for ibin in range(0, hist.GetNbinsX()+2):
+        #for ibin in range(1, hist.GetNbinsX()+1):
             c = hist.GetBinContent(ibin)
             e = hist.GetBinError(ibin)
             v = c + e
@@ -284,8 +280,8 @@ def getYaxisRange(hist):
 def getYaxisNonZeroMin(hist):
     minimum = 999999999999999999
     if hist:
-        for ibin in xrange(1, hist.GetNbinsX()+1):
-        #for ibin in xrange(1, hist.GetNbinsX()+1):
+        for ibin in range(1, hist.GetNbinsX()+1):
+        #for ibin in range(1, hist.GetNbinsX()+1):
             c = hist.GetBinContent(ibin)
             e = hist.GetBinError(ibin)
             v = c + e
@@ -330,7 +326,7 @@ def get_max_yaxis_range_order_half_modded(maximum):
 #______________________________________________________________________________________________________________________
 def remove_errors(hists):
     for hist in hists:
-        for ibin in xrange(0, hist.GetNbinsX()+2):
+        for ibin in range(0, hist.GetNbinsX()+2):
             hist.SetBinError(ibin, 0)
 
 #______________________________________________________________________________________________________________________
@@ -340,11 +336,11 @@ def rebin(hists, nbin):
         currnbin = hist.GetNbinsX()
         fac = currnbin / nbin
         if float(fac).is_integer() and fac > 0:
-            hist.Rebin(fac)
+            hist.Rebin(int(fac))
 
 #______________________________________________________________________________________________________________________
 def single_divide_by_bin_width(hist):
-    for ibin in xrange(1,hist.GetNbinsX()+2):
+    for ibin in range(1,hist.GetNbinsX()+2):
         hist.SetBinContent(ibin, hist.GetBinContent(ibin) / hist.GetBinWidth(ibin))
         hist.SetBinError(ibin, hist.GetBinError(ibin) / hist.GetBinWidth(ibin))
 
@@ -358,8 +354,8 @@ def flatten_th2(th2):
     nx = th2.GetNbinsX()
     ny = th2.GetNbinsY()
     th1 = r.TH1F(th2.GetName(), th2.GetTitle(), nx*ny, 0, nx*ny)
-    for ix in xrange(nx):
-        for iy in xrange(ny):
+    for ix in range(nx):
+        for iy in range(ny):
             bc = th2.GetBinContent(ix+1, iy+1)
             be = th2.GetBinError(ix+1, iy+1)
             #th1.SetBinContent(ix+1+(iy)*nx, bc)
@@ -418,25 +414,25 @@ def apply_nf(hists, nfs):
         if isinstance(nfs, list) and len(nfs) == 0:
             pass
         elif isinstance(nfs, float):
-            for i in xrange(0, hist.GetNbinsX()+2):
+            for i in range(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 hist.SetBinContent(i, bc * nfs)
                 hist.SetBinError(i, be * nfs)
         elif len(nfs) == hist.GetNbinsX():
-            for i in xrange(1, hist.GetNbinsX()+1):
+            for i in range(1, hist.GetNbinsX()+1):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 hist.SetBinContent(i, bc * nfs[i-1])
                 hist.SetBinError(i, be * nfs[i-1])
         elif len(nfs) == hist.GetNbinsX()+2:
-            for i in xrange(0, hist.GetNbinsX()+2):
+            for i in range(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 hist.SetBinContent(i, bc * nfs[i])
                 hist.SetBinError(i, be * nfs[i])
         elif len(nfs) == 1:
-            for i in xrange(0, hist.GetNbinsX()+2):
+            for i in range(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 hist.SetBinContent(i, bc * nfs[0][0])
@@ -454,13 +450,13 @@ def apply_nf_w_error(hists, nfs):
         if isinstance(nfs, list) and len(nfs) == 0:
             pass
         elif isinstance(nfs, float):
-            for i in xrange(0, hist.GetNbinsX()+2):
+            for i in range(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 hist.SetBinContent(i, bc * nfs)
                 hist.SetBinError(i, be * nfs)
         elif len(nfs) == hist.GetNbinsX():
-            for i in xrange(1, hist.GetNbinsX()+1):
+            for i in range(1, hist.GetNbinsX()+1):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 bfe = be / bc if bc != 0 else 0
@@ -472,7 +468,7 @@ def apply_nf_w_error(hists, nfs):
                 hist.SetBinContent(i, nbc)
                 hist.SetBinError(i, nbe)
         elif len(nfs) == hist.GetNbinsX()+2:
-            for i in xrange(0, hist.GetNbinsX()+2):
+            for i in range(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 bfe = be / bc if bc != 0 else 0
@@ -484,7 +480,7 @@ def apply_nf_w_error(hists, nfs):
                 hist.SetBinContent(i, nbc)
                 hist.SetBinError(i, nbe)
         elif len(nfs) == 1:
-            for i in xrange(0, hist.GetNbinsX()+2):
+            for i in range(0, hist.GetNbinsX()+2):
                 bc = hist.GetBinContent(i)
                 be = hist.GetBinError(i)
                 bfe = be / bc if bc != 0 else 0
@@ -509,23 +505,23 @@ def apply_nf_2d(hists, nfs):
             pass
         elif len(nfs) == 1:
             #hist.Scale(nfs[0][0])
-            for i in xrange(0, hist.GetNbinsX()+2):
-                for j in xrange(0, hist.GetNbinsY()+2):
+            for i in range(0, hist.GetNbinsX()+2):
+                for j in range(0, hist.GetNbinsY()+2):
                     bc = hist.GetBinContent(i, j)
                     be = hist.GetBinError(i, j)
                     nf = nfs[0][0]
                     hist.SetBinContent(i, j, bc * nf)
                     hist.SetBinError(i, j, be * nf)
         elif len(nfs) == hist.GetNbinsX():
-            for i in xrange(1, hist.GetNbinsX()+1):
-                for j in xrange(0, hist.GetNbinsY()+2):
+            for i in range(1, hist.GetNbinsX()+1):
+                for j in range(0, hist.GetNbinsY()+2):
                     bc = hist.GetBinContent(i, j)
                     be = hist.GetBinError(i, j)
                     nf = nfs[i-1][0]
                     hist.SetBinContent(i, j, bc * nf)
                     hist.SetBinError(i, j, be * nf)
         else:
-            print "WARNING - apply_nf_w_error_2d: something went wrong."
+            print("WARNING - apply_nf_w_error_2d: something went wrong.")
     if isinstance(hists, list):
         for hist in hists:
             func(hist, nfs)
@@ -539,8 +535,8 @@ def apply_nf_w_error_2d(hists, nfs):
         if isinstance(nfs, list) and len(nfs) == 0:
             pass
         elif len(nfs) == 1:
-            for i in xrange(0, hist.GetNbinsX()+2):
-                for j in xrange(0, hist.GetNbinsY()+2):
+            for i in range(0, hist.GetNbinsX()+2):
+                for j in range(0, hist.GetNbinsY()+2):
                     bc = hist.GetBinContent(i, j)
                     be = hist.GetBinError(i, j)
                     bfe = be / bc if bc != 0 else 0
@@ -552,8 +548,8 @@ def apply_nf_w_error_2d(hists, nfs):
                     hist.SetBinContent(i, j, nbc)
                     hist.SetBinError(i, j, nbe)
         elif len(nfs) == hist.GetNbinsX():
-            for i in xrange(1, hist.GetNbinsX()+1):
-                for j in xrange(0, hist.GetNbinsY()+2):
+            for i in range(1, hist.GetNbinsX()+1):
+                for j in range(0, hist.GetNbinsY()+2):
                     bc = hist.GetBinContent(i, j)
                     be = hist.GetBinError(i, j)
                     bfe = be / bc if bc != 0 else 0
@@ -565,7 +561,7 @@ def apply_nf_w_error_2d(hists, nfs):
                     hist.SetBinContent(i, j, nbc)
                     hist.SetBinError(i, j, nbe)
         else:
-            print "WARNING - apply_nf_w_error_2d: something went wrong."
+            print("WARNING - apply_nf_w_error_2d: something went wrong.")
     if isinstance(hists, list):
         for hist in hists:
             func(hist, nfs)
@@ -588,7 +584,7 @@ def fom_limit(s, serr, b, berr, totals, totalb):
         RooUtil_StatUtil_Loaded = True
 
     if b > 0:
-        print s, b, 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
+        print(s, b, 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0)
         return 1. / r.RooUtil.StatUtil.cut_and_count_95percent_limit(s, b, berr / b), 0
     else:
         return 0, 0
@@ -641,7 +637,7 @@ def fom_acceptance(s, serr, b, berr, totals, totalb):
 def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
-        print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
+        print("Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX())
     scan = cloneTH1(sig)
     scan.Reset()
     xmin = scan.GetXaxis().GetBinLowEdge(1)
@@ -652,10 +648,10 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
     totalsig = sig.Integral(0, nbin + 1)
     totalbkg = bkg.Integral(0, nbin + 1)
 
-    for i in xrange(1, nbin + 1):
+    for i in range(1, nbin + 1):
         local_max_f = 0
         local_max_f_err = 0
-        for j in xrange(i + 1, nbin + 1):
+        for j in range(i + 1, nbin + 1):
             sigerr = r.Double(0)
             sigint = sig.IntegralAndError(i, j, sigerr)
             bkgerr = r.Double(0)
@@ -681,7 +677,7 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
 # def plot_sigscan(sig, bkg, fom=fom_SoverSqrtSPlusB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
-        print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
+        print("Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX())
     leftscan = cloneTH1(sig)
     leftscan.Reset()
     xmin = leftscan.GetXaxis().GetBinLowEdge(1)
@@ -690,8 +686,8 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
     max_f_cut = 0
     totalsig = sig.Integral(0, nbin + 1)
     totalbkg = bkg.Integral(0, nbin + 1)
-    # print totalsig, totalbkg
-    for i in xrange(1, nbin + 1):
+    # print(totalsig, totalbkg)
+    for i in range(1, nbin + 1):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
         bkgerr = r.Double(0)
@@ -707,13 +703,13 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
             else:
                 max_f = f
                 max_f_cut = xmin + xwidth * (i - 1)
-    # print max_f
+    # print(max_f)
     leftscan.SetName("#rightarrow {:.2f} ({:.2f})".format(max_f, max_f_cut))
     rightscan = cloneTH1(sig)
     rightscan.Reset()
     max_f = 0
     max_f_cut = 0
-    for i in reversed(xrange(1, nbin + 1)):
+    for i in reversed(range(1, nbin + 1)):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(0, i, sigerr)
         bkgerr = r.Double(0)
@@ -739,11 +735,11 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
     bkg = get_total_hist(bkgs)
 
     if len(bkgs) != len(systs) and len(systs) > 0:
-        print "Error - The provided systs list does not have the same number of entries as the bkgs", bkgs, systs
+        print("Error - The provided systs list does not have the same number of entries as the bkgs", bkgs, systs)
 
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
-        print "Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX()
+        print("Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX())
     leftscan = cloneTH1(sig)
     leftscan.Reset()
     xmin = leftscan.GetXaxis().GetBinLowEdge(1)
@@ -753,7 +749,7 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
     totalsig = sig.Integral(0, nbin + 1)
     totalbkg = bkg.Integral(0, nbin + 1)
     sigaccept = 0
-    for i in xrange(1, nbin + 1):
+    for i in range(1, nbin + 1):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
         bkgerr = r.Double(0)
@@ -771,7 +767,7 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
             count_b_w_syst = count_b_w_syst + count
         bkgerr = count_b_w_syst.err
         f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
-        #print i, f
+        #print(i, f)
         leftscan.SetBinContent(i, f)
         leftscan.SetBinError(i, ferr)
         if max_f < f:
@@ -784,7 +780,7 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
     rightscan.Reset()
     max_f = -999
     max_f_cut = 0
-    for i in reversed(xrange(1, nbin + 1)):
+    for i in reversed(range(1, nbin + 1)):
         sigerr = r.Double(0)
         sigint = sig.IntegralAndError(0, i, sigerr)
         bkgerr = r.Double(0)
@@ -848,13 +844,15 @@ def yield_str(hist, i, prec=3, noerror=False, options={}):
         e = E(hist.GetBinContent(i), hist.GetBinError(i))
         if "human_format" in options:
             if options["human_format"]:
-                sep = u"\u00B1".encode("utf-8")
+                # sep = u"\u00B1".encode("utf-8")
+                sep = u'\u00B1'
                 return "%s %s %s" % (human_format(e.val), sep, human_format(e.err))
             else:
                 return e.round(precuse)
         else:
             # return e.round(precuse)
-            sep = u"\u00B1".encode("utf-8")
+            # sep = u"\u00B1".encode("utf-8")
+            sep = u'\u00B1'
             return "%s %s %s" % ('{{:.{}g}}'.format(precuse).format(e.val), sep, '{{:.{}g}}'.format(precuse).format(e.err))
 #______________________________________________________________________________________________________________________
 def yield_tex_str(hist, i, prec=3, noerror=False):
@@ -914,9 +912,9 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
     # add bin column
     labels = hists[0].GetXaxis().GetLabels()
     if labels:
-        x.add_column("", [print_bin_label_tex_style(hists[0].GetXaxis().GetBinLabel(i)) for i in xrange(1, hists[0].GetNbinsX()+1)])
+        x.add_column("", [print_bin_label_tex_style(hists[0].GetXaxis().GetBinLabel(i)) for i in range(1, hists[0].GetNbinsX()+1)])
     else:
-        x.add_column("", ["Bin{}".format(i) for i in xrange(1, hists[0].GetNbinsX()+1)])
+        x.add_column("", ["Bin{}".format(i) for i in range(1, hists[0].GetNbinsX()+1)])
     for hist in hists:
         # print(name)
         name = hist.GetTitle()
@@ -927,7 +925,7 @@ def print_yield_tex_table_from_list(hists, outputname, prec=2, caption="PUT YOUR
             name = "$" + name + "$"
         if name == "data":
             name = "Data"
-        x.add_column(name, [ yield_tex_str(hist, i, prec, noerror) for i in xrange(1, hist.GetNbinsX()+1)])
+        x.add_column(name, [ yield_tex_str(hist, i, prec, noerror) for i in range(1, hist.GetNbinsX()+1)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.tex'
     x.set_theme_basic()
@@ -990,9 +988,9 @@ def print_yield_tex_table_from_list_v2(hists_summary, hists_individ, outputname,
     # add bin column
     labels = hists_summary[0].GetXaxis().GetLabels()
     if labels:
-        x.add_column("", [print_bin_label_tex_style(hists_summary[0].GetXaxis().GetBinLabel(i)) for i in xrange(1, hists_summary[0].GetNbinsX()+1)])
+        x.add_column("", [print_bin_label_tex_style(hists_summary[0].GetXaxis().GetBinLabel(i)) for i in range(1, hists_summary[0].GetNbinsX()+1)])
     else:
-        x.add_column("", ["Bin{}".format(i) for i in xrange(1, hists_summary[0].GetNbinsX()+1)])
+        x.add_column("", ["Bin{}".format(i) for i in range(1, hists_summary[0].GetNbinsX()+1)])
     for hist in hists_summary + hists_individ:
         # print(name)
         name = hist.GetTitle()
@@ -1005,7 +1003,7 @@ def print_yield_tex_table_from_list_v2(hists_summary, hists_individ, outputname,
             name = "Data"
         if name == "Total":
             name = "\\Ntotal"
-        x.add_column(name, [ yield_tex_str(hist, i, 0 if name == "\\Nobs" else prec, True if name == "\\Nobs" else  noerror) for i in xrange(1, hist.GetNbinsX()+1)])
+        x.add_column(name, [ yield_tex_str(hist, i, 0 if name == "\\Nobs" else prec, True if name == "\\Nobs" else  noerror) for i in range(1, hist.GetNbinsX()+1)])
     fname = outputname
     fname = os.path.splitext(fname)[0]+'.tex'
     x.set_theme_basic()
@@ -1074,7 +1072,7 @@ def print_yield_table(hdata, hbkgs, hsigs, hsyst, options):
         htotal.SetTitle("Total")
         hists.append(htotal)
     if hdata and len(hbkgs) != 0:
-        #print hdata
+        #print(hdata)
         #hratio = makeRatioHist(hdata, hbkgs)
         hratio = hdata.Clone("Ratio")
         hratio.SetTitle("Ratio")
@@ -1117,7 +1115,7 @@ def copy_nice_plot_index_php(options):
 #    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 def copy_nice_plot(plotdir):
-    os.system("cp {}/../misc/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
+    os.system("cp {}/syncfiles/miscfiles/index.php {}/".format(os.path.realpath(__file__).rsplit("/",1)[0], plotdir))
 
 #______________________________________________________________________________________________________________________
 def autobin(data, bgs):
@@ -1128,7 +1126,7 @@ def autobin(data, bgs):
     accumulative.Scale(1. / norm)
     idx5 = -1
     idx95 = -1
-    for i in xrange(1, accumulative.GetNbinsX()+2):
+    for i in range(1, accumulative.GetNbinsX()+2):
         intg = accumulative.Integral(0, i)
         if intg > 0.02 and idx5 < 0:
             idx5 = i
@@ -1136,7 +1134,7 @@ def autobin(data, bgs):
             idx95 = i
     minbin = -1
     if data:
-        for i in xrange(idx5, idx95):
+        for i in range(idx5, idx95):
             bc = data.GetBinContent(i)
             if bc < minbin or minbin < 0:
                 minbin = bc
@@ -1185,7 +1183,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
 
     # Sanity check. If no histograms exit
     if not data and len(bgs) == 0 and len(sigs) == 0:
-        print "[plottery_wrapper] >>> Nothing to do!"
+        print("[plottery_wrapper] >>> Nothing to do!")
         return
 
     # If a blind option is set, blind the data histogram to None
@@ -1328,7 +1326,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                         bg.Scale(sf)
                     options["extra_text"] = ["SF={:.2f}#pm{:.2f}".format(sf, sferr)]
                 else:
-                    print "Warning: fit_bkg option did nothing as either btot == 0 or dtot == 0"
+                    print("Warning: fit_bkg option did nothing as either btot == 0 or dtot == 0")
         del options["fit_bkg"]
 
     # Once maximum is computed, set the y-axis label location
@@ -1361,10 +1359,10 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                 nbins = h.GetNbinsX()
                 nlabels = len(options["bin_labels"])
                 if nbins != nlabels:
-                    print "Error: the bin_labels length do not match the histogram nbinsx"
+                    print("Error: the bin_labels length do not match the histogram nbinsx")
                     continue
                 else:
-                    for i in xrange(nlabels):
+                    for i in range(nlabels):
                         h.GetXaxis().SetBinLabel(i + 1, options["bin_labels"][i])
                     h.SetCanExtend(False)
                     if "bin_labels_orientation" in options:
@@ -1394,7 +1392,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
                     data.Add(hsig)
                 for hbkg in bgs:
                     data.Add(hbkg)
-                for i in xrange(1, data.GetNbinsX() + 1):
+                for i in range(1, data.GetNbinsX() + 1):
                     data.SetBinError(i, 0)
                 options["legend_datalabel"] = "Sig+Bkg"
         del options["inject_signal"]
@@ -1655,8 +1653,8 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
 
     # generalize later
     if len(tps) != len(fps):
-        print len(tps), len(fps)
-        print ">>> number of true positive hists and false positive hists must match"
+        print(len(tps), len(fps))
+        print(">>> number of true positive hists and false positive hists must match")
         sys.exit(-1)
 
     debug = False
@@ -1672,16 +1670,16 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
         bkghist = fps[index]
         cutval = cutvals[index] if len(cutvals) == len(tps) else -999
 
-        if debug: print "[DEBUG] >>> here", sighist.GetName(), bkghist.GetName()
+        if debug: print("[DEBUG] >>> here", sighist.GetName(), bkghist.GetName())
 
         error = r.Double()
 
         stot = sighist.IntegralAndError(0, sighist.GetNbinsX()+1, error)
         btot = bkghist.IntegralAndError(0, bkghist.GetNbinsX()+1, error)
 
-        if debug: print '[DEBUG] >>>', stot, btot
-        if debug: print '[DEBUG] >>> sighist.GetMean()', sighist.GetMean()
-        if debug: print '[DEBUG] >>> bkghist.GetMean()', bkghist.GetMean()
+        if debug: print('[DEBUG] >>>', stot, btot)
+        if debug: print('[DEBUG] >>> sighist.GetMean()', sighist.GetMean())
+        if debug: print('[DEBUG] >>> bkghist.GetMean()', bkghist.GetMean())
 
         x=[]
         y=[]
@@ -1704,7 +1702,7 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
             curval = sighist.GetXaxis().GetBinUpEdge(sighist.GetNbinsX()) - i * sighist.GetXaxis().GetBinWidth(1)
             if doreverse:
                 curval = sighist.GetXaxis().GetBinUpEdge(1 + i)
-            print seff, beff, curval
+            print(seff, beff, curval)
 #            if abs(ref_seff - seff) < 0.03:
 #                print abs(ref_seff - seff) < 0.03
 #                print ref_seff
@@ -1730,15 +1728,15 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
                     if ref_seff == 0: ref_seff = seff
                     if ref_beff == 0: ref_beff = beff
             if debug:
-                if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(sighist.GetBinLowEdge(i) - 0.10) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(sighist.GetBinLowEdge(i) - 0.07) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(beff - 0.07) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(beff - 0.04) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(seff - 0.91) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(sighist.GetBinLowEdge(i) - 0.10) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(sighist.GetBinLowEdge(i) - 0.07) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(beff - 0.07) < 0.02: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(beff - 0.04) < 0.02: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(seff - 0.91) < 0.02: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
             #if beff != 0:
-            #    print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff), s, b, stot, btot
+            #    print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff), s, b, stot, btot)
             x.append(beff)
             y.append(seff)
 
@@ -1842,8 +1840,8 @@ def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=
 
     # generalize later
     if len(tps) != len(fps):
-        print len(tps), len(fps)
-        print ">>> number of true positive hists and false positive hists must match"
+        print(len(tps), len(fps))
+        print(">>> number of true positive hists and false positive hists must match")
         sys.exit(-1)
 
     debug = False
@@ -1859,16 +1857,16 @@ def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=
         bkghist = fps[index]
         cutval = cutvals[index] if len(cutvals) == len(tps) else -999
 
-        if debug: print "[DEBUG] >>> here", sighist.GetName(), bkghist.GetName()
+        if debug: print("[DEBUG] >>> here", sighist.GetName(), bkghist.GetName())
 
         error = r.Double()
 
         stot = sighist.IntegralAndError(0, sighist.GetNbinsX()+1, error)
         btot = bkghist.IntegralAndError(0, bkghist.GetNbinsX()+1, error)
 
-        if debug: print '[DEBUG] >>>', stot, btot
-        if debug: print '[DEBUG] >>> sighist.GetMean()', sighist.GetMean()
-        if debug: print '[DEBUG] >>> bkghist.GetMean()', bkghist.GetMean()
+        if debug: print('[DEBUG] >>>', stot, btot)
+        if debug: print('[DEBUG] >>> sighist.GetMean()', sighist.GetMean())
+        if debug: print('[DEBUG] >>> bkghist.GetMean()', bkghist.GetMean())
 
         x=[]
         y=[]
@@ -1891,14 +1889,14 @@ def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=
             curval = sighist.GetXaxis().GetBinUpEdge(sighist.GetNbinsX()) - i * sighist.GetXaxis().GetBinWidth(1)
             if doreverse:
                 curval = sighist.GetXaxis().GetBinUpEdge(1 + i)
-            print seff, beff, curval
+            print(seff, beff, curval)
 #            if abs(ref_seff - seff) < 0.03:
-#                print abs(ref_seff - seff) < 0.03
-#                print ref_seff
-#                print cuteffset
-#                print cutval == -999, cutval
+#                print(abs(ref_seff - seff) < 0.03)
+#                print(ref_seff)
+#                print(cuteffset)
+#                print(cutval == -999, cutval)
             if abs(ref_seff - seff) < 0.01 and ref_seff > 0 and not cuteffset and cutval == -999:
-#                print 'here'
+#                print('here')
                 cuteffset = True
                 legend_labels[index] = "({0:.2f}, {1:.4f}) @ {2} ".format(seff, beff, curval) + legend_labels[index] if len(legend_labels[index]) > 0 else ""
                 pointpairs.append(([beff], [seff]))
@@ -1917,15 +1915,15 @@ def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=
                     if ref_seff == 0: ref_seff = seff
                     if ref_beff == 0: ref_beff = beff
             if debug:
-                if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(sighist.GetBinLowEdge(i) - 0.10) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(sighist.GetBinLowEdge(i) - 0.07) < 0.01: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(beff - 0.07) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(beff - 0.04) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
-                if abs(seff - 0.91) < 0.02: print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff)
+                if abs(sighist.GetBinLowEdge(i) - 0.25) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(sighist.GetBinLowEdge(i) - 0.15) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(sighist.GetBinLowEdge(i) - 0.10) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(sighist.GetBinLowEdge(i) - 0.07) < 0.01: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(beff - 0.07) < 0.02: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(beff - 0.04) < 0.02: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
+                if abs(seff - 0.91) < 0.02: print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff))
             #if beff != 0:
-            #    print seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff), s, b, stot, btot
+            #    print(seff, beff, sighist.GetBinLowEdge(i), seff*seff / math.sqrt(beff), seff / math.sqrt(beff), s, b, stot, btot)
             x.append(beff)
             y.append(seff)
 
@@ -2203,7 +2201,7 @@ def dump_plot(
                 hists.append(h)
                 colors.append(clrs[n])
             else:
-                print "ERROR: did not find histogram", hist_name_to_get, "for the file", tfs[n].GetName()
+                print("ERROR: did not find histogram", hist_name_to_get, "for the file", tfs[n].GetName())
                 sys.exit(1)
 
         if do_sum:
