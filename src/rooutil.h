@@ -13,3 +13,4 @@
 #include "histmap.h"
 #include "LinkDef.h"
 #include "csv.h"
+#include "json.h"
