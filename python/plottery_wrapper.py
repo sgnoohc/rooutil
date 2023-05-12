@@ -20,6 +20,7 @@ import tabletex
 from errors import E
 import errno    
 import pyrootutil as ru
+from ctypes import c_double
 
 RooUtil_StatUtil_Loaded = False
 
@@ -314,14 +315,17 @@ def get_max_yaxis_range(hists):
 
 #______________________________________________________________________________________________________________________
 def get_max_yaxis_range_order_half_modded(maximum):
-    firstdigit = int(str(maximum)[0])
-    maximum = max(maximum, 0.001)
-    order = int(math.log10(maximum))
-    if firstdigit <= 2:
-        middle = (10.**(order - 1))
-    else:
-        middle = (10.**(order))
-    return maximum + middle
+    try:
+        firstdigit = int(str(maximum)[0])
+        maximum = max(maximum, 0.001)
+        order = int(math.log10(maximum))
+        if firstdigit <= 2:
+            middle = (10.**(order - 1))
+        else:
+            middle = (10.**(order))
+        return maximum + middle
+    except:
+        return "BLAH"
 
 #______________________________________________________________________________________________________________________
 def remove_errors(hists):
@@ -652,10 +656,12 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
         local_max_f = 0
         local_max_f_err = 0
         for j in range(i + 1, nbin + 1):
-            sigerr = r.Double(0)
+            sigerr = c_double(0)
             sigint = sig.IntegralAndError(i, j, sigerr)
-            bkgerr = r.Double(0)
+            bkgerr = c_double(0)
             bkgint = bkg.IntegralAndError(i, j, bkgerr)
+            sigerr = sigerr.value
+            bkgerr = bkgerr.value
             f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
             if max_f < f:
                 max_f = f
@@ -688,10 +694,12 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
     totalbkg = bkg.Integral(0, nbin + 1)
     # print(totalsig, totalbkg)
     for i in range(1, nbin + 1):
-        sigerr = r.Double(0)
+        sigerr = c_double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
-        bkgerr = r.Double(0)
+        bkgerr = c_double(0)
         bkgint = bkg.IntegralAndError(i, nbin + 1, bkgerr)
+        sigerr = sigerr.value
+        bkgerr = bkgerr.value
         f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
         leftscan.SetBinContent(i, f)
         leftscan.SetBinError(i, ferr)
@@ -710,10 +718,12 @@ def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
     max_f = 0
     max_f_cut = 0
     for i in reversed(range(1, nbin + 1)):
-        sigerr = r.Double(0)
+        sigerr = c_double(0)
         sigint = sig.IntegralAndError(0, i, sigerr)
-        bkgerr = r.Double(0)
+        bkgerr = c_double(0)
         bkgint = bkg.IntegralAndError(0, i, bkgerr)
+        sigerr = sigerr.value
+        bkgerr = bkgerr.value
         f, ferr = fom(sigint, sigerr, bkgint, bkgerr, totalsig, totalbkg)
         rightscan.SetBinContent(i, f)
         rightscan.SetBinError(i, ferr)
@@ -750,16 +760,19 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
     totalbkg = bkg.Integral(0, nbin + 1)
     sigaccept = 0
     for i in range(1, nbin + 1):
-        sigerr = r.Double(0)
+        sigerr = c_double(0)
         sigint = sig.IntegralAndError(i, nbin + 1, sigerr)
-        bkgerr = r.Double(0)
+        bkgerr = c_double(0)
         bkgint = bkg.IntegralAndError(i, nbin + 1, bkgerr)
+        sigerr = sigerr.value
+        bkgerr = bkgerr.value
         count_s = E(sigint, sigerr)
         count_b = E(bkgint, bkgerr)
         counts = []
         for index, bg in enumerate(bkgs):
-            e = r.Double(0)
+            e = c_double(0)
             c = bg.IntegralAndError(i, nbin + 1, e)
+            e = e.value
             ne = math.sqrt(e*e + c*systs[index]*c*systs[index])
             counts.append(E(c, ne))
         count_b_w_syst = E(0, 0)
@@ -781,16 +794,19 @@ def plot_sigscan_w_syst(sig, bkgs, systs, fom=fom_SoverSqrtBwErr):
     max_f = -999
     max_f_cut = 0
     for i in reversed(range(1, nbin + 1)):
-        sigerr = r.Double(0)
+        sigerr = c_double(0)
         sigint = sig.IntegralAndError(0, i, sigerr)
-        bkgerr = r.Double(0)
+        bkgerr = c_double(0)
         bkgint = bkg.IntegralAndError(0, i, bkgerr)
+        sigerr = sigerr.value
+        bkgerr = bkgerr.value
         count_s = E(sigint, sigerr)
         count_b = E(bkgint, bkgerr)
         counts = []
         for index, bg in enumerate(bkgs):
-            e = r.Double(0)
+            e = c_double(0)
             c = bg.IntegralAndError(0, i, e)
+            e = e.value
             ne = math.sqrt(e*e + c*systs[index]*c*systs[index])
             counts.append(E(c, ne))
         count_b_w_syst = E(0, 0)
@@ -1303,6 +1319,14 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
         maxmult = options["ymax_scale"]
         del options["ymax_scale"]
     yaxismax = get_max_yaxis_range_order_half_modded(get_max_yaxis_range([data, totalbkg] + sigs) * maxmult)
+    if yaxismax == "BLAH":
+        print(data.GetName())
+        print(options)
+        data.Print("all")
+        for bg in bgs:
+            bg.Print("all")
+        for sg in sigs:
+            sg.Print("all")
     yaxismin = get_nonzeromin_yaxis_range(bgs)
     #yaxismin = 1000
 
@@ -1315,10 +1339,12 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if "fit_bkg" in options:
         if options["fit_bkg"]:
             if not didnothaveanydata:
-                btoterr = r.Double()
+                btoterr = c_double()
                 btot = totalbkg.IntegralAndError(0, totalbkg.GetNbinsX()+1, btoterr)
-                dtoterr = r.Double()
+                dtoterr = c_double()
                 dtot = data.IntegralAndError(0, data.GetNbinsX()+1, dtoterr)
+                btoterr = btoterr.value
+                dtoterr = dtoterr.value
                 if btot != 0 and dtot != 0:
                     sf = dtot/btot
                     sferr = sf * math.sqrt((dtoterr / dtot)**2 + (btoterr / btot)**2)
@@ -1672,7 +1698,7 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
 
         if debug: print("[DEBUG] >>> here", sighist.GetName(), bkghist.GetName())
 
-        error = r.Double()
+        error = c_double() # TODO: THIS IS BUGGY!
 
         stot = sighist.IntegralAndError(0, sighist.GetNbinsX()+1, error)
         btot = bkghist.IntegralAndError(0, bkghist.GetNbinsX()+1, error)
@@ -1693,8 +1719,8 @@ def plot_roc(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=[],
             s = sighist.IntegralAndError(sighist.GetNbinsX()-i, sighist.GetNbinsX()+1, error)
             b = bkghist.IntegralAndError(sighist.GetNbinsX()-i, bkghist.GetNbinsX()+1, error)
             if doreverse:
-                s = sighist.IntegralAndError(0, 1 + i, error)
-                b = bkghist.IntegralAndError(0, 1 + i, error)
+                s = sighist.IntegralAndError(0, 1 + i, error.value)
+                b = bkghist.IntegralAndError(0, 1 + i, error.value)
             #s = sighist.IntegralAndError(0, i, error)
             #b = bkghist.IntegralAndError(0, i, error)
             seff = s / stot
@@ -1859,7 +1885,7 @@ def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=
 
         if debug: print("[DEBUG] >>> here", sighist.GetName(), bkghist.GetName())
 
-        error = r.Double()
+        error = c_double() # TODO: THIS IS BUGGY!
 
         stot = sighist.IntegralAndError(0, sighist.GetNbinsX()+1, error)
         btot = bkghist.IntegralAndError(0, bkghist.GetNbinsX()+1, error)
@@ -1880,8 +1906,8 @@ def plot_roc_v1(fps=[],tps=[],legend_labels=[],colors=[],cutvals=[],scanreverse=
             s = sighist.IntegralAndError(sighist.GetNbinsX()-i, sighist.GetNbinsX()+1, error)
             b = bkghist.IntegralAndError(sighist.GetNbinsX()-i, bkghist.GetNbinsX()+1, error)
             if doreverse:
-                s = sighist.IntegralAndError(0, 1 + i, error)
-                b = bkghist.IntegralAndError(0, 1 + i, error)
+                s = sighist.IntegralAndError(0, 1 + i, error.value)
+                b = bkghist.IntegralAndError(0, 1 + i, error.value)
             #s = sighist.IntegralAndError(0, i, error)
             #b = bkghist.IntegralAndError(0, i, error)
             seff = s / stot
