@@ -1333,7 +1333,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
     if "yaxis_log" in options:
         if options["yaxis_log"] and ("yaxis_range" not in options or options["yaxis_range"] == []):
             options["yaxis_range"] = [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
-            print [yaxismin, 10000*(yaxismax-yaxismin)+yaxismax]
+            print([yaxismin, 10000*(yaxismax-yaxismin)+yaxismax])
 
     # scale background to fit
     if "fit_bkg" in options:
