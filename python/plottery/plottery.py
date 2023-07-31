@@ -60,7 +60,7 @@ class Options(object):
             "legend_alignment": { "type": "String", "desc": "easy alignment of TLegend. String containing two words from: bottom, top, left, right", "default": "", "kinds": ["1dratio","graph"], },
             "legend_smart": { "type": "Boolean", "desc": "Smart alignment of legend to prevent overlaps", "default": True, "kinds": ["1dratio"], },
             "legend_border": { "type": "Boolean", "desc": "show legend border?", "default": True, "kinds": ["1dratio","graph"], },
-            "legend_rounded": { "type": "Boolean", "desc": "rounded legend border", "default": True, "kinds": ["1dratio"], },
+            "legend_rounded": { "type": "Boolean", "desc": "rounded legend border", "default": False, "kinds": ["1dratio"], },
             "legend_scalex": { "type": "Float", "desc": "scale width of legend by this factor", "default": 1, "kinds": ["1dratio","graph"], },
             "legend_scaley": { "type": "Float", "desc": "scale height of legend by this factor", "default": 1, "kinds": ["1dratio","graph"], },
             "legend_opacity": { "type": "Float", "desc": "from 0 to 1 representing the opacity of the TLegend white background", "default": 0.5, "kinds": ["1dratio","graph"], },
@@ -437,6 +437,7 @@ def plot_hist(data=None,bgs=[],legend_labels=[],colors=[],sigs=[],sig_labels=[],
         list(map(utils.move_in_overflows, bgs))
 
     legend = get_legend(opts)
+    _persist.append(legend)
 
     if has_data:
         if not opts["no_overflow"]:
@@ -449,6 +450,7 @@ def plot_hist(data=None,bgs=[],legend_labels=[],colors=[],sigs=[],sig_labels=[],
         legend.AddEntry(data, opts["legend_datalabel"], "LPE" if not opts["hist_disable_xerrors"] else "PE")
 
     stack = r.THStack("stack", "stack")
+    _persist.append(stack)
     for ibg,bg in enumerate(bgs):
         if ibg < len(colors):
             bg.SetLineColor(r.TColor.GetColorDark(colors[ibg]))
@@ -567,6 +569,10 @@ def plot_hist(data=None,bgs=[],legend_labels=[],colors=[],sigs=[],sig_labels=[],
 
         # Draw the main band in the main pad
         bgs_syst.Draw("E2 SAME")
+
+    _persist.append(data)
+    if syst:
+        _persist.append(ratio_syst)
 
     if has_data:
         data.Draw("samepe"+extradrawopt)
@@ -715,6 +721,7 @@ def plot_hist(data=None,bgs=[],legend_labels=[],colors=[],sigs=[],sig_labels=[],
             oldpad.cd()
 
         pad_main.cd()
+        _persist.append(ratio)
 
     save(c1, opts)
 

@@ -604,8 +604,10 @@ def fom_SoverB(s, serr, b, berr, totals, totalb):
 #______________________________________________________________________________________________________________________
 # S / sqrt(B) fom
 def fom_SoverSqrtSPlusB(s, serr, b, berr, totals, totalb):
-    if s + b > 0:
-        return s / math.sqrt(s + b), 0
+    # if s + b > 0:
+    #     return s / math.sqrt(s + b), 0
+    if (137.64/59.83 * s) + b > 0:
+        return (137.64/59.83 * s) / math.sqrt((137.64/59.83 * s) + b), 0
     else:
         return 0, 0
 
@@ -677,10 +679,10 @@ def plot_sigscan2d(sig, bkg, fom=fom_SoverB):
 
 #______________________________________________________________________________________________________________________
 # For each signal and total background return scan from left/right of fom (figure of merit) func.
-def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
+# def plot_sigscan(sig, bkg, fom=fom_SoverSqrtB):
 # def plot_sigscan(sig, bkg, fom=fom_limit):
 # def plot_sigscan(sig, bkg, fom=fom_SoverB):
-# def plot_sigscan(sig, bkg, fom=fom_SoverSqrtSPlusB):
+def plot_sigscan(sig, bkg, fom=fom_SoverSqrtSPlusB):
     nbin = sig.GetNbinsX()
     if nbin != bkg.GetNbinsX():
         print("Error - significance scan for the signal and background histograms have different size", nbin, bkg.GetNbinsX())
@@ -1177,7 +1179,7 @@ def autobin(data, bgs):
 # ====================
 
 #______________________________________________________________________________________________________________________
-def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
+def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[], _persist=[]):
     """
     Wrapper function to call Plottery.
     """
@@ -1563,6 +1565,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             sig_labels    = hsig_labels,
             colors        = hcolors,
             legend_labels = hlegend_labels,
+            _persist      = _persist,
             options       = options
             )
 
@@ -1579,6 +1582,7 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
             sig_labels    = hsig_labels,
             colors        = hcolors,
             legend_labels = hlegend_labels,
+            _persist      = _persist,
             options       = options
             )
 
@@ -1587,6 +1591,8 @@ def plot_hist(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_
 
     # Call nice plots
     copy_nice_plot_index_php(options)
+
+    return c1
 
 #______________________________________________________________________________________________________________________
 def plot_cut_scan(data=None, bgs=[], sigs=[], syst=None, options={}, colors=[], sig_labels=[], legend_labels=[]):
